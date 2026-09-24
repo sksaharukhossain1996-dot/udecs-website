@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: udecs-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: FASTAPI_ENV
+        value: production
+      - key: DEBUG
+        value: "False"
