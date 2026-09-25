@@ -90,7 +90,7 @@ async function startServer() {
   app.post(
     '/api/whatsapp/webhook',
     express.raw({ type: 'application/json', limit: '1mb' }),
-    (req, res) => {
+    async (req, res) => {
       const config = getWhatsAppMetaConfig(process.env);
       if (!config) {
         return res.status(503).json({ error: 'Meta WhatsApp webhook credentials are not configured.' });
@@ -98,8 +98,16 @@ async function startServer() {
       if (!Buffer.isBuffer(req.body)) {
         return res.status(400).json({ error: 'Expected an application/json webhook body.' });
       }
-      if (!verifyWhatsAppWebhookSignature(req.body, req.get('x-hub-signature-256'), config.appSecret)) {
-        return res.status(401).json({ error: 'Invalid Meta webhook signature.' });
+      try {
+        if (!await verifyWhatsAppWebhookSignature(req.body, req.get('x-hub-signature-256'), config.appSecret)) {
+          return res.status(401).json({ error: 'Invalid Meta webhook signature.' });
+        }
+      } catch (error: unknown) {
+        console.error(
+          '[WhatsApp Webhook] Signature verification failed:',
+          error instanceof Error ? error.message : error
+        );
+        return res.status(500).json({ error: 'Webhook signature verification failed.' });
       }
 
       let payload: unknown;
@@ -108,7 +116,7 @@ async function startServer() {
       } catch {
         return res.status(400).json({ error: 'Webhook body must be valid JSON.' });
       }
-      if (!isValidWhatsAppWebhookPayload(payload)) {
+      if (!isValidWhatsAppWebhookPayload(payload, config.phoneNumberId)) {
         return res.status(400).json({ error: 'Malformed WhatsApp webhook payload.' });
       }
 

@@ -1075,7 +1075,7 @@ export const AdminWebsiteControl: React.FC = () => {
                 </div>
                 <div className="flex justify-between py-1">
                   <span>WhatsApp Automation Webhook:</span>
-                  <span className="font-mono text-[#0F1913]">Configure the Render API webhook URL in Meta</span>
+                  <span className="font-mono text-[#0F1913]">Configure the Cloudflare Worker webhook URL in Meta</span>
                 </div>
               </div>
             </div>

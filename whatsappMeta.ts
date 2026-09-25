@@ -1,5 +1,3 @@
-import { createHmac, timingSafeEqual } from 'crypto';
-
 export interface WhatsAppMetaConfig {
   accessToken: string;
   phoneNumberId: string;
@@ -40,15 +38,25 @@ export function getWhatsAppMetaConfig(
   };
 }
 
-export function verifyWhatsAppWebhookSignature(
-  rawBody: Buffer,
+export async function verifyWhatsAppWebhookSignature(
+  rawBody: Uint8Array,
   signature: string | undefined,
   appSecret: string
-): boolean {
+) : Promise<boolean> {
   if (!signature || !/^sha256=[a-f\d]{64}$/i.test(signature)) return false;
-  const supplied = Buffer.from(signature.slice('sha256='.length), 'hex');
-  const expected = createHmac('sha256', appSecret).update(rawBody).digest();
-  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+  const suppliedHex = signature.slice('sha256='.length);
+  const supplied = new Uint8Array(suppliedHex.match(/.{2}/g)!.map((byte) => parseInt(byte, 16)));
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(appSecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const body = new Uint8Array(rawBody.byteLength);
+  body.set(rawBody);
+  const expected = new Uint8Array(await crypto.subtle.sign('HMAC', key, body.buffer));
+  return constantTimeEqual(supplied, expected);
 }
 
 export function verifyWhatsAppWebhookToken(
@@ -56,12 +64,19 @@ export function verifyWhatsAppWebhookToken(
   expectedToken: string
 ): suppliedToken is string {
   if (typeof suppliedToken !== 'string') return false;
-  const supplied = Buffer.from(suppliedToken);
-  const expected = Buffer.from(expectedToken);
-  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+  return constantTimeEqual(new TextEncoder().encode(suppliedToken), new TextEncoder().encode(expectedToken));
 }
 
-export function isValidWhatsAppWebhookPayload(payload: unknown): boolean {
+function constantTimeEqual(left: Uint8Array, right: Uint8Array): boolean {
+  if (left.length !== right.length) return false;
+  let difference = 0;
+  for (let index = 0; index < left.length; index += 1) {
+    difference |= left[index] ^ right[index];
+  }
+  return difference === 0;
+}
+
+export function isValidWhatsAppWebhookPayload(payload: unknown, expectedPhoneNumberId?: string): boolean {
   if (!payload || typeof payload !== 'object') return false;
   const body = payload as { object?: unknown; entry?: unknown };
   if (body.object !== 'whatsapp_business_account' || !Array.isArray(body.entry) || body.entry.length === 0) {
@@ -73,7 +88,9 @@ export function isValidWhatsAppWebhookPayload(payload: unknown): boolean {
     const candidate = entry as { id?: unknown; changes?: unknown };
     return (
       typeof candidate.id === 'string' &&
+      candidate.id.length > 0 &&
       Array.isArray(candidate.changes) &&
+      candidate.changes.length > 0 &&
       candidate.changes.every((change) => {
         if (!change || typeof change !== 'object') return false;
         const item = change as { field?: unknown; value?: unknown };
@@ -86,11 +103,19 @@ export function isValidWhatsAppWebhookPayload(payload: unknown): boolean {
           return false;
         }
         const value = item.value as { metadata?: unknown; messaging_product?: unknown };
+        if (
+          !value.metadata ||
+          typeof value.metadata !== 'object' ||
+          Array.isArray(value.metadata)
+        ) {
+          return false;
+        }
+        const metadata = value.metadata as { phone_number_id?: unknown };
         return (
           value.messaging_product === 'whatsapp' &&
-          !!value.metadata &&
-          typeof value.metadata === 'object' &&
-          !Array.isArray(value.metadata)
+          typeof metadata.phone_number_id === 'string' &&
+          metadata.phone_number_id.length > 0 &&
+          (!expectedPhoneNumberId || metadata.phone_number_id === expectedPhoneNumberId)
         );
       })
     );

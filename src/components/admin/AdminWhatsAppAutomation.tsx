@@ -68,7 +68,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
     getWhatsAppStatus()
       .then(({ configured }) => {
         setGatewayConfigured(configured);
-        if (!configured) updateWhatsAppConfig({ isActive: false, gatewayStatus: 'paused' });
+        updateWhatsAppConfig({ isActive: false, gatewayStatus: 'paused' });
       })
       .catch(() => {
         setGatewayConfigured(false);
@@ -212,25 +212,21 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                 {language === 'bn' ? 'হোয়াটসঅ্যাপ অটোমেশন হাব' : 'WhatsApp Automation Hub'}
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase ${
-                    whatsappConfig.isActive
+                    gatewayConfigured
                       ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                       : 'bg-zinc-100 text-zinc-600 border border-zinc-300'
                   }`}
                 >
                   <span
                     className={`w-2 h-2 rounded-full ${
-                      whatsappConfig.isActive ? 'bg-[#25D366] animate-pulse' : 'bg-zinc-400'
+                      gatewayConfigured ? 'bg-[#25D366]' : 'bg-zinc-400'
                     }`}
                   />
-                  {!gatewayConfigured
-                    ? 'NOT CONFIGURED'
-                    : whatsappConfig.isActive
-                    ? 'ACTIVE'
-                    : 'PAUSED'}
+                  {gatewayConfigured ? 'MANUAL SEND ONLY' : 'NOT CONFIGURED'}
                 </span>
               </h1>
               <p className="text-xs text-[#565F52] mt-0.5">
-                Automated WhatsApp delivery requires Meta Cloud API credentials; direct wa.me messaging remains available.
+                This panel supports authorized manual sends only. Storefront event automation is not implemented; direct wa.me messaging remains available.
               </p>
             </div>
           </div>
@@ -248,26 +244,14 @@ export const AdminWhatsAppAutomation: React.FC = () => {
           </div>
 
           <button
-            onClick={() =>
-              updateWhatsAppConfig({
-                isActive: !whatsappConfig.isActive,
-                gatewayStatus: whatsappConfig.isActive ? 'paused' : 'connected',
-              })
-            }
-            disabled={!gatewayConfigured}
+            disabled
             className={`px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all shadow-xs disabled:cursor-not-allowed disabled:opacity-50 ${
-              whatsappConfig.isActive
-                ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-[#25D366] hover:bg-[#1EBE5D] text-white'
+              'bg-zinc-500 text-white'
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
             <span>
-              {!gatewayConfigured
-                ? 'Automation unavailable'
-                : whatsappConfig.isActive
-                ? 'Pause Automation'
-                : 'Activate Automation'}
+              {!gatewayConfigured ? 'Meta API not configured' : 'Automation not implemented'}
             </span>
           </button>
         </div>
@@ -344,23 +328,23 @@ export const AdminWhatsAppAutomation: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#25D366] animate-ping" />
-                  <span className="text-xs font-mono font-bold text-[#25D366] uppercase tracking-wider">
-                    Official Business Gateway Active
+                  <span className={`w-2.5 h-2.5 rounded-full ${gatewayConfigured ? 'bg-[#25D366]' : 'bg-amber-400'}`} />
+                  <span className={`text-xs font-mono font-bold uppercase tracking-wider ${gatewayConfigured ? 'text-[#25D366]' : 'text-amber-400'}`}>
+                    {gatewayConfigured ? 'Meta API configured' : 'Meta API not configured'}
                   </span>
                 </div>
                 <h3 className="text-lg font-black font-heading text-white">
                   UNICK DIGITAL E-COMMERCE SOLUTIONS · WhatsApp Engine
                 </h3>
                 <p className="text-xs text-[#B9BFAE] max-w-2xl">
-                  Connected to Verified Business Number <strong className="text-white font-mono">{company.whatsapp}</strong> with direct escalation to Owner Phone <strong className="text-white font-mono">{whatsappConfig.ownerAlertNumber}</strong> (SK Saharuk Hossain, Pratappur, Panskura).
+                  Manual sends require an authorized Firebase admin and configured Meta sender. Storefront order triggers and inbound auto-replies are not connected yet.
                 </p>
               </div>
 
               <div className="bg-white/10 p-3 rounded-lg border border-white/10 text-center shrink-0">
                 <span className="text-[10px] text-[#B9BFAE] block uppercase">Gateway Protocol</span>
                 <span className="text-xs font-mono font-bold text-[#25D366] block">Meta Cloud API 2026</span>
-                <span className="text-[9px] text-[#B9BFAE]/80">99.98% Guaranteed Delivery</span>
+                <span className="text-[9px] text-[#B9BFAE]/80">Meta acceptance is not delivery confirmation</span>
               </div>
             </div>
           </div>
@@ -381,7 +365,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                       onChange={(e) =>
                         updateWhatsAppConfig({ autoSendOnOrderPlaced: e.target.checked })
                       }
-                      disabled={!gatewayConfigured}
+                      disabled
                       className="sr-only peer"
                     />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#25D366]"></div>
@@ -391,12 +375,12 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                   অর্ডার নিশ্চিতকরণ অটো-সেন্ড (Order Placement)
                 </h4>
                 <p className="text-xs text-[#565F52]">
-                  Sends instant order summary, GST invoice readiness, and payment confirmation to customer WhatsApp immediately when an order is created.
+                  Not implemented: an order-created event could send the order summary and payment details after server-side order integration is added.
                 </p>
               </div>
               <div className="pt-2 border-t border-[#CBCFB9] flex items-center justify-between text-[11px] text-[#565F52]">
                 <span>Recipient: Customer Phone</span>
-                <span className="font-bold text-[#3C6656]">Instant Delivery</span>
+                <span className="font-bold text-[#3C6656]">Not connected yet</span>
               </div>
             </div>
 
@@ -414,7 +398,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                       onChange={(e) =>
                         updateWhatsAppConfig({ autoSendOnOrderShipped: e.target.checked })
                       }
-                      disabled={!gatewayConfigured}
+                      disabled
                       className="sr-only peer"
                     />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#25D366]"></div>
@@ -424,12 +408,12 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                   শিপমেন্ট ও AWB ট্র্যাকিং অটো-সেন্ড (Order Shipped)
                 </h4>
                 <p className="text-xs text-[#565F52]">
-                  Dispatches courier partner name (Delhivery, Shiprocket, BlueDart), tracking AWB number, and live tracking URL when order status changes to "shipped".
+                  Not implemented: shipment details and a tracking URL could be sent after courier-status events are securely integrated.
                 </p>
               </div>
               <div className="pt-2 border-t border-[#CBCFB9] flex items-center justify-between text-[11px] text-[#565F52]">
                 <span>Recipient: Customer Phone</span>
-                <span className="font-bold text-[#A87C1F]">On Status Change</span>
+                <span className="font-bold text-[#A87C1F]">Not connected yet</span>
               </div>
             </div>
 
@@ -447,7 +431,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                       onChange={(e) =>
                         updateWhatsAppConfig({ autoSendOnOrderDelivered: e.target.checked })
                       }
-                      disabled={!gatewayConfigured}
+                      disabled
                       className="sr-only peer"
                     />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#25D366]"></div>
@@ -457,12 +441,12 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                   ডেলিভারি কনফার্মেশন ও রিভিউ (Order Delivered)
                 </h4>
                 <p className="text-xs text-[#565F52]">
-                  Sends friendly delivery greeting and feedback request to customer WhatsApp once delivery is confirmed by surface freight courier.
+                  Not implemented: delivery confirmation and review requests require a server-side courier event integration.
                 </p>
               </div>
               <div className="pt-2 border-t border-[#CBCFB9] flex items-center justify-between text-[11px] text-[#565F52]">
                 <span>Recipient: Customer Phone</span>
-                <span className="font-bold text-blue-700">On delivery confirmation</span>
+                <span className="font-bold text-blue-700">Not connected yet</span>
               </div>
             </div>
 
@@ -480,7 +464,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                       onChange={(e) =>
                         updateWhatsAppConfig({ autoSendLowStockAlert: e.target.checked })
                       }
-                      disabled={!gatewayConfigured}
+                      disabled
                       className="sr-only peer"
                     />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#25D366]"></div>
@@ -490,12 +474,12 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                   জরুরি লো-স্টক সতর্কতা (Admin Low Stock)
                 </h4>
                 <p className="text-xs text-[#565F52]">
-                  Sends high-priority WhatsApp alert directly to Owner phone ({whatsappConfig.ownerAlertNumber}) when any SKU drops below minimum warehouse stock.
+                  Not implemented: inventory changes are not connected to server-side WhatsApp alerts.
                 </p>
               </div>
               <div className="pt-2 border-t border-[#CBCFB9] flex items-center justify-between text-[11px] text-[#565F52]">
                 <span>Recipient: {whatsappConfig.ownerAlertNumber}</span>
-                <span className="font-bold text-red-700">Warehouse Alert</span>
+                <span className="font-bold text-red-700">Not connected yet</span>
               </div>
             </div>
 
@@ -514,7 +498,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                       onChange={(e) =>
                         updateWhatsAppConfig({ autoAiAssistantReply: e.target.checked })
                       }
-                      disabled={!gatewayConfigured}
+                      disabled
                       className="sr-only peer"
                     />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#25D366]"></div>
@@ -524,12 +508,12 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                   স্মার্ট এআই অটো-রিপ্লাই (Gemini 2.5 Flash)
                 </h4>
                 <p className="text-xs text-[#565F52]">
-                  Automatically generates bilingual (Bengali/English) courteous replies to customer product questions, B2B wholesale pricing, and GST queries.
+                  Not implemented: verified webhook callbacks are acknowledged, but customer messages are not processed or answered.
                 </p>
               </div>
               <div className="pt-2 border-t border-[#CBCFB9] flex items-center justify-between text-[11px] text-[#565F52]">
                 <span>Model: Gemini 2.5 Flash</span>
-                <span className="font-bold text-zinc-600">Requires Meta setup</span>
+                <span className="font-bold text-zinc-600">Inbound replies not implemented</span>
               </div>
             </div>
 
@@ -1074,11 +1058,11 @@ export const AdminWhatsAppAutomation: React.FC = () => {
             <code className="break-all">
               {webhookCallbackUrl.startsWith('https://')
                 ? webhookCallbackUrl
-                : 'Set the GitHub Pages VITE_API_BASE_URL variable to your Render API origin first.'}
+                : 'Set the GitHub Pages VITE_API_BASE_URL variable to your Cloudflare Worker URL first.'}
             </code>
           </div>
           <p>
-            In Meta Developers, create/select a Business app, add WhatsApp, and set this callback URL. Set a long random verify token in Render as <code>WHATSAPP_VERIFY_TOKEN</code>, and enter the same value in Meta. Set the app secret from App Settings &gt; Basic as <code>WHATSAPP_APP_SECRET</code>. Subscribe the WhatsApp Business Account to the <code>messages</code> webhook field.
+            In Meta Developers, create/select a Business app, add WhatsApp, and set this callback URL. Save a long random verify token as the Cloudflare Worker secret <code>WHATSAPP_VERIFY_TOKEN</code>, and enter the same value in Meta. Save the app secret from App Settings &gt; Basic as <code>WHATSAPP_APP_SECRET</code>. Subscribe the WhatsApp Business Account to the <code>messages</code> webhook field. Configure the access token and phone number ID as Worker secrets, and add authorized Firebase admin emails to the <code>WHATSAPP_ADMIN_EMAILS</code> Worker variable.
           </p>
         </div>
       )}

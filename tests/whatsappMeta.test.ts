@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createHmac, generateKeyPairSync, sign } from 'node:crypto';
 import test from 'node:test';
 import { verifyFirebaseAdminIdToken } from '../firebaseAdminAuth';
+import worker, { mapGeminiLiveServerMessage } from '../cloudflare-worker/index';
 import {
   getWhatsAppMetaConfig,
   isValidWhatsAppWebhookPayload,
@@ -29,13 +30,13 @@ test('Meta config remains unavailable until all credentials are present', () => 
   })?.apiVersion, 'v23.0');
 });
 
-test('webhook signature accepts the HMAC of the exact raw body only', () => {
+test('webhook signature accepts the HMAC of the exact raw body only', async () => {
   const body = Buffer.from('{"object":"whatsapp_business_account"}');
   const signature = `sha256=${createHmac('sha256', config.appSecret).update(body).digest('hex')}`;
-  assert.equal(verifyWhatsAppWebhookSignature(body, signature, config.appSecret), true);
-  assert.equal(verifyWhatsAppWebhookSignature(body, signature, 'wrong-secret'), false);
-  assert.equal(verifyWhatsAppWebhookSignature(body, 'sha256=invalid', config.appSecret), false);
-  assert.equal(verifyWhatsAppWebhookSignature(body, undefined, config.appSecret), false);
+  assert.equal(await verifyWhatsAppWebhookSignature(body, signature, config.appSecret), true);
+  assert.equal(await verifyWhatsAppWebhookSignature(body, signature, 'wrong-secret'), false);
+  assert.equal(await verifyWhatsAppWebhookSignature(body, 'sha256=invalid', config.appSecret), false);
+  assert.equal(await verifyWhatsAppWebhookSignature(body, undefined, config.appSecret), false);
 });
 
 test('webhook verification token is matched without a normal string comparison', () => {
@@ -55,7 +56,31 @@ test('webhook payload validation rejects malformed Meta callbacks', () => {
       }],
     }],
   }), true);
+  assert.equal(isValidWhatsAppWebhookPayload({
+    object: 'whatsapp_business_account',
+    entry: [{
+      id: 'account-id',
+      changes: [{
+        field: 'messages',
+        value: { messaging_product: 'whatsapp', metadata: { phone_number_id: '123' } },
+      }],
+    }],
+  }, '123'), true);
+  assert.equal(isValidWhatsAppWebhookPayload({
+    object: 'whatsapp_business_account',
+    entry: [{
+      id: 'account-id',
+      changes: [{
+        field: 'messages',
+        value: { messaging_product: 'whatsapp', metadata: { phone_number_id: 'other-number' } },
+      }],
+    }],
+  }, '123'), false);
   assert.equal(isValidWhatsAppWebhookPayload({ object: 'wrong', entry: [] }), false);
+  assert.equal(isValidWhatsAppWebhookPayload({
+    object: 'whatsapp_business_account',
+    entry: [{ id: 'account-id', changes: [] }],
+  }), false);
   assert.equal(isValidWhatsAppWebhookPayload({
     object: 'whatsapp_business_account',
     entry: [{ id: 'account-id', changes: [{ field: 'messages' }] }],
@@ -131,4 +156,111 @@ test('Firebase tokens must be signed, unexpired, verified, and in the admin allo
   );
   assert.equal(await verifyFirebaseAdminIdToken(token, 'wrong-project', new Set(['admin@example.com']), certFetch), null);
   assert.equal(await verifyFirebaseAdminIdToken(token, 'udecs-store', new Set(['other@example.com']), certFetch), null);
+});
+
+test('Worker health, CORS, and unconfigured WhatsApp routes do not require deployment secrets', async () => {
+  const health = await worker.fetch(new Request('https://worker.example/health'), {});
+  assert.equal(health.status, 200);
+  assert.deepEqual(await health.json(), { status: 'ok' });
+
+  const status = await worker.fetch(new Request('https://worker.example/api/whatsapp/status'), {});
+  assert.equal(status.status, 200);
+  assert.equal((await status.json() as { status: string }).status, 'not_configured');
+
+  const send = await worker.fetch(new Request('https://worker.example/api/whatsapp/send', {
+    method: 'POST',
+    body: JSON.stringify({ to: '9845485437', message: 'test' }),
+  }), {});
+  assert.equal(send.status, 503);
+  assert.match((await send.json() as { error: string }).error, /no message was sent/);
+
+  const blocked = await worker.fetch(new Request('https://worker.example/api/ai-chat'), {});
+  assert.equal(blocked.status, 403);
+  const preflight = await worker.fetch(new Request('https://worker.example/api/whatsapp/send', {
+    method: 'OPTIONS',
+    headers: {
+      Origin: 'https://udecs.store',
+      'Access-Control-Request-Method': 'POST',
+      'Access-Control-Request-Headers': 'authorization,content-type',
+    },
+  }), {});
+  assert.equal(preflight.status, 204);
+  assert.match(preflight.headers.get('access-control-allow-headers') || '', /Authorization/);
+});
+
+test('Worker webhook accepts only correctly signed valid callbacks', async () => {
+  const env = {
+    WHATSAPP_ACCESS_TOKEN: config.accessToken,
+    WHATSAPP_PHONE_NUMBER_ID: config.phoneNumberId,
+    WHATSAPP_APP_SECRET: config.appSecret,
+    WHATSAPP_VERIFY_TOKEN: config.verifyToken,
+  };
+  const callback = JSON.stringify({
+    object: 'whatsapp_business_account',
+    entry: [{
+      id: 'account-id',
+      changes: [{
+        field: 'messages',
+        value: { messaging_product: 'whatsapp', metadata: { phone_number_id: config.phoneNumberId } },
+      }],
+    }],
+  });
+  const signature = `sha256=${createHmac('sha256', config.appSecret).update(callback).digest('hex')}`;
+  const valid = await worker.fetch(new Request('https://worker.example/api/whatsapp/webhook', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Hub-Signature-256': signature },
+    body: callback,
+  }), env);
+  assert.equal(valid.status, 200);
+
+  const mismatchedSenderCallback = JSON.stringify({
+    object: 'whatsapp_business_account',
+    entry: [{
+      id: 'account-id',
+      changes: [{
+        field: 'messages',
+        value: { messaging_product: 'whatsapp', metadata: { phone_number_id: 'another-number' } },
+      }],
+    }],
+  });
+  const mismatchedSenderSignature =
+    `sha256=${createHmac('sha256', config.appSecret).update(mismatchedSenderCallback).digest('hex')}`;
+  const mismatchedSender = await worker.fetch(new Request('https://worker.example/api/whatsapp/webhook', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Hub-Signature-256': mismatchedSenderSignature,
+    },
+    body: mismatchedSenderCallback,
+  }), env);
+  assert.equal(mismatchedSender.status, 400);
+
+  const unsigned = await worker.fetch(new Request('https://worker.example/api/whatsapp/webhook', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: callback,
+  }), env);
+  assert.equal(unsigned.status, 401);
+
+  const invalidToken = await worker.fetch(new Request(
+    `https://worker.example/api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=wrong&hub.challenge=123`
+  ), env);
+  assert.equal(invalidToken.status, 403);
+});
+
+test('Worker maps Gemini Live audio, text, interruptions and turn completion', () => {
+  assert.deepEqual(mapGeminiLiveServerMessage({
+    setupComplete: {},
+    serverContent: {
+      modelTurn: { parts: [{ text: 'hello' }, { inlineData: { data: 'YXVkaW8=' } }] },
+      interrupted: true,
+      turnComplete: true,
+    },
+  }), [
+    { type: 'ready', message: 'Connected to Gemini Live voice assistant' },
+    { type: 'text', text: 'hello' },
+    { type: 'audio', audio: 'YXVkaW8=' },
+    { type: 'interrupted', interrupted: true },
+    { type: 'turnComplete', turnComplete: true },
+  ]);
 });

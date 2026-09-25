@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "udecs-api",
+  "main": "cloudflare-worker/index.ts",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["web_socket_auto_reply_to_close"],
+  "workers_dev": true,
+  "vars": {
+    "FIREBASE_PROJECT_ID": "udecs-store",
+    "WHATSAPP_API_VERSION": "v23.0",
+    "ALLOWED_ORIGINS": "https://udecs.store,https://www.udecs.store"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
