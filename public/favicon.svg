@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="favNavy" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1B365D" />
+      <stop offset="100%" stop-color="#0E2138" />
+    </linearGradient>
+    <linearGradient id="favGold" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E27318" />
+      <stop offset="100%" stop-color="#FDB43A" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="110" fill="#FFFFFF"/>
+  <g transform="translate(35, 30) scale(0.75)">
+    <!-- Globe Wireframe -->
+    <g stroke="#1F3D5C" stroke-width="8" fill="none" opacity="0.8">
+      <circle cx="280" cy="200" r="150"/>
+      <ellipse cx="280" cy="200" rx="150" ry="55"/>
+      <ellipse cx="280" cy="200" rx="65" ry="150"/>
+      <line x1="280" y1="50" x2="280" y2="350"/>
+    </g>
+    <!-- Cart Wireframe -->
+    <path d="M 90 120 L 130 120 L 190 280 C 195 300, 215 315, 235 315 L 400 315 L 440 180 L 160 180"
+          stroke="url(#favNavy)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <!-- Golden Arrow Swoop -->
+    <path d="M 130 300 C 180 320, 240 290, 310 230 C 360 190, 400 130, 445 70 L 415 60 L 485 40 L 475 110 L 448 95 C 410 150, 365 210, 300 260 C 235 310, 175 325, 130 300 Z"
+          fill="url(#favGold)"/>
+    <!-- Wheels -->
+    <circle cx="225" cy="375" r="25" fill="url(#favNavy)"/>
+    <circle cx="375" cy="375" r="25" fill="url(#favNavy)"/>
+  </g>
+  <!-- Text snippet -->
+  <text x="256" y="475" text-anchor="middle" font-family="'Inter', Arial, sans-serif" font-weight="900" font-size="70" fill="#1B365D" letter-spacing="4">UDECS</text>
+</svg>

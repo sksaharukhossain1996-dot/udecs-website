@@ -1,0 +1,6 @@
+{
+  "name": "UNICK DIGITAL E-COMMERCE SOLUTIONS",
+  "description": "Comprehensive e-commerce & ERP management platform for udecs.store featuring PayU payment gateway, WhatsApp AI customer support, automated inventory, GST reporting, employee management, and multi-language support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

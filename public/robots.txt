@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://udecs.store/sitemap.xml

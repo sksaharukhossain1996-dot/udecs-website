@@ -1,0 +1,172 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Storefront product catalog item with SKU, HSN, pricing, and stock",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 200 },
+        "nameBn": { "type": "string", "maxLength": 200 },
+        "nameHi": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "enum": ["kitchen", "sports", "wholesale", "industrial"] },
+        "sku": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "hsn": { "type": "string", "maxLength": 16 },
+        "price": { "type": "number" },
+        "wholesalePrice": { "type": "number" },
+        "minWholesaleQty": { "type": "number" },
+        "stock": { "type": "number" },
+        "minStockAlert": { "type": "number" },
+        "rating": { "type": "number" },
+        "reviewsCount": { "type": "number" },
+        "imageIcon": { "type": "string", "maxLength": 64 },
+        "imageUrl": { "type": "string", "maxLength": 1000 },
+        "productLink": { "type": "string", "maxLength": 1000 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "descriptionBn": { "type": "string", "maxLength": 2000 },
+        "gstRate": { "type": "number" },
+        "featured": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "sku", "hsn", "price", "stock", "category", "gstRate"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "E-commerce customer purchase order with GST invoicing",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "maxLength": 150 },
+        "customerEmail": { "type": "string", "maxLength": 150 },
+        "customerPhone": { "type": "string", "maxLength": 30 },
+        "shippingAddress": { "type": "string", "maxLength": 500 },
+        "city": { "type": "string", "maxLength": 100 },
+        "state": { "type": "string", "maxLength": 100 },
+        "pincode": { "type": "string", "maxLength": 20 },
+        "gstin": { "type": "string", "maxLength": 30 },
+        "subtotal": { "type": "number" },
+        "taxableAmount": { "type": "number" },
+        "cgst": { "type": "number" },
+        "sgst": { "type": "number" },
+        "igst": { "type": "number" },
+        "totalGst": { "type": "number" },
+        "shippingFee": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "currency": { "type": "string", "enum": ["INR", "USD", "EUR", "AED"] },
+        "paymentMethod": { "type": "string", "enum": ["payu", "upi", "card", "netbanking", "cod"] },
+        "paymentStatus": { "type": "string", "enum": ["pending", "paid", "failed", "refunded"] },
+        "orderStatus": { "type": "string", "enum": ["pending", "processing", "packed", "shipped", "delivered", "cancelled"] },
+        "payuTxnId": { "type": "string", "maxLength": 100 },
+        "trackingNumber": { "type": "string", "maxLength": 100 },
+        "courierName": { "type": "string", "maxLength": 100 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerName", "customerPhone", "shippingAddress", "totalAmount", "orderStatus", "paymentStatus", "paymentMethod"]
+    },
+    "SiteContent": {
+      "title": "SiteContent",
+      "description": "Storefront marketing copy, announcement banner, and headlines",
+      "type": "object",
+      "properties": {
+        "announcement": { "type": "string", "maxLength": 500 },
+        "heroBadge": { "type": "string", "maxLength": 200 },
+        "heroHeadline": { "type": "string", "maxLength": 200 },
+        "heroHeadlineHighlight": { "type": "string", "maxLength": 200 },
+        "heroSubheadline": { "type": "string", "maxLength": 1000 },
+        "heroCtaButton": { "type": "string", "maxLength": 100 },
+        "heroSecondaryButton": { "type": "string", "maxLength": 100 },
+        "statProducts": { "type": "string", "maxLength": 100 },
+        "statExperience": { "type": "string", "maxLength": 100 },
+        "statClients": { "type": "string", "maxLength": 100 },
+        "statDistricts": { "type": "string", "maxLength": 100 },
+        "categoryHeadline": { "type": "string", "maxLength": 200 },
+        "categorySubheadline": { "type": "string", "maxLength": 500 },
+        "wholesaleHeadline": { "type": "string", "maxLength": 200 },
+        "wholesaleSubheadline": { "type": "string", "maxLength": 1000 },
+        "footerAbout": { "type": "string", "maxLength": 1000 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Company": {
+      "title": "Company",
+      "description": "Company registration, GSTIN, contacts, and social media links",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 150 },
+        "legalName": { "type": "string", "maxLength": 200 },
+        "domain": { "type": "string", "maxLength": 100 },
+        "whatsapp": { "type": "string", "maxLength": 30 },
+        "emailGmail": { "type": "string", "maxLength": 150 },
+        "emailOutlook": { "type": "string", "maxLength": 150 },
+        "gstin": { "type": "string", "maxLength": 30 },
+        "state": { "type": "string", "maxLength": 100 },
+        "stateCode": { "type": "string", "maxLength": 10 },
+        "address": { "type": "string", "maxLength": 300 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "legalName", "domain", "whatsapp", "gstin"]
+    },
+    "Inquiry": {
+      "title": "Inquiry",
+      "description": "B2B wholesale quotation requests and customer inquiries",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "businessName": { "type": "string", "maxLength": 150 },
+        "contactPerson": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "email": { "type": "string", "maxLength": 150 },
+        "gstin": { "type": "string", "maxLength": 30 },
+        "category": { "type": "string", "maxLength": 100 },
+        "estVolume": { "type": "string", "maxLength": 100 },
+        "notes": { "type": "string", "maxLength": 1000 },
+        "status": { "type": "string", "enum": ["new", "contacted", "quoted", "closed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["businessName", "contactPerson", "phone"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Security and administrative audit trail",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "user": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "maxLength": 50 },
+        "action": { "type": "string", "maxLength": 100 },
+        "module": { "type": "string", "maxLength": 50 },
+        "details": { "type": "string", "maxLength": 1000 },
+        "ip": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["action", "details"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Public catalog of products for sale with stock and pricing"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer purchase orders and fulfillment tracking"
+    },
+    "/siteContent/main": {
+      "schema": { "$ref": "#/entities/SiteContent" },
+      "description": "Live storefront headlines, hero banner, announcement, and stats"
+    },
+    "/company/info": {
+      "schema": { "$ref": "#/entities/Company" },
+      "description": "Official company registration, contacts, and GSTIN information"
+    },
+    "/inquiries/{inquiryId}": {
+      "schema": { "$ref": "#/entities/Inquiry" },
+      "description": "B2B wholesale quotations and customer contact messages"
+    },
+    "/auditLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Staff and administrative audit log events"
+    }
+  }
+}

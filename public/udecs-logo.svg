@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 640" width="100%" height="100%">
+  <defs>
+    <!-- Navy Blue Gradient -->
+    <linearGradient id="navyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#224263" />
+      <stop offset="100%" stop-color="#14283D" />
+    </linearGradient>
+
+    <!-- Warm Gold / Orange Gradient -->
+    <linearGradient id="goldOrangeGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E27318" />
+      <stop offset="40%" stop-color="#EE9026" />
+      <stop offset="100%" stop-color="#FDB43A" />
+    </linearGradient>
+
+    <!-- Subtle Drop Shadow -->
+    <filter id="subtleGlow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12" flood-color="#14283D"/>
+    </filter>
+  </defs>
+
+  <!-- ==================== TOP ICON ==================== -->
+  <g transform="translate(40, 10)">
+    <!-- Globe Wireframe (inside/behind the cart) -->
+    <g stroke="#1F3D5C" stroke-width="7" fill="none" opacity="0.85">
+      <!-- Globe Outer Boundary -->
+      <circle cx="260" cy="180" r="140" stroke-width="8" stroke-dasharray="8 6"/>
+      <!-- Latitude lines -->
+      <ellipse cx="260" cy="180" rx="140" ry="50"/>
+      <ellipse cx="260" cy="180" rx="140" ry="95"/>
+      <!-- Longitude lines -->
+      <ellipse cx="260" cy="180" rx="60" ry="140"/>
+      <line x1="260" y1="40" x2="260" y2="320"/>
+      <line x1="120" y1="180" x2="400" y2="180"/>
+    </g>
+
+    <!-- Dynamic Curved Golden Orange Crescent / Trail -->
+    <path d="M 120 280 C 180 340, 310 320, 380 250 C 430 200, 450 120, 400 40 C 420 80, 420 140, 390 190 C 350 260, 260 290, 180 280 C 150 276, 130 270, 120 280 Z"
+          fill="url(#goldOrangeGrad)"/>
+
+    <!-- Shopping Cart Wireframe (Deep Navy) -->
+    <!-- Handle -->
+    <path d="M 85 105 L 120 105 C 132 105, 142 114, 145 126 L 180 260 C 185 280, 202 295, 224 295 L 370 295 C 388 295, 404 282, 408 264 L 430 170"
+          stroke="url(#navyGrad)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+    <!-- Basket Front Swoop / Rim -->
+    <path d="M 148 140 L 420 140" stroke="url(#navyGrad)" stroke-width="16" stroke-linecap="round" fill="none"/>
+
+    <!-- Dynamic Upward Golden-Orange Main Arrow -->
+    <g filter="url(#subtleGlow)">
+      <!-- Arrow Shaft / Tail -->
+      <path d="M 120 285 C 160 300, 220 280, 280 230 C 325 190, 360 140, 395 85 L 365 75 L 435 55 L 425 125 L 398 108 C 360 160, 320 215, 265 255 C 215 295, 160 310, 120 285 Z"
+            fill="url(#goldOrangeGrad)"/>
+      <!-- Sharp Arrowhead -->
+      <polygon points="435,55 350,75 392,108" fill="#FDB43A"/>
+      <polygon points="435,55 425,135 392,108" fill="#E27318"/>
+    </g>
+
+    <!-- Front Cart Curving Shield Arch (Navy) -->
+    <path d="M 110 245 C 115 310, 180 345, 245 330 C 205 320, 160 295, 145 240 Z" fill="url(#navyGrad)"/>
+
+    <!-- Cart Wheels -->
+    <g fill="url(#navyGrad)">
+      <!-- Left Wheel -->
+      <circle cx="215" cy="350" r="22"/>
+      <circle cx="215" cy="350" r="9" fill="#FFFFFF"/>
+      <!-- Right Wheel -->
+      <circle cx="355" cy="350" r="22"/>
+      <circle cx="355" cy="350" r="9" fill="#FFFFFF"/>
+    </g>
+  </g>
+
+  <!-- ==================== BRAND NAME TEXT ==================== -->
+  <g transform="translate(300, 480)" text-anchor="middle">
+    <!-- UDECS Wordmark -->
+    <g fill="#1B365D" font-family="'Inter', 'Montserrat', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="115" letter-spacing="1">
+      <!-- Letter U -->
+      <text x="-215" y="0">U</text>
+      <!-- Letter D -->
+      <text x="-120" y="0">D</text>
+      
+      <!-- Letter E with forward speed arrow cut into center bar -->
+      <g transform="translate(-10, 0)">
+        <path d="M -25 -82 L 40 -82 L 40 -56 L 6 -56 L 6 -15 L 24 -15 L 24 5 L 6 5 L 6 38 L 42 38 L 42 64 L -25 64 Z" fill="#1B365D"/>
+        <!-- Arrow Cut / Forward Indicator on E -->
+        <path d="M 8 -5 L 30 -5 L 30 -16 L 52 0 L 30 16 L 30 5 L 8 5 Z" fill="#1B365D"/>
+        <!-- Accent Glow for E's forward arrow in gold -->
+        <polygon points="26,-12 44,0 26,12" fill="#E27318"/>
+      </g>
+      
+      <!-- Letter C -->
+      <text x="100" y="0">C</text>
+      <!-- Letter S -->
+      <text x="200" y="0">S</text>
+    </g>
+
+    <!-- Subtitle: COMMERCE SOLUTIONS -->
+    <text x="0" y="58"
+          fill="#1B365D"
+          font-family="'Inter', 'Montserrat', 'Helvetica Neue', Arial, sans-serif"
+          font-weight="800"
+          font-size="28"
+          letter-spacing="10">
+      COMMERCE SOLUTIONS
+    </text>
+  </g>
+</svg>

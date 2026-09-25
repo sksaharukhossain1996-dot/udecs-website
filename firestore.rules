@@ -1,0 +1,116 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email in ['sksaharukhossain1996@gmail.com', 'ecommerceunickdigital@gmail.com'] && request.auth.token.email_verified == true) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidProduct(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 200 &&
+             data.sku is string && data.sku.size() > 0 && data.sku.size() <= 64 &&
+             data.hsn is string && data.hsn.size() > 0 && data.hsn.size() <= 16 &&
+             data.price is number && data.price >= 0 &&
+             data.stock is number && data.stock >= 0 &&
+             data.category is string && (data.category in ['kitchen', 'sports', 'wholesale', 'industrial']) &&
+             data.gstRate is number && (data.gstRate in [5, 12, 18, 28]);
+    }
+
+    function isValidOrder(data) {
+      return data.customerName is string && data.customerName.size() > 0 && data.customerName.size() <= 150 &&
+             data.customerPhone is string && data.customerPhone.size() > 0 && data.customerPhone.size() <= 30 &&
+             data.shippingAddress is string && data.shippingAddress.size() > 0 && data.shippingAddress.size() <= 500 &&
+             data.totalAmount is number && data.totalAmount >= 0 &&
+             data.orderStatus is string && (data.orderStatus in ['pending', 'processing', 'packed', 'shipped', 'delivered', 'cancelled']) &&
+             data.paymentStatus is string && (data.paymentStatus in ['pending', 'paid', 'failed', 'refunded']) &&
+             data.paymentMethod is string && (data.paymentMethod in ['payu', 'upi', 'card', 'netbanking', 'cod']);
+    }
+
+    function isValidInquiry(data) {
+      return data.businessName is string && data.businessName.size() > 0 && data.businessName.size() <= 150 &&
+             data.contactPerson is string && data.contactPerson.size() > 0 && data.contactPerson.size() <= 100 &&
+             data.phone is string && data.phone.size() > 0 && data.phone.size() <= 30;
+    }
+
+    function isValidAuditLog(data) {
+      return data.action is string && data.action.size() > 0 && data.action.size() <= 100 &&
+             data.details is string && data.details.size() <= 1000;
+    }
+
+    // Health check and connection testing
+    match /test/{docId} {
+      allow read: if true;
+    }
+
+    // Product catalog
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isValidId(productId) && isAdmin() && isValidProduct(incoming());
+      allow update: if isValidId(productId) && isAdmin() && isValidProduct(incoming());
+      allow delete: if isValidId(productId) && isAdmin();
+    }
+
+    // Customer Orders
+    match /orders/{orderId} {
+      allow create: if isValidId(orderId) && isValidOrder(incoming());
+      allow get: if isValidId(orderId) && (isAdmin() || (isSignedIn() && resource.data.customerEmail == request.auth.token.email));
+      allow list: if isAdmin();
+      allow update: if isValidId(orderId) && isAdmin() && isValidOrder(incoming());
+      allow delete: if false;
+    }
+
+    // Storefront CMS Texts
+    match /siteContent/{contentId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Official Company Profile
+    match /company/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // B2B Wholesale Inquiries
+    match /inquiries/{inquiryId} {
+      allow create: if isValidId(inquiryId) && isValidInquiry(incoming());
+      allow read, update, delete: if isValidId(inquiryId) && isAdmin();
+    }
+
+    // Audit Trail
+    match /auditLogs/{logId} {
+      allow create: if isValidId(logId) && isValidAuditLog(incoming());
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // Administrative Privileges
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+  }
+}
