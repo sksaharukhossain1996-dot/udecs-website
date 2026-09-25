@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import {
   MessageSquare,
@@ -9,7 +9,6 @@ import {
   RefreshCw,
   Copy,
   ExternalLink,
-  ShieldCheck,
   Check,
   Smartphone,
   Phone,
@@ -24,8 +23,10 @@ import {
 import {
   renderWhatsAppTemplate,
   generateWhatsAppLink,
+  getWhatsAppStatus,
   sendAutomatedWhatsAppApi,
 } from '../../services/whatsappService';
+import { getApiUrl } from '../../services/api';
 
 export const AdminWhatsAppAutomation: React.FC = () => {
   const {
@@ -42,6 +43,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'simulator' | 'templates' | 'logs' | 'webhook'>('overview');
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [gatewayConfigured, setGatewayConfigured] = useState(false);
 
   // Simulator State
   const [selectedTemplate, setSelectedTemplate] = useState<
@@ -61,6 +63,18 @@ export const AdminWhatsAppAutomation: React.FC = () => {
 
   // Template Editing State
   const [templatesForm, setTemplatesForm] = useState(whatsappConfig.templates);
+
+  useEffect(() => {
+    getWhatsAppStatus()
+      .then(({ configured }) => {
+        setGatewayConfigured(configured);
+        if (!configured) updateWhatsAppConfig({ isActive: false, gatewayStatus: 'paused' });
+      })
+      .catch(() => {
+        setGatewayConfigured(false);
+        updateWhatsAppConfig({ isActive: false, gatewayStatus: 'paused' });
+      });
+  }, []);
 
   const showToast = (msg: string) => {
     setSuccessToast(msg);
@@ -113,6 +127,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
 
   const previewMessage = getPreviewText();
   const directWhatsAppLink = generateWhatsAppLink(simPhone, previewMessage);
+  const webhookCallbackUrl = getApiUrl('/api/whatsapp/webhook');
 
   // Send Test Message
   const handleSendTest = async () => {
@@ -141,18 +156,18 @@ export const AdminWhatsAppAutomation: React.FC = () => {
       addAuditLog({
         action: 'WHATSAPP_AUTO_DISPATCH',
         module: 'WHATSAPP_AUTOMATION',
-        details: `Dispatched test ${selectedTemplate} message to +91 ${simPhone}. Status: ${res.status}`,
+        details: `Meta accepted test ${selectedTemplate} message to +91 ${simPhone}. Status: ${res.status}; delivery is unconfirmed.`,
       });
 
       setSendResult({
         success: true,
-        msg: `Message successfully dispatched! Message ID: ${res.messageId} (Status: 🟢 Delivered)`,
+        msg: `Meta accepted the message request (${res.messageId}). This does not confirm delivery.`,
       });
-      showToast('Automated WhatsApp message successfully sent!');
+      showToast('Meta accepted the WhatsApp message request.');
     } catch (err: any) {
       setSendResult({
         success: false,
-        msg: err?.message || 'Failed to dispatch message. Gateway fallback applied.',
+        msg: err?.message || 'Meta did not accept the message request.',
       });
     } finally {
       setIsSending(false);
@@ -207,11 +222,15 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                       whatsappConfig.isActive ? 'bg-[#25D366] animate-pulse' : 'bg-zinc-400'
                     }`}
                   />
-                  {whatsappConfig.isActive ? 'ACTIVE & OPERATIONAL' : 'PAUSED'}
+                  {!gatewayConfigured
+                    ? 'NOT CONFIGURED'
+                    : whatsappConfig.isActive
+                    ? 'ACTIVE'
+                    : 'PAUSED'}
                 </span>
               </h1>
               <p className="text-xs text-[#565F52] mt-0.5">
-                Automated order confirmation, real-time shipment AWB tracking, Gemini 3.8 AI auto-replies, and WhatsApp Webhooks.
+                Automated WhatsApp delivery requires Meta Cloud API credentials; direct wa.me messaging remains available.
               </p>
             </div>
           </div>
@@ -221,25 +240,35 @@ export const AdminWhatsAppAutomation: React.FC = () => {
         <div className="flex items-center gap-2.5 flex-wrap">
           <div className="bg-white border border-[#CBCFB9] px-3.5 py-1.5 rounded-lg text-right">
             <span className="text-[10px] text-[#565F52] block uppercase font-bold tracking-wider">
-              Dispatched Logs
+              Accepted Requests
             </span>
             <span className="text-sm font-black font-mono text-[#0F1913]">
-              {whatsappConfig.totalDispatchedCount || 24} Messages
+              {whatsappConfig.totalDispatchedCount} Messages
             </span>
           </div>
 
           <button
             onClick={() =>
-              updateWhatsAppConfig({ isActive: !whatsappConfig.isActive })
+              updateWhatsAppConfig({
+                isActive: !whatsappConfig.isActive,
+                gatewayStatus: whatsappConfig.isActive ? 'paused' : 'connected',
+              })
             }
-            className={`px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all shadow-xs ${
+            disabled={!gatewayConfigured}
+            className={`px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all shadow-xs disabled:cursor-not-allowed disabled:opacity-50 ${
               whatsappConfig.isActive
                 ? 'bg-red-600 hover:bg-red-700 text-white'
                 : 'bg-[#25D366] hover:bg-[#1EBE5D] text-white'
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
-            <span>{whatsappConfig.isActive ? 'Pause Automation' : 'Activate Automation'}</span>
+            <span>
+              {!gatewayConfigured
+                ? 'Automation unavailable'
+                : whatsappConfig.isActive
+                ? 'Pause Automation'
+                : 'Activate Automation'}
+            </span>
           </button>
         </div>
       </div>
@@ -352,6 +381,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                       onChange={(e) =>
                         updateWhatsAppConfig({ autoSendOnOrderPlaced: e.target.checked })
                       }
+                      disabled={!gatewayConfigured}
                       className="sr-only peer"
                     />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#25D366]"></div>
@@ -384,6 +414,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                       onChange={(e) =>
                         updateWhatsAppConfig({ autoSendOnOrderShipped: e.target.checked })
                       }
+                      disabled={!gatewayConfigured}
                       className="sr-only peer"
                     />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#25D366]"></div>
@@ -416,6 +447,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                       onChange={(e) =>
                         updateWhatsAppConfig({ autoSendOnOrderDelivered: e.target.checked })
                       }
+                      disabled={!gatewayConfigured}
                       className="sr-only peer"
                     />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#25D366]"></div>
@@ -430,7 +462,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
               </div>
               <div className="pt-2 border-t border-[#CBCFB9] flex items-center justify-between text-[11px] text-[#565F52]">
                 <span>Recipient: Customer Phone</span>
-                <span className="font-bold text-blue-700">Delivered</span>
+                <span className="font-bold text-blue-700">On delivery confirmation</span>
               </div>
             </div>
 
@@ -448,6 +480,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                       onChange={(e) =>
                         updateWhatsAppConfig({ autoSendLowStockAlert: e.target.checked })
                       }
+                      disabled={!gatewayConfigured}
                       className="sr-only peer"
                     />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#25D366]"></div>
@@ -481,21 +514,22 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                       onChange={(e) =>
                         updateWhatsAppConfig({ autoAiAssistantReply: e.target.checked })
                       }
+                      disabled={!gatewayConfigured}
                       className="sr-only peer"
                     />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#25D366]"></div>
                   </label>
                 </div>
                 <h4 className="font-heading font-bold text-sm text-[#0F1913]">
-                  স্মার্ট এআই অটো-রিপ্লাই (Gemini 3.8 Flash)
+                  স্মার্ট এআই অটো-রিপ্লাই (Gemini 2.5 Flash)
                 </h4>
                 <p className="text-xs text-[#565F52]">
                   Automatically generates bilingual (Bengali/English) courteous replies to customer product questions, B2B wholesale pricing, and GST queries.
                 </p>
               </div>
               <div className="pt-2 border-t border-[#CBCFB9] flex items-center justify-between text-[11px] text-[#565F52]">
-                <span>Model: Gemini 3.8 Flash</span>
-                <span className="font-bold text-purple-700">AI Powered</span>
+                <span>Model: Gemini 2.5 Flash</span>
+                <span className="font-bold text-zinc-600">Requires Meta setup</span>
               </div>
             </div>
 
@@ -747,12 +781,18 @@ export const AdminWhatsAppAutomation: React.FC = () => {
               <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
                 <button
                   type="button"
-                  disabled={isSending}
+                  disabled={isSending || !gatewayConfigured}
                   onClick={handleSendTest}
                   className="flex-1 bg-[#25D366] hover:bg-[#1EBE5D] text-white py-2.5 rounded font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>{isSending ? 'Dispatching...' : 'Dispatch Automated WhatsApp'}</span>
+                  <span>
+                    {isSending
+                      ? 'Sending...'
+                      : gatewayConfigured
+                      ? 'Send via Meta Cloud API'
+                      : 'Meta credentials required'}
+                  </span>
                 </button>
 
                 <a
@@ -958,13 +998,13 @@ export const AdminWhatsAppAutomation: React.FC = () => {
               Automated WhatsApp Dispatch Logs ({whatsAppLogs.length})
             </h3>
             <span className="text-[10px] text-[#565F52]">
-              Live status synchronized with WhatsApp Cloud Webhook
+              Delivery results are unavailable until Meta integration is configured.
             </span>
           </div>
 
           {whatsAppLogs.length === 0 ? (
             <div className="p-8 text-center text-xs text-[#565F52]">
-              No automated WhatsApp dispatches recorded yet. Use the Simulator to send a test message!
+              No successful WhatsApp sends are recorded. Direct wa.me messaging is available; automated delivery is not configured.
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -1001,9 +1041,13 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                         {log.timestamp}
                       </td>
                       <td className="p-3 text-right">
-                        <span className="inline-flex items-center gap-1 font-bold text-[10px] text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
-                          <Check className="w-3 h-3 text-emerald-600" />
-                          Delivered ✓✓
+                        <span className={`inline-flex items-center gap-1 font-bold text-[10px] px-2 py-0.5 rounded-full ${
+                          log.status === 'sent'
+                            ? 'text-emerald-800 bg-emerald-100'
+                            : 'text-red-800 bg-red-100'
+                        }`}>
+                          {log.status === 'sent' ? <Check className="w-3 h-3 text-emerald-600" /> : <AlertTriangle className="w-3 h-3 text-red-600" />}
+                          {log.status === 'sent' ? 'Accepted; delivery unknown' : log.status === 'queued' ? 'Queued' : 'Not sent'}
                         </span>
                       </td>
                     </tr>
@@ -1017,94 +1061,25 @@ export const AdminWhatsAppAutomation: React.FC = () => {
 
       {/* TAB 5: META CLOUD API & WEBHOOKS */}
       {activeTab === 'webhook' && (
-        <div className="bg-white p-5 rounded-lg border border-[#CBCFB9] shadow-xs space-y-5">
-          <div className="flex items-center justify-between pb-3 border-b border-[#CBCFB9]">
-            <div>
-              <h3 className="font-heading font-bold text-sm text-[#0F1913] uppercase tracking-wider flex items-center gap-2">
-                <Radio className="w-4 h-4 text-purple-600" />
-                Meta WhatsApp Business Cloud API & Webhook Gateway
-              </h3>
-              <p className="text-xs text-[#565F52]">
-                Configure real-time incoming and outgoing webhooks for Meta Developer Portal or third-party WhatsApp providers.
-              </p>
-            </div>
-            <span className="px-2.5 py-1 rounded bg-purple-100 text-purple-800 font-bold text-[11px]">
-              Ready for Meta Dev Portal
-            </span>
+        <div className="bg-amber-50 p-5 rounded-lg border border-amber-200 shadow-xs space-y-2 text-sm text-amber-950">
+          <h3 className="font-heading font-bold flex items-center gap-2">
+            <Radio className="w-4 h-4" />
+            Meta WhatsApp Cloud API setup
+          </h3>
+          <p>
+            The backend sends text messages through Meta's Graph API, requires a signed-in Firebase admin, and verifies webhook signatures and the setup handshake. Valid webhook events are acknowledged but not yet used for auto-replies or delivery tracking.
+          </p>
+          <div>
+            <strong>Callback URL:</strong>{' '}
+            <code className="break-all">
+              {webhookCallbackUrl.startsWith('https://')
+                ? webhookCallbackUrl
+                : 'Set the GitHub Pages VITE_API_BASE_URL variable to your Render API origin first.'}
+            </code>
           </div>
-
-          <div className="space-y-4 text-xs">
-            <div>
-              <label className="block font-bold text-[#0F1913] mb-1">
-                Callback Webhook URL (Meta Developer Portal Callback)
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={whatsappConfig.webhookUrl}
-                  className="flex-1 bg-[#FBFAF5] border border-[#CBCFB9] rounded p-2 text-[#0F1913] font-mono text-[11px]"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleCopy(whatsappConfig.webhookUrl, 'Webhook URL')}
-                  className="px-3 bg-[#EEF0E7] hover:bg-[#E4E8D9] rounded border border-[#CBCFB9] text-[#182620] font-bold flex items-center gap-1.5"
-                >
-                  {copiedKey === 'Webhook URL' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedKey === 'Webhook URL' ? 'Copied' : 'Copy'}</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-bold text-[#0F1913] mb-1">
-                  Webhook Verify Token (Hub Verify Token)
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    value="udecs_token"
-                    className="flex-1 bg-[#FBFAF5] border border-[#CBCFB9] rounded p-2 text-[#0F1913] font-mono text-[11px]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleCopy('udecs_token', 'Verify Token')}
-                    className="px-3 bg-[#EEF0E7] hover:bg-[#E4E8D9] rounded border border-[#CBCFB9] text-[#182620] font-bold flex items-center gap-1.5"
-                  >
-                    {copiedKey === 'Verify Token' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedKey === 'Verify Token' ? 'Copied' : 'Copy'}</span>
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-[#0F1913] mb-1">
-                  Subscribed Webhook Fields
-                </label>
-                <input
-                  type="text"
-                  readOnly
-                  value="messages, message_deliveries, message_reads"
-                  className="w-full bg-[#FBFAF5] border border-[#CBCFB9] rounded p-2 text-[#0F1913] font-mono text-[11px]"
-                />
-              </div>
-            </div>
-
-            <div className="p-4 bg-[#FBFAF5] border border-[#CBCFB9] rounded-lg space-y-2">
-              <h4 className="font-bold text-xs text-[#0F1913] flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                Integration Instructions:
-              </h4>
-              <ol className="list-decimal pl-5 space-y-1 text-[11px] text-[#565F52]">
-                <li>Copy the <strong>Callback Webhook URL</strong> above and paste it into Meta Developers &gt; WhatsApp &gt; Configuration &gt; Callback URL.</li>
-                <li>Enter <code className="bg-white px-1 border border-[#CBCFB9] rounded font-mono font-bold text-[#0F1913]">udecs_token</code> in the Verify Token field and click <strong>Verify and Save</strong>.</li>
-                <li>Subscribe to the <code className="bg-white px-1 border border-[#CBCFB9] rounded font-mono font-bold text-[#0F1913]">messages</code> field to receive live customer texts.</li>
-                <li>Any customer message will automatically invoke Gemini 3.8 Flash to formulate an instant response in Bengali/English.</li>
-              </ol>
-            </div>
-          </div>
+          <p>
+            In Meta Developers, create/select a Business app, add WhatsApp, and set this callback URL. Set a long random verify token in Render as <code>WHATSAPP_VERIFY_TOKEN</code>, and enter the same value in Meta. Set the app secret from App Settings &gt; Basic as <code>WHATSAPP_APP_SECRET</code>. Subscribe the WhatsApp Business Account to the <code>messages</code> webhook field.
+          </p>
         </div>
       )}
     </div>

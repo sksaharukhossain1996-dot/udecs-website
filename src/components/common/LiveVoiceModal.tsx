@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
+import { getWebSocketUrl } from '../../services/api';
 import { BrandLogo } from './BrandLogo';
 import {
   Mic,
@@ -206,9 +207,7 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
       mediaStreamRef.current = stream;
 
       // 3. Setup WebSocket connection to server /live endpoint
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/live`;
-      const ws = new WebSocket(wsUrl);
+      const ws = new WebSocket(getWebSocketUrl('/live'));
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -222,7 +221,7 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
             text:
               language === 'bn'
                 ? 'নমস্কার! UNICK DIGITAL (UDECS) লাইভ ভয়েস অ্যাসিস্ট্যান্ট সংযুক্ত হয়েছে। আপনি সরাসরি বাংলায় কথা বলতে পারেন।'
-                : 'Hello! UDECS Live Voice Assistant (powered by Gemini 3.8 Live) is ready. Ask anything about cookware, orders, or wholesale!',
+                : 'Hello! UDECS Live Voice Assistant is ready. Ask anything about cookware, orders, or wholesale!',
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           },
         ]);
@@ -472,7 +471,7 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
                   UDECS Live Voice AI
                 </h3>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-semibold uppercase tracking-wider">
-                  Gemini 3.8 Live
+                  Gemini Live
                 </span>
               </div>
               <p className="text-xs text-[#9CA48A]">
@@ -504,7 +503,7 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
             {status === 'connecting' && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-900/40 text-amber-300 border border-amber-700/60 animate-pulse">
                 <RefreshCw className="w-3 h-3 animate-spin" />
-                Connecting to Gemini 3.8 Live API...
+                Connecting to Gemini Live API...
               </span>
             )}
             {status === 'connected' && (

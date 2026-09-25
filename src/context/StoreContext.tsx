@@ -224,7 +224,23 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Persistent WhatsApp Automation Settings
   const [whatsappConfig, setWhatsappConfig] = useState<WhatsAppAutomationConfig>(() => {
     const saved = localStorage.getItem('udecs_whatsapp_config');
-    return saved ? JSON.parse(saved) : DEFAULT_WHATSAPP_CONFIG;
+    if (!saved) return DEFAULT_WHATSAPP_CONFIG;
+    const stored = JSON.parse(saved) as WhatsAppAutomationConfig;
+    return {
+      ...DEFAULT_WHATSAPP_CONFIG,
+      ...stored,
+      isActive: stored.isActive === true && stored.gatewayStatus === 'connected',
+      autoSendOnOrderPlaced: false,
+      autoSendOnOrderShipped: false,
+      autoSendOnOrderDelivered: false,
+      autoSendLowStockAlert: false,
+      autoAiAssistantReply: false,
+      gatewayStatus: stored.gatewayStatus === 'connected' ? 'connected' : 'paused',
+      webhookUrl: '',
+      totalDispatchedCount:
+        stored.gatewayStatus === 'connected' ? stored.totalDispatchedCount || 0 : 0,
+      templates: { ...DEFAULT_WHATSAPP_CONFIG.templates, ...stored.templates },
+    };
   });
 
   const updateWhatsAppConfig = (updates: Partial<WhatsAppAutomationConfig>) => {
@@ -328,7 +344,12 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const [notifications, setNotifications] = useState<NotificationLog[]>(() => {
     const saved = localStorage.getItem('udecs_notifications');
-    return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
+    const existing: NotificationLog[] = saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
+    return existing.map((notification) =>
+      notification.channel === 'whatsapp' && notification.status === 'sent'
+        ? { ...notification, status: 'failed' }
+        : notification
+    );
   });
 
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => {
@@ -397,10 +418,11 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const sendNotification = (type: any, recipient: string, subject: string, message: string) => {
+    const channel = type === 'email' || type === 'whatsapp' ? type : 'sms';
     const fullNotif: NotificationLog = {
       id: `NOTIF-${Date.now()}`,
       type: type === 'sms' ? 'sms' : type === 'email' ? 'email' : 'custom',
-      channel: type === 'email' ? 'email' : 'sms',
+      channel,
       recipient,
       subject,
       message,
@@ -409,7 +431,12 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
     };
     setNotifications((prev) => [fullNotif, ...prev]);
-    logAction('NOTIFICATION_DISPATCHED', `Sent ${type.toUpperCase()} to ${recipient}: ${subject}`);
+    logAction(
+      'NOTIFICATION_DISPATCHED',
+      type === 'whatsapp'
+        ? `Meta accepted WhatsApp request for ${recipient}; delivery unconfirmed: ${subject}`
+        : `Sent ${type.toUpperCase()} to ${recipient}: ${subject}`
+    );
   };
 
   const updateCollabDoc = (content: string) => {
@@ -762,42 +789,13 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // 2. WhatsApp Automation Trigger (Order Confirmation to Customer & Alert to Owner)
     if (whatsappConfig.isActive && whatsappConfig.autoSendOnOrderPlaced) {
       const waMsg = buildOrderPlacedMessage(newOrder, whatsappConfig, language === 'bn' ? 'bn' : 'en');
-      const waCustomerNotif: NotificationLog = {
-        id: `NOTIF-WA-ORD-${Date.now()}`,
-        type: 'order_placed',
-        channel: 'whatsapp',
-        recipient: newOrder.customerPhone,
-        subject: `WhatsApp Order Confirmation: #${newOrder.id}`,
-        message: waMsg,
-        status: 'sent',
-        timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
-      };
-
-      const waOwnerNotif: NotificationLog = {
-        id: `NOTIF-WA-OWNER-${Date.now()}`,
-        type: 'order_placed',
-        channel: 'whatsapp',
-        recipient: whatsappConfig.ownerAlertNumber,
-        subject: `New Store Order: #${newOrder.id}`,
-        message: `🛍️ New Order #${newOrder.id} received from ${newOrder.customerName} (${newOrder.customerPhone}). Total: ₹${newOrder.totalAmount.toLocaleString()}. Payment: ${newOrder.paymentMethod.toUpperCase()}.`,
-        status: 'sent',
-        timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
-      };
-
-      newNotifs.push(waCustomerNotif, waOwnerNotif);
-
-      // Trigger backend automated dispatch
-      sendAutomatedWhatsAppApi({
+      void sendAutomatedWhatsAppApi({
         to: newOrder.customerPhone,
         message: waMsg,
         templateType: 'orderPlaced',
         orderId: newOrder.id,
         customerName: newOrder.customerName,
-      });
-
-      updateWhatsAppConfig({
-        totalDispatchedCount: (whatsappConfig.totalDispatchedCount || 0) + 1,
-      });
+      }).catch((err) => console.warn('WhatsApp order confirmation was not sent:', err));
     }
 
     setNotifications((n) => [...newNotifs, ...n]);
@@ -842,29 +840,13 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             // WhatsApp Automation on Dispatch
             if (whatsappConfig.isActive && whatsappConfig.autoSendOnOrderShipped) {
               const waShipMsg = buildOrderShippedMessage(updated, whatsappConfig, language === 'bn' ? 'bn' : 'en');
-              const waShipNotif: NotificationLog = {
-                id: `NOTIF-WA-SHIP-${Date.now()}`,
-                type: 'order_shipped',
-                channel: 'whatsapp',
-                recipient: ord.customerPhone,
-                subject: `WhatsApp AWB Tracking: #${ord.id}`,
-                message: waShipMsg,
-                status: 'sent',
-                timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
-              };
-              statusNotifs.push(waShipNotif);
-
-              sendAutomatedWhatsAppApi({
+              void sendAutomatedWhatsAppApi({
                 to: ord.customerPhone,
                 message: waShipMsg,
                 templateType: 'orderShipped',
                 orderId: ord.id,
                 customerName: ord.customerName,
-              });
-
-              updateWhatsAppConfig({
-                totalDispatchedCount: (whatsappConfig.totalDispatchedCount || 0) + 1,
-              });
+              }).catch((err) => console.warn('WhatsApp shipment update was not sent:', err));
             }
           }
 
@@ -872,29 +854,13 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           if (status === 'delivered') {
             if (whatsappConfig.isActive && whatsappConfig.autoSendOnOrderDelivered) {
               const waDelivMsg = buildOrderDeliveredMessage(updated, whatsappConfig, language === 'bn' ? 'bn' : 'en');
-              const waDelivNotif: NotificationLog = {
-                id: `NOTIF-WA-DELIV-${Date.now()}`,
-                type: 'custom',
-                channel: 'whatsapp',
-                recipient: ord.customerPhone,
-                subject: `WhatsApp Delivery Confirmation: #${ord.id}`,
-                message: waDelivMsg,
-                status: 'sent',
-                timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
-              };
-              statusNotifs.push(waDelivNotif);
-
-              sendAutomatedWhatsAppApi({
+              void sendAutomatedWhatsAppApi({
                 to: ord.customerPhone,
                 message: waDelivMsg,
                 templateType: 'orderDelivered',
                 orderId: ord.id,
                 customerName: ord.customerName,
-              });
-
-              updateWhatsAppConfig({
-                totalDispatchedCount: (whatsappConfig.totalDispatchedCount || 0) + 1,
-              });
+              }).catch((err) => console.warn('WhatsApp delivery update was not sent:', err));
             }
           }
 

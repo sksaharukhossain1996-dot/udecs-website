@@ -205,11 +205,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </button>
 
-            {/* Live Voice Assistant (Gemini 3.8 Live) */}
+            {/* Live Voice Assistant */}
             <button
               onClick={onOpenVoice}
               className="flex items-center gap-1.5 text-xs font-semibold bg-[#E8730A] hover:bg-[#D06505] text-white px-2.5 py-1.5 rounded transition-all shadow-xs"
-              title="Live Voice AI (Gemini 3.8 Live)"
+              title="Live Voice AI"
             >
               <Mic className="w-3.5 h-3.5 text-amber-200 animate-pulse" />
               <span className="hidden sm:inline">Live Voice</span>
@@ -285,7 +285,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="mt-2 w-full flex items-center justify-center gap-2 bg-[#E8730A] text-white py-2.5 rounded font-semibold text-sm shadow-xs"
             >
               <Mic className="w-4 h-4 text-amber-200 animate-pulse" />
-              <span>Live Voice AI (Gemini 3.8 Live)</span>
+              <span>Live Voice AI</span>
             </button>
             <button
               onClick={() => {

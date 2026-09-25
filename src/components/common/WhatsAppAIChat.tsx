@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { BrandLogo } from './BrandLogo';
 import { MessageCircle, X, Send, Bot, User, Phone, CheckCheck, Sparkles, ExternalLink, Mic } from 'lucide-react';
+import { getApiUrl } from '../../services/api';
 
 interface ChatMessage {
   id: string;
@@ -57,7 +58,7 @@ export const WhatsAppAIChat: React.FC<WhatsAppAIChatProps> = ({ onOpenVoice }) =
     setLoading(true);
 
     try {
-      const response = await fetch('/api/ai-chat', {
+      const response = await fetch(getApiUrl('/api/ai-chat'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -120,7 +121,7 @@ export const WhatsAppAIChat: React.FC<WhatsAppAIChatProps> = ({ onOpenVoice }) =
               onClick={onOpenVoice}
               className="bg-[#E8730A] hover:bg-[#D06505] text-white p-3.5 rounded-full shadow-xl flex items-center gap-2 transition-all hover:scale-105 active:scale-95 group border-2 border-white/20"
               aria-label="Live Voice Assistant"
-              title="Talk to Live Voice AI (Gemini 3.8 Live)"
+              title="Talk to the Gemini Live voice assistant"
             >
               <Mic className="w-5 h-5 text-amber-200 animate-pulse" />
               <span className="hidden sm:inline font-bold text-xs pr-1 font-heading">

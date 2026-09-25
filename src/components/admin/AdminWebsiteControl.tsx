@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
+import { getApiUrl } from '../../services/api';
 import { Product } from '../../types';
 import { ProductIcon } from '../common/ProductIcon';
 import {
@@ -117,48 +118,45 @@ export const AdminWebsiteControl: React.FC = () => {
     setIsCheckingDomain(true);
     setDomainCheckResult(null);
     try {
-      const res = await fetch('/api/domain/live-status');
-      if (res.ok) {
-        const data = await res.json();
-        setDomainCheckResult({
-          status: `${data.httpStatus} OK (${data.isLive ? 'Domain Live & Resolving' : 'Online'})`,
-          isLive: Boolean(data.isLive),
-          latency: `${data.latencyMs} ms (Edge Latency)`,
-          ssl: data.sslStatus || 'Valid TLS 1.3 · 256-bit ECC',
-          edge: `udecs.store → ${data.currentRouting}`,
-          registrar: data.registrar || 'GoDaddy (domaincontrol.com)',
-          aRecords: data.aRecords || [],
-          cnameRecords: data.cnameRecords || [],
-          nameservers: data.nameservers || [],
-          timestamp: new Date().toLocaleTimeString(),
-        });
-        showToast('Real-time DNS & Edge check: udecs.store is active!');
-        addAuditLog({
-          action: 'DOMAIN_HEALTH_CHECK',
-          module: 'Website Settings',
-          details: `Live DNS checked: ${data.registrar}, A: ${data.aRecords?.join(', ')}`,
-        });
-        setIsCheckingDomain(false);
-        return;
-      }
-    } catch {
-      // Fallback if local preview
+      const res = await fetch(getApiUrl('/api/domain/live-status'));
+      if (!res.ok) throw new Error(`Diagnostics API responded with status ${res.status}`);
+      const data = await res.json();
+      setDomainCheckResult({
+        status: `${data.httpStatus || 'Unavailable'} (${data.isLive ? 'Domain live' : 'Domain check failed'})`,
+        isLive: Boolean(data.isLive),
+        latency: typeof data.latencyMs === 'number' ? `${data.latencyMs} ms` : 'Unavailable',
+        ssl: data.sslStatus || 'Unavailable',
+        edge: data.currentRouting || 'Unavailable',
+        registrar: data.registrar || 'Unavailable',
+        aRecords: data.aRecords || [],
+        cnameRecords: data.cnameRecords || [],
+        nameservers: data.nameservers || [],
+        timestamp: new Date().toLocaleTimeString(),
+      });
+      if (!data.isLive) throw new Error(data.errorMessage || 'Domain check failed.');
+      showToast('Real-time DNS & Edge check completed.');
+      addAuditLog({
+        action: 'DOMAIN_HEALTH_CHECK',
+        module: 'Website Settings',
+        details: `Live DNS checked: ${data.registrar || 'unknown'}, A: ${data.aRecords?.join(', ') || 'none'}`,
+      });
+    } catch (err) {
+      setDomainCheckResult({
+        status: 'Unavailable',
+        isLive: false,
+        latency: 'Unavailable',
+        ssl: 'Unavailable',
+        edge: 'Unavailable',
+        registrar: 'Unavailable',
+        aRecords: [],
+        cnameRecords: [],
+        nameservers: [],
+        timestamp: new Date().toLocaleTimeString(),
+      });
+      showToast(err instanceof Error ? err.message : 'Domain diagnostics are unavailable.');
+    } finally {
+      setIsCheckingDomain(false);
     }
-
-    setDomainCheckResult({
-      status: '200 OK (Domain Live & Resolving)',
-      isLive: true,
-      latency: '24 ms (Cloudflare Anycast Global Edge)',
-      ssl: 'Valid TLS 1.3 · 256-bit ECC (GoDaddy / Cloudflare)',
-      edge: 'udecs.store (Active Production Binding)',
-      registrar: 'GoDaddy (domaincontrol.com)',
-      aRecords: ['185.199.109.153', '185.199.110.153', '185.199.111.153', '185.199.108.153'],
-      cnameRecords: ['sksaharukhossain1996-dot.github.io'],
-      nameservers: ['ns71.domaincontrol.com', 'ns72.domaincontrol.com'],
-      timestamp: new Date().toLocaleTimeString(),
-    });
-    showToast('Domain diagnostic check completed: udecs.store is online!');
-    setIsCheckingDomain(false);
   };
 
   const handleTestAuth = (e: React.FormEvent) => {
@@ -544,8 +542,8 @@ export const AdminWebsiteControl: React.FC = () => {
               <div className="mt-4 p-3.5 bg-black/40 rounded border border-[#25D366]/40 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs animate-fadeIn">
                 <div>
                   <span className="text-[10px] text-[#8C9385] uppercase block font-mono">Store Status</span>
-                  <span className="font-bold text-[#25D366] flex items-center gap-1 mt-0.5">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span className={`font-bold flex items-center gap-1 mt-0.5 ${domainCheckResult.isLive ? 'text-[#25D366]' : 'text-red-400'}`}>
+                    {domainCheckResult.isLive ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
                     {domainCheckResult.status}
                   </span>
                 </div>
@@ -1077,7 +1075,7 @@ export const AdminWebsiteControl: React.FC = () => {
                 </div>
                 <div className="flex justify-between py-1">
                   <span>WhatsApp Automation Webhook:</span>
-                  <span className="font-mono text-[#0F1913]">https://udecs.store/api/whatsapp/webhook</span>
+                  <span className="font-mono text-[#0F1913]">Configure the Render API webhook URL in Meta</span>
                 </div>
               </div>
             </div>

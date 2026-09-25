@@ -1,18 +1,20 @@
 import { Order, CompanyInfo, Product, WhatsAppAutomationConfig } from '../types';
+import { getApiUrl } from './api';
+import { auth } from '../firebase/config';
 
 export const DEFAULT_WHATSAPP_CONFIG: WhatsAppAutomationConfig = {
-  isActive: true, // Activated by default
-  autoSendOnOrderPlaced: true,
-  autoSendOnOrderShipped: true,
-  autoSendOnOrderDelivered: true,
-  autoSendLowStockAlert: true,
-  autoAiAssistantReply: true,
+  isActive: false,
+  autoSendOnOrderPlaced: false,
+  autoSendOnOrderShipped: false,
+  autoSendOnOrderDelivered: false,
+  autoSendLowStockAlert: false,
+  autoAiAssistantReply: false,
   whatsappNumber: '+91 9845485437',
   ownerAlertNumber: '+91 7319190514',
-  gatewayStatus: 'active',
-  webhookUrl: 'https://ais-dev-lvk4q6izfysioo3j53ootq-904190235227.asia-southeast1.run.app/api/whatsapp/webhook',
+  gatewayStatus: 'paused',
+  webhookUrl: '',
   defaultLanguage: 'bn',
-  totalDispatchedCount: 24,
+  totalDispatchedCount: 0,
   templates: {
     orderPlacedBn: `নমস্কার {customerName}! 🛍️
 UNICK DIGITAL (udecs.store)-এ আপনার অর্ডার সফলভাবে নিশ্চিত হয়েছে।
@@ -160,23 +162,30 @@ export async function sendAutomatedWhatsAppApi(payload: {
   orderId?: string;
   customerName?: string;
 }): Promise<{ success: boolean; messageId: string; status: string }> {
-  try {
-    const res = await fetch('/api/whatsapp/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      throw new Error(`WhatsApp API responded with status ${res.status}`);
-    }
-    return await res.json();
-  } catch (err) {
-    console.warn('Backend WhatsApp API trigger:', err);
-    // Graceful offline/fallback mock response
-    return {
-      success: true,
-      messageId: `wa_msg_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      status: 'delivered',
-    };
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('Sign in with an authorized admin account before sending WhatsApp messages.');
   }
+  const res = await fetch(getApiUrl('/api/whatsapp/send'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${await user.getIdToken()}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(result.error || `WhatsApp API responded with status ${res.status}`);
+  }
+  return result;
+}
+
+export async function getWhatsAppStatus(): Promise<{ configured: boolean; status: string }> {
+  const res = await fetch(getApiUrl('/api/whatsapp/status'));
+  const result = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(result.error || `WhatsApp API responded with status ${res.status}`);
+  }
+  return result;
 }

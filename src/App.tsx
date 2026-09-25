@@ -143,7 +143,7 @@ const StoreContent: React.FC = () => {
       {/* WhatsApp AI Customer Support Widget with Voice Switcher */}
       <WhatsAppAIChat onOpenVoice={() => setIsVoiceOpen(true)} />
 
-      {/* Gemini 3.8 Live Voice Assistant Modal */}
+      {/* Gemini Live Voice Assistant Modal */}
       <LiveVoiceModal
         isOpen={isVoiceOpen}
         onClose={() => setIsVoiceOpen(false)}

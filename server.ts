@@ -5,8 +5,17 @@ import dns from 'dns';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { WebSocketServer, WebSocket } from 'ws';
-import { GoogleGenAI, Modality, ThinkingLevel, LiveServerMessage } from '@google/genai';
+import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
 import dotenv from 'dotenv';
+import {
+  getWhatsAppMetaConfig,
+  isValidWhatsAppWebhookPayload,
+  normalizeWhatsAppRecipient,
+  sendWhatsAppText,
+  verifyWhatsAppWebhookSignature,
+  verifyWhatsAppWebhookToken,
+} from './whatsappMeta';
+import { verifyFirebaseAdminIdToken } from './firebaseAdminAuth';
 
 dotenv.config();
 
@@ -14,6 +23,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const isProd = process.env.NODE_ENV === 'production';
 const PORT = parseInt(process.env.PORT || '3000', 10);
+const allowedOrigins = new Set(
+  (process.env.ALLOWED_ORIGINS || 'https://udecs.store,https://www.udecs.store')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+);
+
+if (!isProd) {
+  allowedOrigins.add('http://localhost:3000');
+  allowedOrigins.add('http://127.0.0.1:3000');
+}
 
 const SYSTEM_INSTRUCTION = `You are the official Voice AI Assistant for UNICK DIGITAL E-COMMERCE SOLUTIONS (UDECS / udecs.store), owned by SK Saharuk Hossain.
 Registered office: Pratappur, Panskura, Purba Medinipur, West Bengal 721152, India.
@@ -30,24 +50,88 @@ async function startServer() {
   const app = express();
   const server = http.createServer(app);
 
-  // WebSocket Server for Gemini 3.8 Live API
-  const wss = new WebSocketServer({ server, path: '/live' });
+  // WebSocket Server for Gemini Live API
+  const wss = new WebSocketServer({ server, path: '/live', maxPayload: 1024 * 1024 });
 
-  app.use(express.json());
+  app.use((req, res, next) => {
+    const origin = req.get('origin');
+    if (origin && !allowedOrigins.has(origin)) {
+      return res.status(403).json({ error: 'Origin is not allowed.' });
+    }
+    if (origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    }
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    next();
+  });
+
+  app.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'ok' });
+  });
+
+  app.get('/api/whatsapp/webhook', (req, res) => {
+    const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
+    if (!verifyToken) {
+      return res.status(503).json({ error: 'Meta WhatsApp webhook credentials are not configured.' });
+    }
+    if (
+      req.query['hub.mode'] === 'subscribe' &&
+      verifyWhatsAppWebhookToken(req.query['hub.verify_token'], verifyToken) &&
+      typeof req.query['hub.challenge'] === 'string'
+    ) {
+      return res.status(200).type('text/plain').send(req.query['hub.challenge']);
+    }
+    return res.sendStatus(403);
+  });
+
+  app.post(
+    '/api/whatsapp/webhook',
+    express.raw({ type: 'application/json', limit: '1mb' }),
+    (req, res) => {
+      const config = getWhatsAppMetaConfig(process.env);
+      if (!config) {
+        return res.status(503).json({ error: 'Meta WhatsApp webhook credentials are not configured.' });
+      }
+      if (!Buffer.isBuffer(req.body)) {
+        return res.status(400).json({ error: 'Expected an application/json webhook body.' });
+      }
+      if (!verifyWhatsAppWebhookSignature(req.body, req.get('x-hub-signature-256'), config.appSecret)) {
+        return res.status(401).json({ error: 'Invalid Meta webhook signature.' });
+      }
+
+      let payload: unknown;
+      try {
+        payload = JSON.parse(req.body.toString('utf8'));
+      } catch {
+        return res.status(400).json({ error: 'Webhook body must be valid JSON.' });
+      }
+      if (!isValidWhatsAppWebhookPayload(payload)) {
+        return res.status(400).json({ error: 'Malformed WhatsApp webhook payload.' });
+      }
+
+      return res.sendStatus(200);
+    }
+  );
+
+  app.use(express.json({ limit: '1mb' }));
 
   // Text AI Chat endpoint for fallback and widget
   app.post('/api/ai-chat', async (req, res) => {
     try {
-      const { message, language = 'bn' } = req.body;
+      const { message, language = 'bn' } = req.body || {};
       const apiKey = process.env.GEMINI_API_KEY;
 
       if (!apiKey) {
-        return res.json({
-          text:
-            language === 'bn'
-              ? `নমস্কার! আমি UNICK DIGITAL E-COMMERCE SOLUTIONS (udecs.store)-এর AI সাপোর্ট অ্যাসিস্ট্যান্ট। আমাদের ক্যাটালগ, পাইকারি রেট, জিএসটি ইনভয়েস (GST: 19AODPH1519N1ZS), কিংবা অর্ডার ট্র্যাকিং সংক্রান্ত যে কোনো তথ্যের জন্য আমরা প্রস্তুত। সরাসরি হোয়াটসঅ্যাপে কথা বলতে ক্লিক করুন: +91 9845485437 অথবা ইমেইল করুন: ecommerceunickdigital@gmail.com।`
-              : `Hello! Welcome to UNICK DIGITAL E-COMMERCE SOLUTIONS (udecs.store). How can I assist you with your order, bulk wholesale inquiries, GST invoices (GSTIN: 19AODPH1519N1ZS), or PayU payments today? You can also reach our team directly on WhatsApp at +91 9845485437 or email ecommerceunickdigital@gmail.com.`,
-        });
+        return res.status(503).json({ error: 'Gemini is not configured on this service.' });
+      }
+      if (typeof message !== 'string' || message.trim().length === 0 || message.length > 4000) {
+        return res.status(400).json({ error: 'Message must contain 1 to 4000 characters.' });
+      }
+      if (!['bn', 'en', 'hi'].includes(language)) {
+        return res.status(400).json({ error: 'Language must be bn, en, or hi.' });
       }
 
       const ai = new GoogleGenAI({
@@ -59,25 +143,18 @@ async function startServer() {
         },
       });
 
-      let responseText = '';
-      try {
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents: message || 'Hello',
-          config: {
-            systemInstruction: SYSTEM_INSTRUCTION,
-          },
-        });
-        responseText = response.text || '';
-      } catch (genErr: any) {
-        console.warn('ai.models.generateContent error:', genErr?.message);
-        responseText = 'Thank you for reaching out to UDECS. How may we assist your order or inquiry today?';
+      const response = await ai.models.generateContent({
+        model: process.env.GEMINI_CHAT_MODEL || 'gemini-2.5-flash',
+        contents: message.trim(),
+        config: { systemInstruction: SYSTEM_INSTRUCTION },
+      });
+      if (!response.text) {
+        return res.status(502).json({ error: 'Gemini returned an empty response.' });
       }
-
-      res.json({ text: responseText });
+      res.json({ text: response.text });
     } catch (err: any) {
-      console.error('Error in /api/ai-chat:', err);
-      res.status(500).json({ error: err.message || 'Internal server error' });
+      console.error('Error in /api/ai-chat:', err?.message || err);
+      res.status(502).json({ error: 'Gemini could not process the request.' });
     }
   });
 
@@ -136,25 +213,25 @@ async function startServer() {
         ? 'Cloudflare DNS'
         : nsRecords.length > 0
         ? nsRecords.join(', ')
-        : 'GoDaddy / Domain Registrar';
-
-      const currentRouting = aRecords.some((ip) => ip.startsWith('185.199.'))
-        ? 'GitHub Pages Apex (sksaharukhossain1996-dot.github.io)'
-        : aRecords.includes('199.36.158.100')
-        ? 'Google Cloud / Firebase Hosting CDN'
-        : 'Direct Production Routing';
+        : 'Unknown';
 
       res.json({
         domain: 'udecs.store',
         isLive: isReachable && httpStatus >= 200 && httpStatus < 400,
-        httpStatus: httpStatus || 200,
-        latencyMs: latencyMs || 28,
+        httpStatus,
+        latencyMs,
         registrar,
-        currentRouting,
-        nameservers: nsRecords.length > 0 ? nsRecords : ['ns71.domaincontrol.com', 'ns72.domaincontrol.com'],
-        aRecords: aRecords.length > 0 ? aRecords : ['185.199.109.153', '185.199.110.153', '185.199.111.153', '185.199.108.153'],
-        cnameRecords: cnameRecords.length > 0 ? cnameRecords : ['sksaharukhossain1996-dot.github.io'],
-        sslStatus: 'Valid TLS 1.3 · 256-bit ECC Certificate',
+        currentRouting: aRecords.some((ip) => ip.startsWith('185.199.'))
+          ? 'GitHub Pages'
+          : aRecords.includes('199.36.158.100')
+          ? 'Firebase Hosting'
+          : aRecords.length
+          ? 'Other'
+          : 'Unknown',
+        nameservers: nsRecords,
+        aRecords,
+        cnameRecords,
+        sslStatus: isReachable ? 'HTTPS reachable' : 'Unavailable',
         timestamp: new Date().toISOString(),
         errorMessage: errorMessage || null,
         dnsInstructions: {
@@ -181,138 +258,89 @@ async function startServer() {
     }
   });
 
-  // WhatsApp Automation: Status endpoint
   app.get('/api/whatsapp/status', (_req, res) => {
+    const configured = Boolean(
+      getWhatsAppMetaConfig(process.env) &&
+      process.env.WHATSAPP_ADMIN_EMAILS?.split(',').some((email) => email.trim())
+    );
     res.json({
-      active: true,
-      connectedNumber: '+919845485437',
-      ownerAlertNumber: '+917319190514',
-      gateway: 'Meta WhatsApp Cloud API / Automated Webhook',
-      status: 'operational',
-      uptime: '99.98%',
-      registeredOwner: 'SK Saharuk Hossain',
-      businessLocation: 'Pratappur, Panskura, Purba Medinipur, WB',
-      supportedTriggers: [
-        'order_placement_auto_dispatch',
-        'shipment_awb_tracking_dispatch',
-        'delivery_confirmation_dispatch',
-        'low_stock_admin_alert',
-        'gemini_ai_auto_replies',
-      ],
+      configured,
+      active: configured,
+      gateway: configured ? 'Meta WhatsApp Cloud API' : null,
+      status: configured ? 'configured' : 'not_configured',
+      message: configured
+        ? 'Meta WhatsApp Cloud API and admin authorization are configured.'
+        : 'Set Meta WhatsApp credentials and authorized admin emails on the server.',
     });
   });
 
   // WhatsApp Automation: Automated Message Send Endpoint
   app.post('/api/whatsapp/send', async (req, res) => {
     try {
-      const { to, message, templateType = 'custom', orderId, customerName } = req.body;
-      const cleanPhone = (to || '').replace(/[^0-9]/g, '');
-
-      if (!cleanPhone || !message) {
-        return res.status(400).json({ error: 'Recipient phone number and message are required.' });
+      const authorization = req.get('authorization') || '';
+      const bearer = /^Bearer ([^\s]+)$/.exec(authorization)?.[1];
+      const adminEmails = new Set(
+        (process.env.WHATSAPP_ADMIN_EMAILS || '')
+          .split(',')
+          .map((email) => email.trim().toLowerCase())
+          .filter(Boolean)
+      );
+      if (!bearer) {
+        return res.status(401).json({ error: 'Sign in with an authorized admin account to send WhatsApp messages.' });
+      }
+      if (adminEmails.size === 0) {
+        return res.status(503).json({ error: 'WhatsApp admin authorization is not configured.' });
       }
 
-      const messageId = `wa_msg_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
-      const timestamp = new Date().toISOString();
+      let adminEmail: string | null;
+      try {
+        adminEmail = await verifyFirebaseAdminIdToken(
+          bearer,
+          process.env.FIREBASE_PROJECT_ID || 'udecs-store',
+          adminEmails
+        );
+      } catch (err: any) {
+        console.error('[WhatsApp Automation] Firebase token verification failed:', err?.message || err);
+        return res.status(503).json({ error: 'Admin authorization is temporarily unavailable.' });
+      }
+      if (!adminEmail) {
+        return res.status(403).json({ error: 'This Firebase account is not an authorized WhatsApp admin.' });
+      }
 
-      console.log(`[WhatsApp Automation] 🚀 Automated Dispatch triggered:`, {
-        messageId,
-        to: cleanPhone,
-        templateType,
-        orderId: orderId || 'N/A',
-        customerName: customerName || 'N/A',
-        timestamp,
-      });
+      const config = getWhatsAppMetaConfig(process.env);
+      if (!config) {
+        return res.status(503).json({
+          error: 'Meta WhatsApp Cloud API is not configured; no message was sent.',
+          code: 'WHATSAPP_NOT_CONFIGURED',
+        });
+      }
+      const { to, message } = req.body || {};
+      const cleanPhone = typeof to === 'string' ? normalizeWhatsAppRecipient(to) : '';
 
-      // Response simulates instant automated delivery via WhatsApp Business Cloud Gateway
-      res.json({
+      if (!/^\d{8,15}$/.test(cleanPhone) || typeof message !== 'string' || !message.trim() || message.length > 4096) {
+        return res.status(400).json({ error: 'Recipient must be an 8–15 digit international number and message must contain 1–4096 characters.' });
+      }
+
+      const { messageId } = await sendWhatsAppText(config, cleanPhone, message.trim());
+      return res.status(202).json({
         success: true,
         messageId,
-        status: 'delivered',
-        channel: 'whatsapp',
-        to: cleanPhone,
-        templateType,
-        timestamp,
-        details: 'Dispatched through UDECS Automated WhatsApp Gateway.',
+        status: 'accepted',
+        details: `Meta accepted the message request from ${adminEmail}; final delivery status is not yet known.`,
       });
     } catch (err: any) {
-      console.error('[WhatsApp Automation] Error sending message:', err);
-      res.status(500).json({ error: err.message || 'Failed to dispatch automated WhatsApp message.' });
+      console.error('[WhatsApp Automation] Error sending message:', err?.message || err);
+      res.status(502).json({ error: 'Meta WhatsApp Cloud API did not accept the message.' });
     }
   });
 
-  // WhatsApp Webhook: Meta verification handshake
-  app.get('/api/whatsapp/webhook', (req, res) => {
-    const mode = req.query['hub.mode'];
-    const token = req.query['hub.verify_token'];
-    const challenge = req.query['hub.challenge'];
-
-    if (mode && token) {
-      if (mode === 'subscribe' && (token === 'udecs_token' || token === 'udecs_webhook_secret')) {
-        console.log('[WhatsApp Webhook] Verification successful');
-        return res.status(200).send(challenge);
-      }
-      return res.sendStatus(403);
+  // Handle WebSocket connections for Gemini Live API
+  wss.on('connection', async (clientWs: WebSocket, request) => {
+    const origin = request.headers.origin;
+    if (origin && !allowedOrigins.has(origin)) {
+      clientWs.close(1008, 'Origin is not allowed.');
+      return;
     }
-    res.json({
-      status: 'active',
-      gateway: 'UDECS Meta WhatsApp Cloud Webhook',
-      verifyToken: 'udecs_token',
-      timestamp: new Date().toISOString(),
-    });
-  });
-
-  // WhatsApp Webhook: Incoming message receiver with Gemini AI Auto-Reply
-  app.post('/api/whatsapp/webhook', async (req, res) => {
-    try {
-      const body = req.body;
-      console.log('[WhatsApp Webhook] Incoming message event:', JSON.stringify(body));
-
-      const incomingMsg = body?.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-      const fromNumber = incomingMsg?.from;
-      const textBody = incomingMsg?.text?.body || body?.message || '';
-
-      let aiReply = '';
-      const apiKey = process.env.GEMINI_API_KEY;
-
-      if (textBody && apiKey) {
-        try {
-          const ai = new GoogleGenAI({
-            apiKey,
-            httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
-          });
-
-          const response = await ai.models.generateContent({
-            model: 'gemini-3.8-flash',
-            contents: `Customer WhatsApp Message: "${textBody}". Formulate a concise, courteous WhatsApp response as the official representative of UDECS (Unick Digital E-Commerce Solutions). If the inquiry is in Bengali, respond in Bengali or Banglish; if in English, respond in English. Keep it within 2-3 short paragraphs with emojis.`,
-            config: {
-              systemInstruction: SYSTEM_INSTRUCTION,
-            },
-          });
-          aiReply = response.text || '';
-        } catch (aiErr: any) {
-          console.warn('[WhatsApp Webhook] Gemini response error:', aiErr?.message);
-        }
-      }
-
-      if (!aiReply) {
-        aiReply = `নমস্কার! UNICK DIGITAL E-COMMERCE SOLUTIONS (udecs.store)-এ যোগাযোগ করার জন্য ধন্যবাদ। আমাদের ক্যাটালগ ও বি২বি রেট দেখতে ভিজিট করুন udecs.store। আমাদের টিম শীঘ্রই যোগাযোগ করবে। জরুরি সহায়তায়: +91 9845485437।`;
-      }
-
-      res.status(200).json({
-        status: 'received',
-        reply: aiReply,
-        from: fromNumber || 'customer',
-        timestamp: new Date().toISOString(),
-      });
-    } catch (err: any) {
-      console.error('[WhatsApp Webhook] Processing error:', err);
-      res.status(500).json({ error: err.message });
-    }
-  });
-
-  // Handle WebSocket connections for Gemini 3.8 Live API
-  wss.on('connection', async (clientWs: WebSocket) => {
     console.log('[Live API] Client connected to /live WebSocket');
     const apiKey = process.env.GEMINI_API_KEY;
 
@@ -341,7 +369,7 @@ async function startServer() {
 
     try {
       liveSession = await ai.live.connect({
-        model: 'gemini-3.8-live',
+        model: process.env.GEMINI_LIVE_MODEL || 'gemini-2.5-flash-native-audio-preview-12-2025',
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: {
@@ -402,7 +430,7 @@ async function startServer() {
               clientWs.send(
                 JSON.stringify({
                   type: 'error',
-                  error: err?.message || 'Gemini 3.8 Live session encountered an error',
+                  error: err?.message || 'Gemini Live session encountered an error',
                 })
               );
             } catch (e) {
@@ -416,15 +444,15 @@ async function startServer() {
       clientWs.send(
         JSON.stringify({
           type: 'ready',
-          message: 'Connected to Gemini 3.8 Live voice assistant',
+          message: 'Connected to Gemini Live voice assistant',
         })
       );
     } catch (connErr: any) {
-      console.error('[Live API] Failed to connect to Gemini 3.8 Live API:', connErr);
+      console.error('[Live API] Failed to connect to Gemini Live API:', connErr);
       clientWs.send(
         JSON.stringify({
           type: 'error',
-          error: connErr?.message || 'Failed to initialize Gemini 3.8 Live voice session',
+          error: connErr?.message || 'Failed to initialize Gemini Live voice session',
         })
       );
       clientWs.close();

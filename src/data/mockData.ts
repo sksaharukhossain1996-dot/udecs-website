@@ -621,16 +621,6 @@ export const INITIAL_NOTIFICATIONS: NotificationLog[] = [
     status: 'sent',
     timestamp: '2026-09-23 14:16:00',
   },
-  {
-    id: 'NOTIF-3',
-    type: 'low_stock',
-    channel: 'whatsapp',
-    recipient: '+91 9845485437',
-    subject: 'Automated Stock Alert',
-    message: 'ALERT: KT-132 (Airtight Storage Box) is at 6 units (Alert trigger: 10). Restock recommended.',
-    status: 'sent',
-    timestamp: '2026-09-23 09:00:00',
-  },
 ];
 
 export const TRANSLATIONS = {
