@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>UDECS Pitch Deck</title>
+  <link rel="icon" type="image/png" href="/UDECS_Logo_Premium_Transparent.png" />
+  <style>
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #FBFAF5; color: #0F1913; display: flex; min-height: 100vh; align-items: center; justify-content: center; margin: 0; }
+    .card { max-width: 460px; background: #fff; border: 1px solid #CBCFB9; border-radius: 14px; padding: 36px 30px; text-align: center; }
+    img { width: 72px; }
+    h1 { font-size: 1.3rem; margin: 14px 0 8px; }
+    p { color: #4a5548; font-size: 0.95rem; line-height: 1.55; }
+    a.btn { display: inline-block; margin-top: 20px; padding: 13px 26px; background: #0F1913; color: #fff; border-radius: 10px; text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="/UDECS_Logo_Premium_Transparent.png" alt="UDECS" />
+    <div id="body"><h1>Checking your link...</h1></div>
+  </div>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+    const firebaseConfig = {
+      apiKey: 'AIzaSyANRNCASxjGE-IZSLdCws_6W4VpjemO1aI',
+      authDomain: 'udecs-store.firebaseapp.com',
+      projectId: 'udecs-store',
+      appId: '1:859203239571:web:e541cc2e68f880efa41766',
+    };
+    const DECK_URL = '/udecs-investor-deck-9f3k7q.pdf';
+    const db = getFirestore(initializeApp(firebaseConfig));
+    const el = document.getElementById('body');
+    const token = new URLSearchParams(location.search).get('t') || '';
+    const fail = (msg) => { el.innerHTML = '<h1>Link not valid</h1><p>' + msg + '</p>'; };
+    if (!/^[A-Za-z0-9_-]{20,80}$/.test(token)) {
+      fail('This download link is missing or malformed. Please use the exact link shared with you after approval.');
+    } else {
+      try {
+        const snap = await getDoc(doc(db, 'deckTokens', token));
+        if (snap.exists() && snap.data().approved === true) {
+          el.innerHTML = '<h1>Approved ✅</h1><p>Your access to the UDECS pitch deck is approved. Click below to download it.</p><a class="btn" href="' + DECK_URL + '" download>Download Pitch Deck (PDF)</a>';
+        } else {
+          fail('This link has not been approved yet or has expired. Contact us on WhatsApp +91 9845485437 if you believe this is a mistake.');
+        }
+      } catch (e) {
+        fail('Could not verify your link right now. Please try again in a few minutes.');
+      }
+    }
+  </script>
+</body>
+</html>
