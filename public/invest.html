@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0F1913" />
+  <meta name="robots" content="noindex" />
+  <title>Invest in UDECS | UNICK DIGITAL E-COMMERCE SOLUTIONS</title>
+  <link rel="icon" type="image/png" href="/UDECS_Logo_Premium_Transparent.png" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #FBFAF5; color: #0F1913; }
+    .wrap { max-width: 640px; margin: 0 auto; padding: 32px 20px 60px; }
+    .head { text-align: center; margin-bottom: 28px; }
+    .head img { width: 84px; height: auto; }
+    h1 { font-size: 1.7rem; margin: 14px 0 6px; }
+    .sub { color: #4a5548; font-size: 0.98rem; line-height: 1.5; }
+    .card { background: #fff; border: 1px solid #CBCFB9; border-radius: 14px; padding: 26px; margin-top: 24px; }
+    label { display: block; font-weight: 700; font-size: 0.9rem; margin: 16px 0 6px; }
+    input, select, textarea { width: 100%; padding: 11px 12px; border: 1px solid #CBCFB9; border-radius: 8px; background: #FBFAF5; font-size: 0.95rem; color: #0F1913; }
+    textarea { resize: vertical; min-height: 90px; }
+    button { width: 100%; margin-top: 24px; padding: 14px; border: 0; border-radius: 10px; background: #0F1913; color: #fff; font-size: 1.02rem; font-weight: 700; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: default; }
+    .note { margin-top: 16px; font-size: 0.85rem; color: #4a5548; text-align: center; line-height: 1.5; }
+    .ok { display: none; text-align: center; padding: 40px 10px; }
+    .ok h2 { margin-bottom: 10px; }
+    .err { display: none; margin-top: 14px; color: #B3261E; font-size: 0.9rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <img src="/UDECS_Logo_Premium_Transparent.png" alt="UDECS" />
+      <h1>Invest in UDECS</h1>
+      <p class="sub">UNICK DIGITAL E-COMMERCE SOLUTIONS &middot; Panskura, West Bengal &middot; GSTIN 19AODPH1519N1ZS<br/>
+      Share your company details. Our team reviews every request personally; once approved, you receive a private link to download the UDECS pitch deck.</p>
+    </div>
+    <form class="card" id="leadForm">
+      <label for="name">Your Full Name *</label>
+      <input id="name" name="name" required maxlength="120" />
+      <label for="company">Company / Firm Name *</label>
+      <input id="company" name="company" required maxlength="160" />
+      <label for="email">Email *</label>
+      <input id="email" name="email" type="email" required maxlength="120" />
+      <label for="phone">Phone / WhatsApp *</label>
+      <input id="phone" name="phone" required maxlength="20" />
+      <label for="city">City, Country *</label>
+      <input id="city" name="city" required maxlength="120" />
+      <label for="amount">Investment Interest *</label>
+      <select id="amount" name="amount" required>
+        <option value="">Select a range</option>
+        <option>Under ₹5 Lakh</option>
+        <option>₹5 - ₹25 Lakh</option>
+        <option>₹25 Lakh - ₹1 Crore</option>
+        <option>Above ₹1 Crore</option>
+        <option>Partnership / Other</option>
+      </select>
+      <label for="message">Message (optional)</label>
+      <textarea id="message" name="message" maxlength="1000" placeholder="Anything you want us to know"></textarea>
+      <button type="submit" id="submitBtn">Submit Request</button>
+      <div class="err" id="errBox">Something went wrong. Please try again or WhatsApp us at +91 9845485437.</div>
+      <p class="note">Submitting does not give instant access. You will receive the pitch deck link on your email/phone after approval.</p>
+    </form>
+    <div class="card ok" id="okBox">
+      <h2>Request received ✅</h2>
+      <p class="sub">Thank you for your interest in UDECS. Our team will review your details and share the pitch deck link after approval.</p>
+    </div>
+  </div>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: 'AIzaSyANRNCASxjGE-IZSLdCws_6W4VpjemO1aI',
+      authDomain: 'udecs-store.firebaseapp.com',
+      projectId: 'udecs-store',
+      appId: '1:859203239571:web:e541cc2e68f880efa41766',
+    };
+    const db = getFirestore(initializeApp(firebaseConfig));
+    const WORKER_URL = ''; // set after the Cloudflare Worker is deployed, e.g. https://api.udecs.store
+
+    document.getElementById('leadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      const f = e.target;
+      const lead = {
+        name: f.name.value.trim(),
+        company: f.company.value.trim(),
+        email: f.email.value.trim(),
+        phone: f.phone.value.trim(),
+        city: f.city.value.trim(),
+        amount: f.amount.value,
+        message: f.message.value.trim(),
+        approved: false,
+        createdAt: serverTimestamp(),
+        source: 'invest.html',
+      };
+      try {
+        await addDoc(collection(db, 'investorLeads'), lead);
+        if (WORKER_URL) {
+          fetch(WORKER_URL + '/api/investor-lead', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(lead),
+          }).catch(() => {});
+        }
+        document.getElementById('leadForm').style.display = 'none';
+        document.getElementById('okBox').style.display = 'block';
+      } catch (err) {
+        document.getElementById('errBox').style.display = 'block';
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
