@@ -17,6 +17,11 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { generateWhatsAppLink, buildOrderPlacedMessage } from '../../services/whatsappService';
+// @ts-ignore - vendored MIT QR generator, no types
+import qrcode from '../../lib/qrcode-generator';
+
+const UPI_ID = '9845485437@ybl'; // customer payments - user-chosen (twice) 01:58, PhonePe handle on business number
+const UPI_PAYEE_NAME = 'UDECS';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -37,7 +42,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     createOrder,
     currency,
     formatPrice,
-    payuConfig,
     language,
     whatsappConfig,
   } = useStore();
@@ -64,10 +68,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     gstin: '',
   });
 
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('payu');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('upi');
   const [isProcessing, setIsProcessing] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
-  const [payuStep, setPayuStep] = useState<'details' | 'payu_portal' | 'complete'>('details');
+  const [checkoutStep, setCheckoutStep] = useState<'details' | 'upi_pay' | 'complete'>('details');
 
   if (!isOpen) return null;
 
@@ -89,6 +93,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const shippingFee = subtotal > 1000 ? 0 : 99;
   const totalAmount = subtotal + shippingFee;
 
+  // UPI deep link + QR (amount-encoded, order ref in the note)
+  const upiDeepLink = completedOrder
+    ? `upi://pay?pa=${UPI_ID}&pn=${UPI_PAYEE_NAME}&am=${completedOrder.totalAmount}&cu=INR&tn=${encodeURIComponent(`UDECS Order ${completedOrder.id}`)}`
+    : '';
+  const upiQrDataUrl = React.useMemo(() => {
+    if (!upiDeepLink) return '';
+    const qr = qrcode(0, 'M');
+    qr.addData(upiDeepLink);
+    qr.make();
+    return qr.createDataURL(6, 2);
+  }, [upiDeepLink]);
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -102,9 +118,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       return;
     }
 
-    if (paymentMethod === 'payu' || paymentMethod === 'upi' || paymentMethod === 'card') {
-      // Transition to PayU gateway simulation screen
-      setPayuStep('payu_portal');
+    if (paymentMethod === 'upi') {
+      // Place the order first (pending), then show the UPI QR with the order ref
+      executeOrderPlacement('upi', `UPI_${Date.now().toString().slice(-8)}`);
     } else {
       executeOrderPlacement('cod', 'COD_ORDER_PLACED');
     }
@@ -151,19 +167,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       totalAmount,
       currency,
       paymentMethod: method,
-      paymentStatus: method === 'cod' ? 'pending' : 'paid',
+      paymentStatus: 'pending', // UPI + COD both stay pending until admin marks payment received
       payuTxnId: txnId,
-      orderStatus: 'processing',
-      courierName: 'Delhivery Surface Logistics',
-      trackingNumber: `DLH${Math.floor(10000000 + Math.random() * 90000000)}IN`,
+      orderStatus: method === 'upi' ? 'pending' : 'processing',
+      courierName: undefined,
+      trackingNumber: undefined,
     });
 
-    setTimeout(() => {
-      setIsProcessing(false);
-      setCompletedOrder(newOrder);
-      setPayuStep('complete');
-      onOrderSuccess(newOrder);
-    }, 1200);
+    setIsProcessing(false);
+    setCompletedOrder(newOrder);
+    setCheckoutStep(method === 'upi' ? 'upi_pay' : 'complete');
+    onOrderSuccess(newOrder);
   };
 
   return (
@@ -175,12 +189,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             <h3 className="text-xl font-bold font-heading text-[#0F1913] flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-[#3C6656]" />
               <span>
-                {payuStep === 'complete'
+                {checkoutStep === 'complete'
                   ? language === 'bn'
                     ? 'অর্ডার সফলভাবে সম্পন্ন হয়েছে!'
                     : 'Order Placed Successfully!'
-                  : payuStep === 'payu_portal'
-                  ? 'PayU India Secure Checkout'
+                  : checkoutStep === 'upi_pay'
+                  ? 'UPI Payment'
                   : language === 'bn'
                   ? 'নিরাপদ চেকআউট ও বিলিং'
                   : 'Secure Checkout & Tax Billing'}
@@ -197,7 +211,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         </div>
 
         {/* STEP 1: Details & Billing Form */}
-        {payuStep === 'details' && (
+        {checkoutStep === 'details' && (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               {/* Customer and Shipping Details */}
@@ -341,21 +355,21 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <input
                         type="radio"
                         name="payment"
-                        checked={paymentMethod === 'payu'}
-                        onChange={() => setPaymentMethod('payu')}
+                        checked={paymentMethod === 'upi'}
+                        onChange={() => setPaymentMethod('upi')}
                         className="accent-[#CC9A2E]"
                       />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold text-[#0F1913]">
-                            PayU Payment Gateway (Recommended)
+                            UPI QR - Direct Bank Payment (Recommended)
                           </span>
                           <span className="text-[10px] bg-[#CC9A2E]/20 text-[#A87C1F] font-semibold px-2 py-0.5 rounded">
-                            Instant · Secure
+0% Fee · Instant
                           </span>
                         </div>
                         <p className="text-[11px] text-[#565F52]">
-                          UPI (GPay, PhonePe, Paytm), Debit/Credit Cards, Net Banking & Wallets
+                          Scan a QR with GPay, PhonePe or Paytm - money goes straight to our bank account
                         </p>
                       </div>
                     </label>
@@ -466,10 +480,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   >
                     <Lock className="w-4 h-4 text-[#CC9A2E]" />
                     <span>
-                      {paymentMethod === 'payu'
+                      {paymentMethod === 'upi'
                         ? language === 'bn'
-                          ? 'PayU দিয়ে পেমেন্ট সম্পন্ন করুন'
-                          : 'Proceed to PayU Gateway'
+                          ? 'অর্ডার করুন ও UPI QR দেখুন'
+                          : 'Place Order & Show UPI QR'
                         : language === 'bn'
                         ? 'ক্যাশ অন ডেলিভারিতে নিশ্চিত করুন'
                         : 'Confirm Cash on Delivery Order'}
@@ -477,7 +491,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   </button>
 
                   <div className="mt-2 text-center text-[10px] text-[#565F52]">
-                    Encrypted 256-bit SSL · PayU Verified Merchant · GST Invoice Included
+                    Secure Checkout · Direct UPI to UDECS Bank Account · GST Invoice Included
                   </div>
                 </div>
               </div>
@@ -485,136 +499,78 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           </form>
         )}
 
-        {/* STEP 2: PayU Payment Gateway Portal (Interactive Simulation & Real Form Handler) */}
-        {payuStep === 'payu_portal' && (
+        {/* STEP 2: UPI QR Payment (order already placed as pending) */}
+        {checkoutStep === 'upi_pay' && completedOrder && (
           <div className="space-y-6">
-            <div className="bg-[#182620] text-white p-5 rounded-lg border border-[#CC9A2E]/40">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="bg-[#CC9A2E] text-[#0F1913] font-black px-2 py-0.5 rounded text-sm tracking-wider">
-                    Pay<span className="text-white">U</span>
-                  </div>
-                  <span className="text-xs font-mono text-[#B9BFAE]">
-                    MERCHANT GATEWAY CHECKOUT
-                  </span>
-                </div>
+            <div className="bg-[#182620] text-white p-5 rounded-lg border border-[#CC9A2E]/40 space-y-4">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <span className="text-xs font-mono text-[#B9BFAE]">UPI DIRECT PAYMENT</span>
                 <div className="text-right">
                   <span className="text-xs text-[#B9BFAE] block">Payable:</span>
                   <span className="text-lg font-black text-[#CC9A2E]">
-                    {formatPrice(totalAmount)}
+                    {formatPrice(completedOrder.totalAmount)}
                   </span>
                 </div>
               </div>
 
-              {/* PayU Form Parameters Inspection */}
-              <div className="bg-black/30 p-3 rounded text-[11px] font-mono-code text-[#B9BFAE] space-y-1 mb-4">
-                <div className="flex justify-between">
-                  <span>Merchant Key:</span>
-                  <span className="text-white">{payuConfig.merchantKey}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Transaction ID (txnid):</span>
-                  <span className="text-white">TXN_{Date.now().toString().slice(-8)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Customer:</span>
-                  <span className="text-white">{formData.name} ({formData.phone})</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Hash (SHA-512):</span>
-                  <span className="text-[#CC9A2E] truncate max-w-[240px]">
-                    e89b47f01c9a721df99a2c91834...
-                  </span>
+              <div className="text-center">
+                <div className="bg-white p-4 rounded-lg inline-block">
+                  <img src={upiQrDataUrl} alt="UPI QR Code" className="w-52 h-52" />
                 </div>
               </div>
 
-              {/* Payment Mode Selector inside PayU */}
-              <div className="space-y-3">
-                <div className="text-xs font-semibold text-white">
-                  Select PayU Payment Channel:
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      executeOrderPlacement('payu', `PAYU_UPI_${Date.now().toString().slice(-6)}`)
-                    }
-                    disabled={isProcessing}
-                    className="p-3 bg-white/10 hover:bg-[#CC9A2E] hover:text-[#0F1913] rounded border border-white/20 font-semibold transition-all flex flex-col items-center gap-1.5"
-                  >
-                    <Smartphone className="w-5 h-5" />
-                    <span>UPI / QR</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      executeOrderPlacement('card', `PAYU_CARD_${Date.now().toString().slice(-6)}`)
-                    }
-                    disabled={isProcessing}
-                    className="p-3 bg-white/10 hover:bg-[#CC9A2E] hover:text-[#0F1913] rounded border border-white/20 font-semibold transition-all flex flex-col items-center gap-1.5"
-                  >
-                    <CreditCard className="w-5 h-5" />
-                    <span>Cards (Visa/MC)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      executeOrderPlacement('netbanking', `PAYU_NB_${Date.now().toString().slice(-6)}`)
-                    }
-                    disabled={isProcessing}
-                    className="p-3 bg-white/10 hover:bg-[#CC9A2E] hover:text-[#0F1913] rounded border border-white/20 font-semibold transition-all flex flex-col items-center gap-1.5"
-                  >
-                    <Building className="w-5 h-5" />
-                    <span>Net Banking</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      executeOrderPlacement('payu', `PAYU_WLT_${Date.now().toString().slice(-6)}`)
-                    }
-                    disabled={isProcessing}
-                    className="p-3 bg-white/10 hover:bg-[#CC9A2E] hover:text-[#0F1913] rounded border border-white/20 font-semibold transition-all flex flex-col items-center gap-1.5"
-                  >
-                    <Lock className="w-5 h-5" />
-                    <span>Wallets</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {isProcessing ? (
-              <div className="py-6 text-center space-y-2">
-                <div className="w-8 h-8 border-3 border-[#CC9A2E] border-t-transparent rounded-full animate-spin mx-auto"></div>
-                <p className="text-xs font-semibold text-[#0F1913]">
-                  Verifying PayU payment signature and reserving warehouse stock...
+              <div className="text-center space-y-1">
+                <p className="text-sm font-bold">Scan with GPay, PhonePe, Paytm or any UPI app</p>
+                <p className="text-xs text-[#B9BFAE]">
+                  UPI ID: <span className="font-mono text-white font-semibold">{UPI_ID}</span>
+                  {' '}&middot; {UPI_PAYEE_NAME}
+                </p>
+                <p className="text-xs text-[#B9BFAE]">
+                  Order Ref: <span className="font-mono text-white">{completedOrder.id}</span>
                 </p>
               </div>
-            ) : (
-              <div className="flex justify-between">
-                <button
-                  onClick={() => setPayuStep('details')}
-                  className="text-xs font-semibold text-[#565F52] hover:text-[#0F1913] underline"
+
+              <div className="text-center">
+                <a
+                  href={upiDeepLink}
+                  className="inline-flex items-center gap-2 bg-[#CC9A2E] text-[#0F1913] font-bold px-5 py-2.5 rounded text-sm hover:brightness-110 transition-all"
                 >
-                  ← Back to Billing Details
-                </button>
-                <span className="text-[11px] text-[#565F52]">
-                  Test Mode: {payuConfig.testMode ? 'Sandbox Enabled' : 'Live Gateway'}
-                </span>
+                  <Smartphone className="w-4 h-4" />
+                  Tap to pay in your UPI app
+                </a>
               </div>
-            )}
+
+              <p className="text-[11px] text-[#B9BFAE] text-center">
+                We confirm your payment on WhatsApp before dispatch. You can share the payment
+                screenshot with us there.
+              </p>
+            </div>
+
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => setCheckoutStep('complete')}
+                className="bg-[#0F1913] text-white font-bold px-6 py-3 rounded text-sm hover:bg-[#182620] transition-all"
+              >
+                I have paid - Continue
+              </button>
+            </div>
           </div>
         )}
 
         {/* STEP 3: Order Completed & Tax Invoice Ready */}
-        {payuStep === 'complete' && completedOrder && (
+        {checkoutStep === 'complete' && completedOrder && (
           <div className="space-y-6 animate-scaleIn">
             <div className="text-center py-4 bg-[#E4E8D9] rounded-lg border border-[#CBCFB9] space-y-2">
               <CheckCircle className="w-12 h-12 text-[#3C6656] mx-auto mb-1" />
               <h4 className="text-xl font-black text-[#0F1913] font-heading">
-                {language === 'bn' ? 'অর্ডার কনফার্ম হয়েছে!' : 'Payment & Order Confirmed!'}
+                {completedOrder.paymentMethod === 'upi'
+                    ? language === 'bn'
+                      ? 'অর্ডার রিসিভ হয়েছে!'
+                      : 'Order Received - Payment Verification Pending'
+                    : language === 'bn'
+                      ? 'অর্ডার কনফার্ম হয়েছে!'
+                      : 'COD Order Confirmed!'}
               </h4>
               <p className="text-xs text-[#565F52]">
                 Order Reference ID:{' '}
@@ -626,8 +582,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <span className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse"></span>
                 <span>
                   {language === 'bn'
-                    ? 'হোয়াটসঅ্যাপ অটোমেশন কনফার্মেশন পাঠানো হয়েছে'
-                    : 'Automated WhatsApp confirmation dispatched'}
+                    ? 'অর্ডার সেভ হয়েছে - WhatsApp এ কনফার্মেশন আসবে'
+                    : 'Order saved - our team will confirm on WhatsApp'}
                 </span>
               </div>
             </div>
