@@ -41,6 +41,7 @@ export const AdminInventory: React.FC = () => {
     minStockAlert: 10,
     hsn: '7323',
     gstRate: 18,
+    weightKg: 0.5,
     imageIcon: 'i-pot',
     description: '',
     descriptionBn: '',
@@ -83,6 +84,7 @@ export const AdminInventory: React.FC = () => {
       minStockAlert: Number(newProduct.minStockAlert) || 10,
       hsn: newProduct.hsn || '7323',
       gstRate: Number(newProduct.gstRate) || 18,
+      weightKg: Number(newProduct.weightKg) || 0.5,
       rating: 4.9,
       reviewsCount: 1,
       imageIcon: newProduct.imageIcon || 'i-pot',
@@ -399,7 +401,7 @@ export const AdminInventory: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-3">
                 <div>
                   <label className="block font-bold text-[#0F1913] mb-1">Retail Price (₹)</label>
                   <input
@@ -429,6 +431,19 @@ export const AdminInventory: React.FC = () => {
                     required
                     value={newProduct.minWholesaleQty}
                     onChange={(e) => setNewProduct({ ...newProduct, minWholesaleQty: Number(e.target.value) })}
+                    className="w-full bg-[#FBFAF5] border border-[#CBCFB9] rounded p-2 text-[#0F1913]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#0F1913] mb-1">Weight per Unit (kg)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    required
+                    value={newProduct.weightKg}
+                    onChange={(e) => setNewProduct({ ...newProduct, weightKg: Number(e.target.value) })}
                     className="w-full bg-[#FBFAF5] border border-[#CBCFB9] rounded p-2 text-[#0F1913]"
                   />
                 </div>
