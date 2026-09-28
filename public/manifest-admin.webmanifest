@@ -9,10 +9,28 @@
   "background_color": "#EEF0E7",
   "theme_color": "#0F1913",
   "lang": "en",
-  "categories": ["business", "productivity"],
+  "categories": [
+    "business",
+    "productivity"
+  ],
   "icons": [
-    { "src": "/icons/admin-icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icons/admin-icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/icons/admin-icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/UDECS_Logo_Premium_Transparent.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/UDECS_Logo_Premium_Transparent.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/UDECS_Logo_Premium_Transparent.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
