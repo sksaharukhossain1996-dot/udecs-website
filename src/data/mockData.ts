@@ -32,12 +32,12 @@ export const COMPANY_DETAILS: CompanyInfo = {
   address: 'Pratappur, Panskura, Purba Medinipur, West Bengal 721152, India',
   description: 'Authorized direct distributor and manufacturer partner for premium cookware, industrial kitchen appliances, sports fitness equipment, and wholesale container supplies.',
   socials: {
-    facebook: 'https://facebook.com/unickdigital.udecs',
-    instagram: 'https://instagram.com/unickdigital.store',
+    facebook: 'https://www.facebook.com/people/Udecscom/61592413603341/',
+    instagram: 'https://www.instagram.com/udecs.in/',
   },
   socialLinks: {
-    facebook: 'https://facebook.com/unickdigital.udecs',
-    instagram: 'https://instagram.com/unickdigital.store',
+    facebook: 'https://www.facebook.com/people/Udecscom/61592413603341/',
+    instagram: 'https://www.instagram.com/udecs.in/',
     whatsapp: '+91 9845485437',
   },
 };
