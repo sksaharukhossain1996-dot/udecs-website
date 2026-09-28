@@ -23,6 +23,7 @@ export interface Product {
   description: string;
   descriptionBn: string;
   gstRate: number; // 5, 12, 18, 28%
+  weightKg?: number; // kg per unit; checkout delivery defaults to 0.5 kg when missing
   featured?: boolean;
 }
 
@@ -246,4 +247,3 @@ export interface WhatsAppAutomationConfig {
     quickOrderTextBn: string;
   };
 }
-
