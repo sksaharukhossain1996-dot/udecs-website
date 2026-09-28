@@ -488,8 +488,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return saved
       ? JSON.parse(saved)
       : {
-          merchantKey: '7rnFly', // Standard PayU Test Key
-          merchantSalt: 'pjHBVeUY',
+          // Never ship real gateway credentials in the client bundle.
+          // Entered via admin settings only when a gateway is active.
+          merchantKey: '',
+          merchantSalt: '',
           testMode: true,
           successUrl: 'https://udecs.store/payment/success',
           failureUrl: 'https://udecs.store/payment/failure',
