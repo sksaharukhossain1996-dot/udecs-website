@@ -5,6 +5,7 @@ import { AdminOverview } from './AdminOverview';
 import { AdminOrders } from './AdminOrders';
 import { AdminInventory } from './AdminInventory';
 import { AdminGstReports } from './AdminGstReports';
+import { AdminInvestors } from './AdminInvestors';
 import { AdminHR } from './AdminHR';
 import { AdminCollaboration } from './AdminCollaboration';
 import { AdminNotifications } from './AdminNotifications';
@@ -230,6 +231,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           {currentTab === 'orders' && <AdminOrders />}
           {currentTab === 'inventory' && <AdminInventory />}
           {currentTab === 'gst' && <AdminGstReports />}
+          {currentTab === 'investors' && <AdminInvestors />}
           {currentTab === 'hr' && <AdminHR />}
           {currentTab === 'collaboration' && <AdminCollaboration />}
           {currentTab === 'gmail' && <AdminGmailHub />}
