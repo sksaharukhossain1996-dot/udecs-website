@@ -20,6 +20,45 @@ import { generateWhatsAppLink, buildOrderPlacedMessage } from '../../services/wh
 // @ts-ignore - vendored MIT QR generator, no types
 import qrcode from '../../lib/qrcode-generator';
 
+// ---- Delivery rate card: iThink Logistics (Xpressbees Surface) from origin 721152 (Panskura, WB)
+// Card captured from the owner's iThink panel on 28 Sep 2026; +7.5% fuel surcharge; COD extra.
+type DeliveryZone = 'A' | 'B' | 'C' | 'D' | 'E';
+const RATE_FWD_05KG: Record<DeliveryZone, number> = { A: 50.17, B: 57.13, C: 62.35, D: 67.57, E: 105.85 };
+const RATE_FWD_2KG: Record<DeliveryZone, number> = { A: 82.65, B: 97.15, C: 111.65, D: 126.15, E: 146.45 };
+const RATE_ADDL_KG: Record<DeliveryZone, number> = { A: 23.20, B: 30.45, C: 37.70, D: 42.05, E: 47.85 };
+const FUEL_SURCHARGE_PCT = 0.075;
+const COD_FLAT_FEE = 32;
+const COD_PERCENT_FEE = 0.0175;
+
+const zoneForPincode = (pincode: string): DeliveryZone => {
+  const pin = (pincode || '').trim();
+  if (!/^\d{6}$/.test(pin)) return 'D';
+  const p3 = parseInt(pin.slice(0, 3), 10);
+  const p2 = parseInt(pin.slice(0, 2), 10);
+  if (pin.startsWith('721')) return 'A';
+  if (p3 >= 700 && p3 <= 743) return 'B';
+  if (p3 === 744 || p2 === 78 || p2 === 79 || p2 === 18 || p2 === 19) return 'E';
+  if ([110, 400, 411, 560, 600, 500, 380].indexOf(p3) !== -1) return 'C';
+  if (p3 >= 750 && p3 <= 770) return 'C';
+  if (p2 >= 80 && p2 <= 85) return 'C';
+  return 'D';
+};
+
+const ZONE_LABELS: Record<DeliveryZone, string> = {
+  A: 'Local', B: 'West Bengal', C: 'Metro / Nearby', D: 'Rest of India', E: 'Remote',
+};
+
+const deliveryCharge = (pincode: string, itemCount: number, isCod: boolean, orderSubtotal: number) => {
+  const zone = zoneForPincode(pincode);
+  const weightKg = Math.max(0.5, itemCount * 0.5); // 0.5 kg per item default
+  const base = weightKg <= 0.5
+    ? RATE_FWD_05KG[zone]
+    : RATE_FWD_2KG[zone] + RATE_ADDL_KG[zone] * Math.max(0, Math.ceil(weightKg - 2));
+  let fee = base * (1 + FUEL_SURCHARGE_PCT);
+  if (isCod) fee += COD_FLAT_FEE + orderSubtotal * COD_PERCENT_FEE;
+  return { zone, weightKg, fee: Math.ceil(fee) };
+};
+
 const UPI_ID = '9845485437@ybl'; // customer payments - user-chosen (twice) 01:58, PhonePe handle on business number
 const UPI_PAYEE_NAME = 'UDECS';
 
@@ -90,7 +129,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const cgst = isWestBengal ? Math.round(totalGst / 2) : 0;
   const sgst = isWestBengal ? totalGst - cgst : 0;
   const igst = !isWestBengal ? totalGst : 0;
-  const shippingFee = subtotal > 1000 ? 0 : 99;
+  const itemCount = checkoutItems.reduce((n, item) => n + item.quantity, 0);
+  const delivery = deliveryCharge(formData.pincode, itemCount, paymentMethod === 'cod', subtotal);
+  const shippingFee = delivery.fee;
   const totalAmount = subtotal + shippingFee;
 
   // UPI deep link + QR (amount-encoded, order ref in the note)
@@ -458,9 +499,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     )}
 
                     <div className="flex justify-between">
-                      <span>Shipping (Delhivery):</span>
+                      <span>Shipping ({delivery.weightKg} kg, {ZONE_LABELS[delivery.zone]}):</span>
                       <span className="text-[#3C6656] font-semibold">
-                        {shippingFee === 0 ? 'FREE' : formatPrice(shippingFee)}
+                        {formatPrice(shippingFee)}
                       </span>
                     </div>
 
