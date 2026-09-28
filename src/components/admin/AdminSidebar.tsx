@@ -18,6 +18,7 @@ import {
   Globe,
   Mail,
   MessageSquare,
+  TrendingUp,
 } from 'lucide-react';
 
 export type AdminTab =
@@ -27,6 +28,7 @@ export type AdminTab =
   | 'orders'
   | 'inventory'
   | 'gst'
+  | 'investors'
   | 'hr'
   | 'collaboration'
   | 'notifications'
@@ -62,6 +64,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'orders', labelBn: 'অর্ডার ও লজিস্টিকস শিপিং', labelEn: 'Orders & Logistics', icon: ShoppingBag },
     { id: 'inventory', labelBn: 'অটোমেটেড ইনভেন্টরি', labelEn: 'Automated Inventory', icon: Boxes },
     { id: 'gst', labelBn: 'জিএসটি রিপোর্ট ও ট্যাক্স', labelEn: 'GST Reports & Filing', icon: FileSpreadsheet },
+    { id: 'investors', labelBn: 'বিনিয়োগকারী লিড', labelEn: 'Investor Leads', icon: TrendingUp },
     { id: 'hr', labelBn: 'কর্মচারী ও স্যালারি স্লিপ', labelEn: 'HR, Attendance & Payroll', icon: Users },
     { id: 'collaboration', labelBn: 'টিম কোলাবরেশন নোটস', labelEn: 'Live Collaboration', icon: FileEdit },
     { id: 'gmail', labelBn: 'Gmail হাব ও গ্রাহক মেল', labelEn: 'Gmail Workspace Hub', icon: Mail },
