@@ -4,7 +4,7 @@
     "target": {
       "namespace": "android_app",
       "package_name": "store.udecs.you",
-      "sha256_cert_fingerprints": ["6E:C0:63:8D:52:35:1B:5E:64:CF:44:89:E9:75:1B:8A:8A:E6:8E:03:0D:59:7B:E8:D7:AD:87:C9:88:EA:8D:8E"]
+      "sha256_cert_fingerprints": ["58:69:33:2A:3B:0C:31:CB:17:0B:07:C9:A4:67:58:DA:36:D1:12:B3:0E:AB:74:62:99:AE:D1:D3:37:2C:05:35"]
     }
   },
   {
@@ -12,7 +12,7 @@
     "target": {
       "namespace": "android_app",
       "package_name": "store.udecs.staff",
-      "sha256_cert_fingerprints": ["44:0C:90:9A:30:5C:3A:ED:63:28:27:8F:E6:CA:9A:00:36:69:D1:41:C1:1B:5A:AD:06:B5:1D:44:B7:BD:0D:44"]
+      "sha256_cert_fingerprints": ["3D:B0:B9:B9:EB:34:CD:13:94:51:78:80:2A:13:74:15:93:12:DE:45:C9:A7:A1:AF:ED:2F:CA:04:DA:3F:6D:80"]
     }
   }
 ]
