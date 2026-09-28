@@ -25,7 +25,7 @@ const StoreContent: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState<boolean>(() => typeof window !== 'undefined' && (window as any).__UDECS_STAFF_ENTRY__ === true);
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
   const [selectedProductModal, setSelectedProductModal] = useState<Product | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
