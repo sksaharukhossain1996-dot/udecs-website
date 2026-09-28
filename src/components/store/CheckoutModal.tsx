@@ -48,9 +48,10 @@ const ZONE_LABELS: Record<DeliveryZone, string> = {
   A: 'Local', B: 'West Bengal', C: 'Metro / Nearby', D: 'Rest of India', E: 'Remote',
 };
 
-const deliveryCharge = (pincode: string, itemCount: number, isCod: boolean, orderSubtotal: number) => {
+const deliveryCharge = (pincode: string, items: { product: any; quantity: number }[], isCod: boolean, orderSubtotal: number) => {
   const zone = zoneForPincode(pincode);
-  const weightKg = Math.max(0.5, itemCount * 0.5); // 0.5 kg per item default
+  const rawWeight = items.reduce((w, item) => w + (item.product.weightKg || 0.5) * item.quantity, 0);
+  const weightKg = Math.max(0.5, Math.round(rawWeight * 10) / 10); // 0.5 kg per unit default
   const base = weightKg <= 0.5
     ? RATE_FWD_05KG[zone]
     : RATE_FWD_2KG[zone] + RATE_ADDL_KG[zone] * Math.max(0, Math.ceil(weightKg - 2));
@@ -129,8 +130,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const cgst = isWestBengal ? Math.round(totalGst / 2) : 0;
   const sgst = isWestBengal ? totalGst - cgst : 0;
   const igst = !isWestBengal ? totalGst : 0;
-  const itemCount = checkoutItems.reduce((n, item) => n + item.quantity, 0);
-  const delivery = deliveryCharge(formData.pincode, itemCount, paymentMethod === 'cod', subtotal);
+  const delivery = deliveryCharge(formData.pincode, checkoutItems, paymentMethod === 'cod', subtotal);
   const shippingFee = delivery.fee;
   const totalAmount = subtotal + shippingFee;
 
