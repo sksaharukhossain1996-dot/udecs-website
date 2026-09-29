@@ -280,66 +280,20 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   });
 
   const [employees, setEmployees] = useState<Employee[]>(() => {
-    const saved = localStorage.getItem('udecs_employees');
+    const saved = localStorage.getItem('udecs_employees_v2');
     return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
   });
 
   const [attendance, setAttendance] = useState<AttendanceRecord[]>(() => {
-    const saved = localStorage.getItem('udecs_attendance');
+    const saved = localStorage.getItem('udecs_attendance_v2');
     if (saved) return JSON.parse(saved);
-    // Initial sample record
-    return [
-      {
-        id: 'att-1',
-        employeeId: 'EMP-001',
-        employeeName: 'Rajesh Sharma',
-        date: new Date().toISOString().split('T')[0],
-        checkIn: '09:15 AM',
-        status: 'present',
-      },
-      {
-        id: 'att-2',
-        employeeId: 'EMP-002',
-        employeeName: 'Tanmoy Roy',
-        date: new Date().toISOString().split('T')[0],
-        checkIn: '09:28 AM',
-        status: 'present',
-      },
-      {
-        id: 'att-3',
-        employeeId: 'EMP-003',
-        employeeName: 'Priya Sen',
-        date: new Date().toISOString().split('T')[0],
-        checkIn: '09:05 AM',
-        status: 'present',
-      },
-    ];
+    return [];
   });
 
   const [salarySlips, setSalarySlips] = useState<SalarySlip[]>(() => {
-    const saved = localStorage.getItem('udecs_salary_slips');
+    const saved = localStorage.getItem('udecs_salary_slips_v2');
     if (saved) return JSON.parse(saved);
-    return [
-      {
-        id: 'SLIP-202608-001',
-        employeeId: 'EMP-002',
-        employeeName: 'Tanmoy Roy',
-        role: 'Store & Logistics Manager',
-        month: 'August',
-        year: 2026,
-        baseSalary: 45000,
-        hra: 13500,
-        specialAllowance: 4500,
-        grossSalary: 63000,
-        pfDeduction: 1800,
-        esiDeduction: 472,
-        tdsDeduction: 2000,
-        totalDeductions: 4272,
-        netSalary: 58728,
-        paymentStatus: 'paid',
-        generatedAt: '2026-08-31T17:00:00Z',
-      },
-    ];
+    return [];
   });
 
   const [notifications, setNotifications] = useState<NotificationLog[]>(() => {
@@ -512,15 +466,15 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, [orders]);
 
   useEffect(() => {
-    localStorage.setItem('udecs_employees', JSON.stringify(employees));
+    localStorage.setItem('udecs_employees_v2', JSON.stringify(employees));
   }, [employees]);
 
   useEffect(() => {
-    localStorage.setItem('udecs_attendance', JSON.stringify(attendance));
+    localStorage.setItem('udecs_attendance_v2', JSON.stringify(attendance));
   }, [attendance]);
 
   useEffect(() => {
-    localStorage.setItem('udecs_salary_slips', JSON.stringify(salarySlips));
+    localStorage.setItem('udecs_salary_slips_v2', JSON.stringify(salarySlips));
   }, [salarySlips]);
 
   useEffect(() => {
