@@ -113,6 +113,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   <span className="text-2xl font-black text-[#0F1913]">
                     {formatPrice(activeUnitPrice)}
                   </span>
+                  {!isEligibleWholesale && product.originalPrice && product.originalPrice > product.price && (
+                    <span className="ml-2 text-sm line-through text-[#565F52]">
+                      {formatPrice(product.originalPrice)}
+                    </span>
+                  )}
+                  {!isEligibleWholesale && product.originalPrice && product.originalPrice > product.price && (
+                    <span className="ml-2 align-middle text-[10px] font-bold bg-[#3C6656] text-white px-1.5 py-0.5 rounded whitespace-nowrap">
+                      {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
+                    </span>
+                  )}
                   {isEligibleWholesale && (
                     <span className="ml-2 text-xs line-through text-[#565F52]">
                       {formatPrice(product.price)}
