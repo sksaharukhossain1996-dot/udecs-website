@@ -11,6 +11,7 @@ export interface Product {
   sku: string;
   hsn: string;
   price: number; // in INR base
+  originalPrice?: number; // pre-discount price, shown struck through when higher than price
   wholesalePrice: number;
   minWholesaleQty: number;
   stock: number;
