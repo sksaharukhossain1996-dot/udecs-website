@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Management Dashboard | UDECS</title>
+  <style>
+    :root{--ink:#102019;--muted:#647064;--cream:#f1f3eb;--paper:#fffefa;--line:#d4dacd;--green:#396252;--gold:#b38222;--red:#b24a3b}
+    *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font:14px/1.5 Inter,system-ui,sans-serif}.layout{display:flex;min-height:100vh}
+    aside{width:245px;background:var(--ink);color:#fff;padding:24px 17px;flex-shrink:0}.brand{display:flex;align-items:center;gap:8px;color:#fff;font-weight:900;font-size:21px;letter-spacing:-.05em;padding:0 10px 32px}.brand img{width:38px;height:38px;object-fit:contain}.brand span{color:#d0a03e}.brand small{display:block;color:#9da99a;font:11px monospace;letter-spacing:0;margin-top:3px}.nav-title{color:#849184;font-size:10px;font-weight:800;letter-spacing:.12em;padding:15px 11px 7px}.nav a{display:block;color:#bfc8bd;padding:11px;border-radius:4px;margin:3px 0;cursor:pointer;text-decoration:none}.nav a:hover,.nav a.active{background:#294337;color:#fff}.nav a span{margin-right:9px}.back{display:block;border-top:1px solid #3a4d40;margin-top:25px;padding:20px 11px;color:#bfc8bd;text-decoration:none}
+    main{flex:1;min-width:0}.topbar{height:72px;background:var(--paper);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;padding:0 34px;gap:10px}.topbar h1{font-size:20px;margin:0}.user{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}.avatar{width:32px;height:32px;border-radius:50%;background:#d9e3d5;color:var(--green);display:grid;place-items:center;font-weight:800}.content{padding:32px;max-width:1400px}.welcome{display:flex;justify-content:space-between;align-items:end;margin-bottom:25px;gap:12px;flex-wrap:wrap}.welcome h2{font-size:27px;margin:0 0 4px;letter-spacing:-.04em}.welcome p{color:var(--muted);margin:0}.button{border:0;border-radius:4px;background:var(--ink);color:#fff;padding:10px 15px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}.button.gold{background:var(--gold)}.button.red{background:var(--red)}.button.ghost{background:#f0f2e9;color:var(--ink);border:1px solid var(--line)}.button:disabled{opacity:.5;cursor:default}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}.card,.panel{background:var(--paper);border:1px solid var(--line);border-radius:5px;padding:20px}.card small{display:block;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.card strong{display:block;font-size:27px;margin:7px 0}.trend{color:var(--green);font-size:12px;font-weight:700}.grid{display:grid;grid-template-columns:1fr 1fr;gap:17px;margin-top:17px}.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap}.panel h3{font-size:16px;margin:0}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:640px}.table th{text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;border-bottom:1px solid var(--line);padding:9px}.table td{border-bottom:1px solid #e6e9e1;padding:9px;vertical-align:middle}.table tr:last-child td{border:0}.table input{width:90px;border:1px solid var(--line);border-radius:4px;padding:6px;background:#fff}.status{display:inline-block;border-radius:99px;padding:3px 8px;font-size:11px;font-weight:700}.ok{background:#dcecdf;color:#2c6949}.warn{background:#f8ebc9;color:#936a16}.low{background:#f7d9d4;color:#a23d32}.note{margin-top:17px;background:#f8ebc9;border:1px solid #e8ca7f;border-radius:5px;padding:14px;color:#6f551b;font-size:12px}.tab-panel{display:none}.tab-panel.active{display:block}.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:11px;color:var(--muted);font-weight:700}.field input,.field select{border:1px solid var(--line);border-radius:4px;padding:10px;background:#fff}.msg{margin:10px 0;padding:10px 14px;border-radius:4px;font-size:13px;display:none}.msg.err{display:block;background:#f7d9d4;color:#a23d32}.msg.okm{display:block;background:#dcecdf;color:#2c6949}.muted{color:var(--muted);font-size:12px}.lowrow{background:#fdf3f2}
+    @media(max-width:950px){.cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.content{padding:24px}}
+    @media(max-width:620px){.layout{display:block}aside{width:100%;padding:14px}.brand{padding:5px 8px 14px}.nav{display:flex;overflow:auto;gap:4px}.nav-title{display:none}.nav a{white-space:nowrap;padding:8px}.back{display:none}.topbar{padding:0 16px;height:62px}.topbar h1{font-size:16px}.user .emailtxt{display:none}.content{padding:18px 14px}.cards{gap:9px}.card{padding:13px}.card strong{font-size:21px}.form-grid{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <a href="index.html" class="brand"><img src="UDECS_Logo_Premium_Transparent.png" alt="UDECS logo"><span>UDECS<small>udecs.store · admin</small></span></a>
+      <div class="nav-title">WORKSPACE</div>
+      <div class="nav">
+        <a class="active" data-tab="overview"><span>▦</span>Overview</a>
+        <a data-tab="products"><span>▥</span>Products</a>
+        <a data-tab="orders"><span>▤</span>Orders</a>
+        <a data-tab="gst"><span>₹</span>GST</a>
+        <a data-tab="employees"><span>♙</span>Employees</a>
+        <a data-tab="settings"><span>⚙</span>Settings</a>
+      </div>
+      <a class="back" href="index.html">← Back to storefront</a>
+    </aside>
+    <main>
+      <header class="topbar">
+        <h1>Management dashboard</h1>
+        <div class="user">
+          <span class="emailtxt" id="whoami">Not signed in</span>
+          <button class="button" id="authbtn">Sign in with Google</button>
+        </div>
+      </header>
+      <div class="content">
+        <div class="msg" id="msg"></div>
+
+        <section class="tab-panel active" id="overview">
+          <div class="welcome"><div><h2>Management dashboard</h2><p>Live data from your store database.</p></div></div>
+          <div class="cards">
+            <div class="card"><small>Listed products</small><strong id="ov-products">…</strong><span class="trend">Live from store</span></div>
+            <div class="card"><small>Low stock items</small><strong id="ov-low">…</strong><span class="status low" id="ov-low-s">Checking</span></div>
+            <div class="card"><small>Orders</small><strong id="ov-orders">—</strong><span class="trend" id="ov-orders-s">Sign in to view</span></div>
+            <div class="card"><small>GSTIN</small><strong style="font-size:17px">19AODPH1519N1ZS</strong><span class="trend">West Bengal</span></div>
+          </div>
+          <div class="note">Products update here instantly. Orders, staff tools and WhatsApp automation live in the <a href="staff.html">UDECS Staff Portal</a> (sign in with your work Google account).</div>
+        </section>
+
+        <section class="tab-panel" id="products">
+          <div class="panel">
+            <div class="panel-head"><h3>Product listing</h3><button class="button gold" id="addtoggle" disabled>＋ Add product</button></div>
+            <div class="muted" id="prod-note" style="margin-bottom:12px">Sign in to add, edit or delete products. The list below is live from your store.</div>
+            <div id="addform" style="display:none;margin-bottom:18px;border:1px dashed var(--line);border-radius:5px;padding:16px">
+              <div class="form-grid">
+                <div class="field"><label>Product name *</label><input id="f-name" placeholder="e.g. Steel Kadhai 24cm"></div>
+                <div class="field"><label>SKU (auto if blank)</label><input id="f-sku" placeholder="e.g. 0201_steel_kadhai"></div>
+                <div class="field"><label>HSN code *</label><input id="f-hsn" value="7323"></div>
+                <div class="field"><label>Price ₹ *</label><input id="f-price" type="number" min="0" step="1" placeholder="e.g. 499"></div>
+                <div class="field"><label>Stock *</label><input id="f-stock" type="number" min="0" step="1" value="50"></div>
+                <div class="field"><label>Category *</label><select id="f-category"><option value="kitchen">Kitchen &amp; Home</option><option value="sports">Sports &amp; Fitness</option><option value="wholesale">Wholesale</option><option value="industrial">Industrial</option></select></div>
+                <div class="field"><label>GST rate *</label><select id="f-gst"><option value="18">18%</option><option value="5">5%</option><option value="12">12%</option><option value="28">28%</option></select></div>
+                <div class="field"><label>Low stock alert at</label><input id="f-minstock" type="number" min="0" step="1" value="10"></div>
+                <div class="field"><label>&nbsp;</label><button class="button" id="addsave">Save product</button></div>
+              </div>
+            </div>
+            <div class="table-wrap"><table class="table"><thead><tr><th>Product</th><th>SKU</th><th>Price ₹</th><th>Stock</th><th>GST</th><th>Category</th><th>Actions</th></tr></thead><tbody id="prod-rows"><tr><td colspan="7" class="muted">Loading products…</td></tr></tbody></table></div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="orders">
+          <div class="panel">
+            <div class="panel-head"><h3>Orders</h3><span class="muted" id="orders-note">Sign in with your admin Google account to view orders.</span></div>
+            <div class="table-wrap"><table class="table"><thead><tr><th>Order</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody id="order-rows"><tr><td colspan="5" class="muted">Sign in to load orders.</td></tr></tbody></table></div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="gst">
+          <div class="grid" style="margin-top:0">
+            <div class="panel">
+              <div class="panel-head"><h3>GST login &amp; taxpayer dashboard</h3></div>
+              <div class="card" style="margin-bottom:14px"><small>Your GSTIN</small><strong style="font-size:22px">19AODPH1519N1ZS</strong><span class="trend">UNICK DIGITAL E-COMMERCE SOLUTIONS · West Bengal</span></div>
+              <p><a class="button gold" href="https://services.gst.gov.in/services/login" target="_blank" rel="noopener">Open GST portal login →</a></p>
+              <p><a class="button ghost" href="https://www.gst.gov.in/" target="_blank" rel="noopener">GST portal home →</a></p>
+              <div class="note">After login, your taxpayer dashboard (returns, GSTR-1, GSTR-3B, payments) opens on the GST portal itself. Automatic GSTR data sync into this dashboard needs GSTN API access - pending CA setup.</div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3>GST reports</h3></div>
+              <p class="muted">GSTR-1, GSTR-3B and HSN-wise reports are generated from your real orders in the Staff Portal.</p>
+              <p><a class="button" href="staff.html">Open GST Reports in Staff Portal →</a></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="employees">
+          <div class="panel">
+            <div class="panel-head"><h3>Employee list</h3></div>
+            <div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>Email</th><th>Address</th></tr></thead><tbody>
+              <tr><td><b>SK Saharuk Hossain</b></td><td><span class="status ok">Owner &amp; Admin</span></td><td>+91 7319190514</td><td>sksaharukhossain1996@gmail.com</td><td>Panskura, Purba Medinipur, WB 721152</td></tr>
+            </tbody></table></div>
+            <div class="note">You are the only employee. Old demo staff names have been removed. When you hire, add staff from the <a href="staff.html">Staff Portal</a>.</div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="settings">
+          <div class="panel">
+            <div class="panel-head"><h3>Account &amp; access</h3></div>
+            <div class="form-grid">
+              <div class="field"><label>Admin accounts</label><input value="sksaharukhossain1996@gmail.com" disabled></div>
+              <div class="field"><label>&nbsp;</label><input value="ecommerceunickdigital@gmail.com" disabled></div>
+              <div class="field"><label>Access rule</label><input value="Only these Google accounts can edit" disabled></div>
+            </div>
+            <div class="note">Credentials are never stored in this page. Editing rights are enforced by the database - only the two Google accounts above can add, change or delete products and orders.</div>
+            <p style="margin-top:16px"><a class="button ghost" href="staff.html">UDECS Staff Portal →</a></p>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+<script>
+  // Tab switching (no login needed)
+  const tabs=document.querySelectorAll('[data-tab]'), panels=document.querySelectorAll('.tab-panel');
+  tabs.forEach(tab=>tab.addEventListener('click',()=>{const id=tab.dataset.tab;tabs.forEach(i=>i.classList.toggle('active',i===tab));panels.forEach(p=>p.classList.toggle('active',p.id===id));history.replaceState(null,'','#'+id)}));
+  const h=location.hash.slice(1); if(h&&document.getElementById(h)){tabs.forEach(i=>i.classList.toggle('active',i.dataset.tab===h));panels.forEach(p=>p.classList.toggle('active',p.id===h));}
+</script>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+  import { getFirestore, collection, doc, getDocs, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+  const app = initializeApp({
+    apiKey: 'AIzaSyANRNCASxjGE-IZSLdCws_6W4VpjemO1aI',
+    authDomain: 'udecs-store.firebaseapp.com',
+    projectId: 'udecs-store'
+  });
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const ADMINS = ['sksaharukhossain1996@gmail.com', 'ecommerceunickdigital@gmail.com'];
+
+  const $ = (id) => document.getElementById(id);
+  const msg = (text, kind) => { const m = $('msg'); m.textContent = text; m.className = 'msg ' + (kind || ''); if (text) setTimeout(() => { m.className = 'msg'; }, 6000); };
+
+  let isAdmin = false;
+  let products = [];
+
+  // ---------- Auth ----------
+  $('authbtn').addEventListener('click', async () => {
+    if (auth.currentUser) { await signOut(auth); return; }
+    try {
+      await signInWithPopup(auth, new GoogleAuthProvider());
+    } catch (e) {
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request' || e.code === 'auth/popup-closed-by-user') {
+        await signInWithRedirect(auth, new GoogleAuthProvider());
+      } else if (e.code === 'auth/unauthorized-domain') {
+        msg('Google sign-in is not enabled for this domain yet. Use the Staff Portal or ask support.', 'err');
+      } else {
+        msg('Sign-in failed: ' + e.message, 'err');
+      }
+    }
+  });
+  getRedirectResult(auth).catch(() => {});
+
+  onAuthStateChanged(auth, (user) => {
+    isAdmin = !!(user && ADMINS.includes(user.email || ''));
+    $('whoami').textContent = user ? (user.email + (isAdmin ? '' : ' (not admin)')) : 'Not signed in';
+    $('authbtn').textContent = user ? 'Sign out' : 'Sign in with Google';
+    $('addtoggle').disabled = !isAdmin;
+    $('prod-note').textContent = isAdmin
+      ? 'You are signed in as admin. Edit price or stock and press Save, or add / delete products.'
+      : 'Sign in to add, edit or delete products. The list below is live from your store.';
+    renderProducts();
+    if (isAdmin) loadOrders(); else { $('order-rows').innerHTML = '<tr><td colspan="5" class="muted">Sign in to load orders.</td></tr>'; $('ov-orders').textContent = '—'; $('ov-orders-s').textContent = 'Sign in to view'; }
+  });
+
+  // ---------- Products (public read) ----------
+  async function loadProducts() {
+    try {
+      const snap = await getDocs(collection(db, 'products'));
+      products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      products.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    } catch (e) {
+      $('prod-rows').innerHTML = '<tr><td colspan="7" class="muted">Could not load products: ' + e.message + '</td></tr>';
+      return;
+    }
+    renderProducts();
+    const low = products.filter(p => (p.stock ?? 0) <= (p.minStockAlert ?? 10));
+    $('ov-products').textContent = products.length;
+    $('ov-low').textContent = low.length;
+    $('ov-low-s').textContent = low.length ? 'Needs attention' : 'All good';
+    $('ov-low-s').className = 'status ' + (low.length ? 'low' : 'ok');
+  }
+
+  function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+  function renderProducts() {
+    if (!products.length) { $('prod-rows').innerHTML = '<tr><td colspan="7" class="muted">No products found.</td></tr>'; return; }
+    $('prod-rows').innerHTML = products.map(p => {
+      const low = (p.stock ?? 0) <= (p.minStockAlert ?? 10);
+      const ro = isAdmin ? '' : 'disabled';
+      const acts = isAdmin
+        ? '<button class="button" style="padding:6px 10px" onclick="window.__saveProd(\'' + esc(p.id) + '\')">Save</button> <button class="button red" style="padding:6px 10px" onclick="window.__delProd(\'' + esc(p.id) + '\')">Delete</button>'
+        : '<span class="muted">Sign in to edit</span>';
+      return '<tr class="' + (low ? 'lowrow' : '') + '"><td><b>' + esc(p.name) + '</b></td><td class="muted">' + esc(p.sku || p.id) + '</td>' +
+        '<td><input type="number" min="0" id="pr-' + esc(p.id) + '" value="' + (p.price ?? 0) + '" ' + ro + '></td>' +
+        '<td><input type="number" min="0" id="st-' + esc(p.id) + '" value="' + (p.stock ?? 0) + '" ' + ro + '>' + (low ? ' <span class="status low">Low</span>' : '') + '</td>' +
+        '<td>' + (p.gstRate ?? '-') + '%</td><td>' + esc(p.category || '-') + '</td><td>' + acts + '</td></tr>';
+    }).join('');
+  }
+
+  window.__saveProd = async (id) => {
+    const price = Number($('pr-' + id).value), stock = Number($('st-' + id).value);
+    if (!(price >= 0) || !(stock >= 0)) { msg('Price and stock must be 0 or more.', 'err'); return; }
+    try {
+      await updateDoc(doc(db, 'products', id), { price, stock, updatedAt: serverTimestamp() });
+      const p = products.find(x => x.id === id); if (p) { p.price = price; p.stock = stock; }
+      msg('Saved: ' + (p ? p.name : id), 'okm'); renderProducts();
+    } catch (e) { msg('Save failed: ' + e.message, 'err'); }
+  };
+
+  window.__delProd = async (id) => {
+    const p = products.find(x => x.id === id);
+    if (!confirm('Delete "' + (p ? p.name : id) + '" from the store? This cannot be undone.')) return;
+    try {
+      await deleteDoc(doc(db, 'products', id));
+      products = products.filter(x => x.id !== id);
+      msg('Deleted: ' + (p ? p.name : id), 'okm'); renderProducts();
+      $('ov-products').textContent = products.length;
+    } catch (e) { msg('Delete failed: ' + e.message, 'err'); }
+  };
+
+  // ---------- Add product ----------
+  $('addtoggle').addEventListener('click', () => { const f = $('addform'); f.style.display = f.style.display === 'none' ? 'block' : 'none'; });
+  $('addsave').addEventListener('click', async () => {
+    const name = $('f-name').value.trim();
+    let sku = $('f-sku').value.trim();
+    const hsn = $('f-hsn').value.trim();
+    const price = Number($('f-price').value), stock = Number($('f-stock').value);
+    const category = $('f-category').value, gstRate = Number($('f-gst').value);
+    const minStockAlert = Number($('f-minstock').value) || 10;
+    if (!name) { msg('Product name is required.', 'err'); return; }
+    if (!hsn) { msg('HSN code is required.', 'err'); return; }
+    if (!(price >= 0) || !(stock >= 0)) { msg('Enter a valid price and stock.', 'err'); return; }
+    if (!sku) sku = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60);
+    if (!/^[a-zA-Z0-9_\-]+$/.test(sku)) { msg('SKU may only contain letters, numbers, - and _', 'err'); return; }
+    if (products.some(p => p.id === sku)) { msg('SKU already exists: ' + sku, 'err'); return; }
+    $('addsave').disabled = true;
+    try {
+      await setDoc(doc(db, 'products', sku), {
+        name, sku, hsn, price, stock, category, gstRate, minStockAlert,
+        nameBn: '', nameHi: '', description: '', descriptionBn: '',
+        imageIcon: 'i-pot', imageUrl: '', featured: false, sourcePdfCategory: category,
+        updatedAt: serverTimestamp()
+      });
+      msg('Added: ' + name + '. It is live on the store now.', 'okm');
+      $('f-name').value = ''; $('f-sku').value = ''; $('f-price').value = '';
+      await loadProducts();
+    } catch (e) { msg('Add failed: ' + e.message, 'err'); }
+    $('addsave').disabled = false;
+  });
+
+  // ---------- Orders (admin only) ----------
+  async function loadOrders() {
+    $('order-rows').innerHTML = '<tr><td colspan="5" class="muted">Loading orders…</td></tr>';
+    try {
+      const snap = await getDocs(collection(db, 'orders'));
+      const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      $('ov-orders').textContent = orders.length;
+      $('ov-orders-s').textContent = 'Total in database';
+      if (!orders.length) { $('order-rows').innerHTML = '<tr><td colspan="5" class="muted">No orders yet.</td></tr>'; return; }
+      $('order-rows').innerHTML = orders.map(o => {
+        const when = o.createdAt?.seconds ? new Date(o.createdAt.seconds * 1000).toLocaleString('en-IN') : '-';
+        const amt = o.totalAmount ?? o.total ?? o.amount ?? '-';
+        const cust = o.customerName || o.customerEmail || o.phone || '-';
+        return '<tr><td><b>' + esc(o.id) + '</b></td><td>' + esc(cust) + '</td><td>₹' + esc(amt) + '</td><td><span class="status warn">' + esc(o.status || 'new') + '</span></td><td class="muted">' + when + '</td></tr>';
+      }).join('');
+    } catch (e) {
+      $('order-rows').innerHTML = '<tr><td colspan="5" class="muted">Could not load orders: ' + esc(e.message) + '</td></tr>';
+    }
+  }
+
+  loadProducts();
+</script>
+</body>
+                  </html>
