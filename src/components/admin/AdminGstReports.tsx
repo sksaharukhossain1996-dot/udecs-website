@@ -58,6 +58,16 @@ export const AdminGstReports: React.FC = () => {
 
   return (
     <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto">
+      {/* GST portal quick access (owner request) */}
+      <div className="p-4 bg-[#FBFAF5] border border-[#CBCFB9] rounded-lg flex flex-wrap items-center gap-4">
+        <div>
+          <div className="text-[10px] font-bold text-[#565F52] uppercase tracking-wide">GSTIN</div>
+          <div className="font-mono font-bold text-[#0F1913]">19AODPH1519N1ZS</div>
+        </div>
+        <a href="https://services.gst.gov.in/services/login" target="_blank" rel="noopener noreferrer" className="px-3 py-2 bg-[#CC9A2E] text-[#0F1913] font-bold rounded hover:bg-[#A87C1F] hover:text-white text-sm">Open GST Portal Login</a>
+        <a href="https://www.gst.gov.in/" target="_blank" rel="noopener noreferrer" className="px-3 py-2 border border-[#CBCFB9] font-bold rounded hover:bg-[#E4E8D9] text-sm text-[#0F1913]">GST Portal Home</a>
+        <span className="text-[11px] text-[#565F52]">Taxpayer dashboard (returns, GSTR-1/3B, payments) opens after login.</span>
+      </div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#CBCFB9]">
         <div>
