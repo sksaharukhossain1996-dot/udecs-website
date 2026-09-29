@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { getAnalytics } from 'firebase/analytics';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
@@ -9,6 +10,17 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// Google Analytics (GA4): activates only when measurementId is set in the config.
+// Wrapped so an ad-blocker or unsupported browser can never break the store.
+export let analytics: ReturnType<typeof getAnalytics> | null = null;
+try {
+  if (typeof window !== 'undefined' && (firebaseConfig as any).measurementId) {
+    analytics = getAnalytics(app);
+  }
+} catch (e) {
+  console.warn('Analytics not initialised:', e);
+}
 
 export const GMAIL_SCOPES = [
   'https://mail.google.com/',
