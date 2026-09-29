@@ -211,9 +211,19 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                       <div className="text-[11px] text-[#565F52] leading-none mb-1">
                         {language === 'bn' ? 'মূল্য:' : 'Price:'}
                       </div>
+                      {product.originalPrice && product.originalPrice > product.price && (
+                        <span className="text-[11.5px] text-[#8A9184] line-through leading-none block mb-0.5">
+                          {formatPrice(product.originalPrice)}
+                        </span>
+                      )}
                       <span className="font-bold text-[16px] text-[#0F1913] font-sans">
                         {formatPrice(product.price)}
                       </span>
+                      {product.originalPrice && product.originalPrice > product.price && (
+                        <span className="ml-1.5 align-middle text-[9.5px] font-bold bg-[#3C6656] text-white px-1.5 py-0.5 rounded whitespace-nowrap">
+                          {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
+                        </span>
+                      )}
                       {product.wholesalePrice && (
                         <div className="text-[10px] text-[#A87C1F] font-medium leading-none mt-1">
                           {language === 'bn' ? 'পাইকারি:' : 'Wholesale:'} {formatPrice(product.wholesalePrice)} ({product.minWholesaleQty}+)
