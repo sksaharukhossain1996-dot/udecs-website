@@ -56,7 +56,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
   const [simCourier, setSimCourier] = useState('Delhivery Express Cargo');
   const [simTracking, setSimTracking] = useState('DEL982417032IN');
   const [simCustomText, setSimCustomText] = useState(
-    'নমস্কার! UNICK DIGITAL (udecs.store)-এ আপনার জন্য বিশেষ ১০% ডিসকাউন্ট রয়েছে। ক্যাটালগ দেখুন: udecs.store'
+    'Hello! UNICK DIGITAL (udecs.store) has a special 10% discount for you. Browse the catalog: udecs.store'
   );
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState<{ success: boolean; msg: string } | null>(null);
@@ -92,7 +92,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
   const getPreviewText = (): string => {
     if (selectedTemplate === 'custom') return simCustomText;
     if (selectedTemplate === 'orderPlaced') {
-      return renderWhatsAppTemplate(whatsappConfig.templates.orderPlacedBn, {
+      return renderWhatsAppTemplate(whatsappConfig.templates.orderPlacedEn, {
         customerName: simName,
         orderId: simOrderId,
         totalAmount: simAmount,
@@ -101,7 +101,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
       });
     }
     if (selectedTemplate === 'orderShipped') {
-      return renderWhatsAppTemplate(whatsappConfig.templates.orderShippedBn, {
+      return renderWhatsAppTemplate(whatsappConfig.templates.orderShippedEn, {
         customerName: simName,
         orderId: simOrderId,
         courierName: simCourier,
@@ -109,7 +109,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
       });
     }
     if (selectedTemplate === 'orderDelivered') {
-      return renderWhatsAppTemplate(whatsappConfig.templates.orderDeliveredBn, {
+      return renderWhatsAppTemplate(whatsappConfig.templates.orderDeliveredEn, {
         customerName: simName,
         orderId: simOrderId,
       });
@@ -902,9 +902,9 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                 </label>
                 <textarea
                   rows={8}
-                  value={templatesForm.orderPlacedBn}
+                  value={templatesForm.orderPlacedEn}
                   onChange={(e) =>
-                    setTemplatesForm({ ...templatesForm, orderPlacedBn: e.target.value })
+                    setTemplatesForm({ ...templatesForm, orderPlacedEn: e.target.value })
                   }
                   className="w-full bg-[#FBFAF5] border border-[#CBCFB9] rounded p-2.5 text-[#0F1913] font-mono text-[11px] focus:outline-none focus:border-[#25D366]"
                 />
@@ -932,9 +932,9 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                 </label>
                 <textarea
                   rows={7}
-                  value={templatesForm.orderShippedBn}
+                  value={templatesForm.orderShippedEn}
                   onChange={(e) =>
-                    setTemplatesForm({ ...templatesForm, orderShippedBn: e.target.value })
+                    setTemplatesForm({ ...templatesForm, orderShippedEn: e.target.value })
                   }
                   className="w-full bg-[#FBFAF5] border border-[#CBCFB9] rounded p-2.5 text-[#0F1913] font-mono text-[11px] focus:outline-none focus:border-[#25D366]"
                 />
