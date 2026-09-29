@@ -13,12 +13,15 @@ import {
   DollarSign,
   Package,
   Layers,
+  Trash2,
 } from 'lucide-react';
 
 export const AdminInventory: React.FC = () => {
   const {
     products,
     updateProductStock,
+    updateProduct,
+    deleteProduct,
     addProduct,
     formatPrice,
     addAuditLog,
@@ -246,7 +249,25 @@ export const AdminInventory: React.FC = () => {
                     </td>
 
                     <td className="p-3 font-bold text-[#0F1913]">
-                      {formatPrice(prod.price)}
+                      <div className="flex items-center gap-1">
+                        <span>₹</span>
+                        <input
+                          type="number"
+                          min={0}
+                          key={prod.id + '-' + prod.price}
+                          defaultValue={prod.price}
+                          onBlur={(e) => {
+                            const v = Math.max(0, Number(e.target.value) || 0);
+                            if (v !== prod.price) {
+                              updateProduct(prod.id, { price: v });
+                              addAuditLog({ action: 'PRICE_UPDATE', module: 'inventory', details: `${prod.name}: Rs.${prod.price} -> Rs.${v}` });
+                            }
+                          }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                          className="w-24 border border-[#CBCFB9] rounded px-1.5 py-0.5 bg-white font-bold text-[#0F1913]"
+                          title="Edit price, press Enter to save"
+                        />
+                      </div>
                     </td>
 
                     <td className="p-3">
@@ -306,6 +327,19 @@ export const AdminInventory: React.FC = () => {
                           title="Bulk Pallet Restock +50 units"
                         >
                           +50
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Delete "${prod.name}" from the store? This cannot be undone.`)) {
+                              deleteProduct(prod.id);
+                              addAuditLog({ action: 'PRODUCT_DELETE', module: 'inventory', details: `Deleted product: ${prod.name} (${prod.sku})` });
+                            }
+                          }}
+                          className="p-1 hover:bg-red-100 rounded text-red-700"
+                          title="Delete product"
+                        >
+                          <Trash2 className="w-3 h-3" />
                         </button>
                       </div>
                     </td>
