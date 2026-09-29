@@ -4,7 +4,10 @@
     "target": {
       "namespace": "android_app",
       "package_name": "store.udecs.you",
-      "sha256_cert_fingerprints": ["58:69:33:2A:3B:0C:31:CB:17:0B:07:C9:A4:67:58:DA:36:D1:12:B3:0E:AB:74:62:99:AE:D1:D3:37:2C:05:35"]
+      "sha256_cert_fingerprints": [
+        "58:69:33:2A:3B:0C:31:CB:17:0B:07:C9:A4:67:58:DA:36:D1:12:B3:0E:AB:74:62:99:AE:D1:D3:37:2C:05:35",
+        "62:BD:42:48:9F:35:44:92:42:C9:C5:AD:14:2E:23:BE:4E:EB:58:02:94:C2:B4:4D:51:38:B9:C8:E9:3D:D5:4F"
+      ]
     }
   },
   {
