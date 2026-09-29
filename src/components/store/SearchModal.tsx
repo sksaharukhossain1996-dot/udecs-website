@@ -96,9 +96,19 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 </div>
 
                 <div className="text-right">
+                  {product.originalPrice && product.originalPrice > product.price && (
+                    <span className="text-[10px] line-through text-[#8A9184] block">
+                      {formatPrice(product.originalPrice)}
+                    </span>
+                  )}
                   <span className="font-bold text-xs text-[#0F1913] block">
                     {formatPrice(product.price)}
                   </span>
+                  {product.originalPrice && product.originalPrice > product.price && (
+                    <span className="text-[9px] font-bold text-[#3C6656] block">
+                      {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
+                    </span>
+                  )}
                   <span className="text-[10px] text-[#3C6656] font-semibold flex items-center gap-1">
                     <span>View</span>
                     <ArrowRight className="w-3 h-3" />
