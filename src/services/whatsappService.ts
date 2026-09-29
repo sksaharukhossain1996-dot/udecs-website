@@ -117,7 +117,7 @@ export function generateWhatsAppLink(phoneNumber: string, message: string): stri
 /**
  * Format Order Placed Message
  */
-export function buildOrderPlacedMessage(order: Order, config: WhatsAppAutomationConfig, lang: 'bn' | 'en' = 'bn'): string {
+export function buildOrderPlacedMessage(order: Order, config: WhatsAppAutomationConfig, lang: 'bn' | 'en' = 'en'): string {
   const template = lang === 'en' ? config.templates.orderPlacedEn : config.templates.orderPlacedBn;
   return renderWhatsAppTemplate(template, {
     customerName: order.customerName,
@@ -131,7 +131,7 @@ export function buildOrderPlacedMessage(order: Order, config: WhatsAppAutomation
 /**
  * Format Order Shipped Message
  */
-export function buildOrderShippedMessage(order: Order, config: WhatsAppAutomationConfig, lang: 'bn' | 'en' = 'bn'): string {
+export function buildOrderShippedMessage(order: Order, config: WhatsAppAutomationConfig, lang: 'bn' | 'en' = 'en'): string {
   const template = lang === 'en' ? config.templates.orderShippedEn : config.templates.orderShippedBn;
   return renderWhatsAppTemplate(template, {
     customerName: order.customerName,
@@ -144,7 +144,7 @@ export function buildOrderShippedMessage(order: Order, config: WhatsAppAutomatio
 /**
  * Format Order Delivered Message
  */
-export function buildOrderDeliveredMessage(order: Order, config: WhatsAppAutomationConfig, lang: 'bn' | 'en' = 'bn'): string {
+export function buildOrderDeliveredMessage(order: Order, config: WhatsAppAutomationConfig, lang: 'bn' | 'en' = 'en'): string {
   const template = lang === 'en' ? config.templates.orderDeliveredEn : config.templates.orderDeliveredBn;
   return renderWhatsAppTemplate(template, {
     customerName: order.customerName,
