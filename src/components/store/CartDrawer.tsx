@@ -20,8 +20,16 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   if (!isOpen) return null;
 
   // Approximate GST (inclusive in display, shown clearly for transparency)
-  const estimatedTaxable = Math.round(cartSubtotal / 1.18);
-  const estimatedGst = cartSubtotal - estimatedTaxable;
+  const quoteShipping = cart.some(item => item.product.shippingMode === 'quote');
+  const money = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+  const estimatedTaxable = quoteShipping ? money(cart.reduce((sum, item) => {
+    const unit = item.isWholesale || item.quantity >= item.product.minWholesaleQty ? item.product.wholesalePrice : item.product.price;
+    return sum + (item.product.gstExtra ? unit * item.quantity : unit * item.quantity / 1.18);
+  }, 0)) : Math.round(cartSubtotal / 1.18);
+  const estimatedGst = quoteShipping ? money(cart.reduce((sum, item) => {
+    const unit = item.isWholesale || item.quantity >= item.product.minWholesaleQty ? item.product.wholesalePrice : item.product.price;
+    return sum + (item.product.gstExtra ? money(unit * item.quantity * item.product.gstRate / 100) : unit * item.quantity - unit * item.quantity / 1.18);
+  }, 0)) : cartSubtotal - estimatedTaxable;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden animate-fadeIn">
@@ -106,7 +114,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center border border-[#CBCFB9] rounded bg-[#EEF0E7]">
                           <button
-                            onClick={() => updateCartQty(product.id, quantity - 1)}
+                            onClick={() => updateCartQty(product.id, quantity - (product.quantityStep || 1))}
                             className="p-1 hover:bg-[#E4E8D9] text-[#0F1913]"
                             aria-label="Decrease quantity"
                           >
@@ -116,7 +124,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                             {quantity}
                           </span>
                           <button
-                            onClick={() => updateCartQty(product.id, quantity + 1)}
+                            onClick={() => updateCartQty(product.id, quantity + (product.quantityStep || 1))}
                             className="p-1 hover:bg-[#E4E8D9] text-[#0F1913]"
                             aria-label="Increase quantity"
                           >
@@ -144,21 +152,21 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <span>{formatPrice(estimatedTaxable)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>{language === 'bn' ? 'জিএসটি (১৮% অন্তর্বর্তী বিলিং):' : 'Estimated GST (18% included):'}</span>
+                  <span>{quoteShipping ? 'GST by product rate:' : language === 'bn' ? 'জিএসটি (১৮% অন্তর্বর্তী বিলিং):' : 'Estimated GST (18% included):'}</span>
                   <span>{formatPrice(estimatedGst)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>{language === 'bn' ? 'ডেলিভারি চার্জ:' : 'Shipping:'}</span>
-                  <span className="text-[#3C6656] font-semibold">{language === 'bn' ? 'ফ্রি ডেলিভারি' : 'Free Shipping'}</span>
+                  <span className="text-[#3C6656] font-semibold">{quoteShipping ? 'Quoted separately before payment' : language === 'bn' ? 'চেকআউটে গণনা হবে' : 'Calculated at checkout'}</span>
                 </div>
               </div>
 
               <div className="pt-2 border-t border-[#CBCFB9] flex justify-between items-baseline">
                 <span className="font-heading font-bold text-[#0F1913] text-sm sm:text-base">
-                  {language === 'bn' ? 'সর্বমোট প্রদেয়:' : 'Total Payable:'}
+                  {quoteShipping ? 'Goods + GST (shipping extra):' : language === 'bn' ? 'সর্বমোট প্রদেয়:' : 'Subtotal:'}
                 </span>
                 <span className="font-black text-xl text-[#0F1913]">
-                  {formatPrice(cartSubtotal)}
+                  {formatPrice(quoteShipping ? estimatedTaxable + estimatedGst : cartSubtotal)}
                 </span>
               </div>
 
@@ -175,7 +183,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
               <div className="flex items-center justify-center gap-2 text-[11px] text-[#565F52]">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#3C6656]" />
-                <span>{language === 'bn' ? 'সুরক্ষিত PayU গেটওয়ে ও পাক্কা জিএসটি ইনভয়েস' : 'Secured via PayU & Official Tax Invoice'}</span>
+                <span>{quoteShipping ? 'Shipping and availability confirmed before payment' : language === 'bn' ? 'সুরক্ষিত চেকআউট ও জিএসটি ইনভয়েস' : 'Secure checkout & GST invoice'}</span>
               </div>
             </div>
           )}
