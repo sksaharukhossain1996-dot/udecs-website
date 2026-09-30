@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Product } from '../../types';
 import { ProductIcon } from '../common/ProductIcon';
@@ -19,6 +19,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
 
+  const [viewport, setViewport] = useState(() => ({ width: document.documentElement.clientWidth, height: window.visualViewport?.height || window.innerHeight }));
+  useEffect(() => {
+    const resize = () => setViewport({ width: document.documentElement.clientWidth, height: window.visualViewport?.height || window.innerHeight });
+    window.addEventListener('resize', resize);
+    window.visualViewport?.addEventListener('resize', resize);
+    return () => { window.removeEventListener('resize', resize); window.visualViewport?.removeEventListener('resize', resize); };
+  }, []);
+
   if (!product) return null;
 
   const isEligibleWholesale = quantity >= product.minWholesaleQty;
@@ -36,7 +44,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F1913]/60 backdrop-blur-xs animate-fadeIn">
+    <div style={{ width: viewport.width, height: viewport.height }} className="fixed top-0 left-0 z-50 flex items-center justify-center p-4 bg-[#0F1913]/60 backdrop-blur-xs animate-fadeIn">
       <div className="bg-[#FBFAF5] border border-[#CBCFB9] rounded-lg max-w-2xl w-full min-w-0 p-4 sm:p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto overflow-x-hidden">
         {/* Close Button */}
         <button
