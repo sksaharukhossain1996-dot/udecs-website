@@ -1,3 +1,4 @@
+import { normalizeWholesaleQty } from '../lib/wholesale';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import {
@@ -606,12 +607,14 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // Cart actions
   const addToCart = (product: Product, quantity = 1, isWholesale = false) => {
+    if (product.supplier === 'rajkot' && !product.supplierInStock) return;
+    quantity = normalizeWholesaleQty(product, quantity);
     setCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
         return prev.map((item) =>
           item.product.id === product.id
-            ? { ...item, quantity: item.quantity + quantity, isWholesale: isWholesale || item.isWholesale }
+            ? { ...item, quantity: normalizeWholesaleQty(product, item.quantity + quantity), isWholesale: isWholesale || item.isWholesale }
             : item
         );
       }
@@ -629,7 +632,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       return;
     }
     setCart((prev) =>
-      prev.map((item) => (item.product.id === productId ? { ...item, quantity } : item))
+      prev.map((item) => (item.product.id === productId ? { ...item, quantity: normalizeWholesaleQty(item.product, quantity) } : item))
     );
   };
 
@@ -689,7 +692,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setProducts((prev) =>
       prev.map((prod) => {
         const orderedItem = newOrder.items.find((item) => item.productId === prod.id);
-        if (orderedItem) {
+        if (orderedItem && prod.stockManaged !== false) {
           const newStock = Math.max(0, prod.stock - orderedItem.quantity);
           // Check if low stock triggered
           if (newStock <= prod.minStockAlert) {
