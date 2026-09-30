@@ -90,7 +90,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                       {language === 'bn' ? product.nameBn : product.name}
                     </h4>
                     <span className="text-[10px] text-[#565F52]">
-                      HSN: {product.hsn} · Stock: {product.stock} units
+                      HSN: {product.hsn} · {product.stockManaged === false ? 'Supplier availability confirmed on order' : `Stock: ${product.stock} units`}
                     </span>
                   </div>
                 </div>
