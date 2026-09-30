@@ -141,7 +141,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {filteredProducts.map((product) => {
-              const isLowStock = product.stock <= product.minStockAlert;
+              const isLowStock = product.stockManaged !== false && product.stock <= product.minStockAlert;
               const isAdded = addedProductId === product.id;
 
               return (
@@ -209,7 +209,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                   <div className="pt-3 border-t border-[#CBCFB9]/70 flex items-end justify-between gap-2 mt-2">
                     <div>
                       <div className="text-[11px] text-[#565F52] leading-none mb-1">
-                        {language === 'bn' ? 'মূল্য:' : 'Price:'}
+                        {product.gstExtra ? 'Per piece (GST extra):' : language === 'bn' ? 'মূল্য:' : 'Price:'}
                       </div>
                       {product.originalPrice && product.originalPrice > product.price && (
                         <span className="text-[11.5px] text-[#8A9184] line-through leading-none block mb-0.5">
@@ -226,7 +226,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                       )}
                       {product.wholesalePrice && (
                         <div className="text-[10px] text-[#A87C1F] font-medium leading-none mt-1">
-                          {language === 'bn' ? 'পাইকারি:' : 'Wholesale:'} {formatPrice(product.wholesalePrice)} ({product.minWholesaleQty}+)
+                          {language === 'bn' ? 'পাইকারি:' : 'Wholesale:'} {formatPrice(product.wholesalePrice)} ({product.minimumOrderQty ? `Min ${product.minimumOrderQty} pcs` : `${product.minWholesaleQty}+`})
                         </div>
                       )}
                     </div>
