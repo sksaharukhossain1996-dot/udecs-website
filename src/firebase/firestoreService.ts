@@ -129,6 +129,7 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
       descriptionBn: product.descriptionBn || '',
       gstRate: Number(product.gstRate || 18),
       featured: Boolean(product.featured),
+      ...(product.supplier ? { supplier: product.supplier, supplierInStock: product.supplierInStock === true, stockManaged: product.stockManaged !== false, shippingMode: product.shippingMode || '', gstExtra: product.gstExtra === true, minimumOrderQty: product.minimumOrderQty || 1, quantityStep: product.quantityStep || 1, sourceCheckedAt: product.sourceCheckedAt || '', sourceRate: product.sourceRate || 0, hsnBasis: product.hsnBasis || '' } : {}),
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {
