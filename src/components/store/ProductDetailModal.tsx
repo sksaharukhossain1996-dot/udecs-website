@@ -1,3 +1,4 @@
+import { wholesaleAvailability } from '../../lib/wholesale';
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Product } from '../../types';
@@ -27,7 +28,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     return () => { window.removeEventListener('resize', resize); window.visualViewport?.removeEventListener('resize', resize); };
   }, []);
 
+  useEffect(() => { setQuantity(product?.minimumOrderQty || 1); }, [product?.id]);
   if (!product) return null;
+  const canOrder = wholesaleAvailability(product);
 
   const isEligibleWholesale = quantity >= product.minWholesaleQty;
   const hasWholesaleDiscount = isEligibleWholesale && product.wholesalePrice < product.price;
@@ -170,6 +173,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               )}
             </div>
 
+            {product.shippingMode === 'quote' && <p className="text-xs text-[#565F52] mb-3">Minimum order: {product.minimumOrderQty} pcs. Price is per piece, GST extra. Shipping quoted separately before payment. No carton piece-count assumed.</p>}
             {/* Quantity Selector */}
             <div className="flex flex-wrap items-center gap-3 mb-6">
               <span className="text-xs font-semibold text-[#0F1913]">
@@ -177,7 +181,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </span>
               <div className="flex items-center border border-[#CBCFB9] rounded bg-[#FBFAF5]">
                 <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  onClick={() => setQuantity(Math.max(product.minimumOrderQty || 1, quantity - (product.quantityStep || 1)))}
                   className="p-1.5 hover:bg-[#E4E8D9] text-[#0F1913] transition-colors"
                   aria-label="Decrease quantity"
                 >
@@ -187,7 +191,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   {quantity}
                 </span>
                 <button
-                  onClick={() => setQuantity(quantity + 1)}
+                  onClick={() => setQuantity(quantity + (product.quantityStep || 1))}
                   className="p-1.5 hover:bg-[#E4E8D9] text-[#0F1913] transition-colors"
                   aria-label="Increase quantity"
                 >
@@ -196,7 +200,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
 
               <span className="text-xs text-[#565F52]">
-                {product.stock > 0
+                {product.stockManaged === false ? (product.supplierInStock ? 'Supplier in stock - availability confirmed on order' : 'Supplier out of stock') : product.stock > 0
                   ? `${product.stock} ${language === 'bn' ? 'ইউনিট স্টকে আছে' : 'units in stock'}`
                   : language === 'bn'
                   ? 'স্টক শেষ'
@@ -208,7 +212,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleAddToCart}
-                disabled={product.stock <= 0}
+                disabled={!canOrder}
                 className="flex-1 bg-[#0F1913] hover:bg-[#182620] disabled:bg-gray-400 text-white py-3 px-4 rounded text-sm font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
               >
                 {isAdded ? <Check className="w-4 h-4 text-[#CC9A2E]" /> : null}
@@ -228,11 +232,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   onClose();
                   onQuickCheckout(product, quantity, isEligibleWholesale);
                 }}
-                disabled={product.stock <= 0}
+                disabled={!canOrder}
                 className="flex-1 bg-[#CC9A2E] hover:bg-[#A87C1F] disabled:bg-gray-400 text-[#0F1913] hover:text-white py-3 px-4 rounded text-sm font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
               >
                 <CreditCard className="w-4 h-4" />
-                <span>{language === 'bn' ? 'PayU দিয়ে এখনই কিনুন' : 'Buy Now with PayU'}</span>
+                <span>{product.shippingMode === 'quote' ? 'Order - shipping quoted separately' : language === 'bn' ? 'এখনই কিনুন' : 'Buy Now'}</span>
               </button>
             </div>
 
@@ -240,11 +244,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div className="mt-5 pt-3 border-t border-[#CBCFB9]/60 flex items-center justify-between flex-wrap gap-2 text-[11px] text-[#565F52]">
               <span className="flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#3C6656]" />
-                {language === 'bn' ? '৭ দিনের রিপ্লেসমেন্ট ওয়ারেন্টি' : '7-Day Return Guarantee'}
+                {product.supplier === 'rajkot' ? 'Terms confirmed with your order' : language === 'bn' ? '৭ দিনের রিপ্লেসমেন্ট ওয়ারেন্টি' : '7-Day Return Guarantee'}
               </span>
               <span className="flex items-center gap-1">
                 <Truck className="w-3.5 h-3.5 text-[#3C6656]" />
-                {language === 'bn' ? 'দ্রুত কুরিয়ার ট্র্যাকিং' : 'Fast Tracked Delivery'}
+                {product.shippingMode === 'quote' ? 'Shipping quoted before payment' : language === 'bn' ? 'দ্রুত কুরিয়ার ট্র্যাকিং' : 'Fast Tracked Delivery'}
               </span>
             </div>
           </div>
