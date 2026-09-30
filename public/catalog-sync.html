@@ -1,5 +1,117 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>UDECS catalog review</title></head><body><div id="catalog-sync-root"></div><script type="module">import{initializeApp as $}from"https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";import{getAuth as A,onAuthStateChanged as M,signInWithPopup as I,GoogleAuthProvider as T}from"https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";import{getFirestore as N,doc as b,getDocFromServer as x,runTransaction as R}from"https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";var y={projectId:"udecs-store",appId:"1:859203239571:web:9ebdafe1c6a28ad2a41766",apiKey:"AIzaSyANRNCASxjGE-IZSLdCws_6W4VpjemO1aI",authDomain:"udecs-store.firebaseapp.com",storageBucket:"udecs-store.firebasestorage.app",messagingSenderId:"859203239571",measurementId:"G-C4ER2KX5SD",oAuthClientId:"859203239571-o53emdth2bfi7hlmt5dsscplm4f8j4sh.apps.googleusercontent.com",recaptchaSiteKey:""};var S=/^[A-Za-z0-9_-]{1,128}$/,C=["kitchen","sports","wholesale","industrial"];function d(i){return Array.isArray(i)?`[${i.map(d).join(",")}]`:i&&typeof i=="object"?`{${Object.keys(i).sort().map(s=>`${JSON.stringify(s)}:${d(i[s])}`).join(",")}}`:JSON.stringify(i)}function f(i){let s=i;if(s?.version!==1||!Array.isArray(s.records)||!s.records.length||s.records.length>220)throw Error("Expected 1-220 reviewed product records.");let r=new Set,n=new Set;for(let e of s.records){if(!S.test(e.id)||r.has(e.id))throw Error(`Invalid or duplicate ID: ${e.id}`);if(r.add(e.id),!["create","update"].includes(e.mode)||(e.mode==="create"?e.expected!==null:!e.expected))throw Error(`Invalid baseline: ${e.id}`);if(e.supplierStatus!=="positive")throw Error(`Held product must stay out of this import: ${e.id}`);if(!/^https:\/\/wukusy\.app\/merchant\/product-details\/\d+$/.test(e.supplierSource))throw Error(`Missing exact supplier source: ${e.id}`);let c=Date.parse(e.supplierCheckedAt);if(!Number.isFinite(c)||c>Date.now()+6e4||Date.now()-c>3600*1e3)throw Error(`Supplier snapshot is older than one hour: ${e.id}`);if(!e.fields||Object.keys(e.fields).some(o=>!/^[A-Za-z][A-Za-z0-9]*$/.test(o)||["id","updatedAt"].includes(o)))throw Error(`Invalid field mask: ${e.id}`);let t={...e.expected,...e.fields};for(let[o,E]of[["name",200],["sku",64],["hsn",16]])if(typeof t[o]!="string"||!t[o]||t[o].length>E)throw Error(`Missing/invalid ${o}: ${e.id}`);if(n.has(t.sku))throw Error(`Duplicate SKU: ${t.sku}`);if(n.add(t.sku),e.mode==="update"&&e.expected?.sku!==t.sku)throw Error(`Cannot change SKU: ${e.id}`);if(!C.includes(t.category)||![5,12,18,28].includes(t.gstRate))throw Error(`Invalid category or GST: ${e.id}`);if(typeof t.price!="number"||!Number.isFinite(t.price)||t.price<0||typeof t.stock!="number"||!Number.isSafeInteger(t.stock)||t.stock<=0)throw Error(`Invalid price or positive stock: ${e.id}`);if(e.mode==="create"){if(typeof t.imageUrl!="string"||!t.imageUrl.startsWith("https://"))throw Error(`Missing supplier photo: ${e.id}`);if(typeof t.weightKg!="number"||!Number.isFinite(t.weightKg)||t.weightKg<=0)throw Error(`Missing shipping weight: ${e.id}`);for(let o of["wholesalePrice","minWholesaleQty","minStockAlert","rating","reviewsCount"])if(typeof t[o]!="number"||!Number.isFinite(t[o])||t[o]<0)throw Error(`Missing business field ${o}: ${e.id}`)}}return s}var k=$(y),m=A(k),h=N(k),L=["ecommerceunickdigital@gmail.com","sksaharukhossain1996@gmail.com"],H=document.getElementById("catalog-sync-root");H.innerHTML='<style>body{font:16px system-ui;background:#f7f7f2;color:#14291d;max-width:980px;margin:30px auto;padding:20px}textarea{width:100%;min-height:170px}button{padding:12px;margin:8px 8px 8px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:20px}img{height:80px;width:80px;object-fit:contain}table{width:100%;background:white}td,th{padding:8px;text-align:left;border-bottom:1px solid #ddd}</style><h1>UDECS catalog review</h1><p>Admin-only. Existing products are preserved. Held products cannot be imported. Review photos, prices and quantities before applying.</p><p id="identity">Checking sign-in...</p><button id="signin">Sign in with Google</button><label>Reviewed product manifest<textarea id="manifest" spellcheck="false"></textarea></label><button id="review" disabled>Check and preview</button><button id="apply" disabled>Apply reviewed records</button><div id="preview"></div><pre id="status">No changes made.</pre>';var a=i=>document.getElementById(i),l=i=>{a("status").textContent=i},g=()=>!!m.currentUser?.emailVerified&&L.includes(m.currentUser.email.toLowerCase()),p=null,w="",u=!1;M(m,i=>{a("identity").textContent=i?`Signed in: ${i.email}${g()?" (admin)":" - not authorized"}`:"Signed out",a("review").disabled=!g()});a("signin").onclick=async()=>{try{await I(m,new T)}catch(i){l(String(i))}};a("manifest").oninput=()=>{p=null,u=!1,a("apply").textContent="Apply reviewed records",a("apply").disabled=!0};a("review").onclick=async()=>{p=null,u=!1,a("apply").textContent="Apply reviewed records",a("apply").disabled=!0;try{if(!g())throw Error("Admin sign-in required.");w=a("manifest").value;let i=f(JSON.parse(w));for(let n of i.records){let e=await x(b(h,"products",n.id));if(n.mode==="create"?e.exists():!e.exists()||d(e.data())!==d(n.expected))throw Error(`Live baseline changed: ${n.id}. Refresh the manifest; no writes made.`)}let s=document.createElement("table"),r=s.insertRow();for(let n of["Photo","SKU","Name","Retail INR","Stock","Action"]){let e=document.createElement("th");e.textContent=n,r.append(e)}for(let n of i.records){let e={...n.expected,...n.fields},c=s.insertRow(),t=document.createElement("img");t.src=String(e.imageUrl||""),t.alt=String(e.name),c.insertCell().append(t);for(let o of[e.sku,e.name,e.price,e.stock,n.mode])c.insertCell().textContent=String(o)}a("preview").replaceChildren(s),p=i,a("apply").disabled=!1,l(`Checked ${i.records.length} records against live data. Nothing written. Inspect every photo, price and stock before applying.`)}catch(i){l(String(i))}};a("apply").onclick=async()=>{if(!u){u=!0,a("apply").textContent="Confirm live import",l("Confirm the reviewed live import by clicking Confirm live import. Nothing written yet.");return}u=!1,a("apply").disabled=!0;let i=[];try{if(!g()||!p||w!==a("manifest").value)throw Error("Review is missing or changed.");let s=f(p);for(let r of s.records){let n=b(h,"products",r.id);await R(h,async t=>{let o=await t.get(n);if(r.mode==="create"){if(o.exists())throw Error(`Already exists: ${r.id}`);t.set(n,r.fields)}else{if(!o.exists()||d(o.data())!==d(r.expected))throw Error(`Changed baseline: ${r.id}`);t.update(n,r.fields)}});let e=await x(n),c=e.data();if(!c||Object.keys(r.fields).some(t=>d(c[t])!==d(r.fields[t]))||r.mode==="update"&&Object.keys(r.expected).some(t=>!(t in r.fields)&&d(c[t])!==d(r.expected[t])))throw Error(`Readback differs: ${r.id}. Stop and inspect.`);i.push({id:r.id,result:"written and server verified"}),l(JSON.stringify(i,null,2))}l(`Complete: ${i.length} products written and independently read back.
-${JSON.stringify(i,null,2)}`)}catch(s){l(`STOPPED: ${String(s)}
-${JSON.stringify(i,null,2)}
-Completed records remain live. Do not retry unchanged manifest.`)}finally{p=null}};
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>UDECS catalog review</title></head><body><div id="catalog-sync-root"></div><script type="module">import { initializeApp as $ } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getAuth as A, onAuthStateChanged as M, signInWithPopup as I, GoogleAuthProvider as T } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { getFirestore as N, doc as b, getDocFromServer as x, runTransaction as R } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+var y = { projectId: "udecs-store", appId: "1:859203239571:web:9ebdafe1c6a28ad2a41766", apiKey: "AIzaSyANRNCASxjGE-IZSLdCws_6W4VpjemO1aI", authDomain: "udecs-store.firebaseapp.com", storageBucket: "udecs-store.firebasestorage.app", messagingSenderId: "859203239571", measurementId: "G-C4ER2KX5SD", oAuthClientId: "859203239571-o53emdth2bfi7hlmt5dsscplm4f8j4sh.apps.googleusercontent.com", recaptchaSiteKey: "" };
+var S = /^[A-Za-z0-9_-]{1,128}$/, C = ["kitchen", "sports", "wholesale", "industrial"];
+function d(i) {
+  return Array.isArray(i) ? `[${i.map(d).join(",")}]` : i && typeof i == "object" ? `{${Object.keys(i).sort().map((s) => `${JSON.stringify(s)}:${d(i[s])}`).join(",")}}` : JSON.stringify(i);
+}
+function f(i) {
+  let s = i;
+  if (s?.version !== 1 || !Array.isArray(s.records) || !s.records.length || s.records.length > 220) throw Error("Expected 1-220 reviewed product records.");
+  let r = /* @__PURE__ */ new Set(), n = /* @__PURE__ */ new Set();
+  for (let e of s.records) {
+    if (!S.test(e.id) || r.has(e.id)) throw Error(`Invalid or duplicate ID: ${e.id}`);
+    if (r.add(e.id), !["create", "update"].includes(e.mode) || (e.mode === "create" ? e.expected !== null : !e.expected)) throw Error(`Invalid baseline: ${e.id}`);
+    if (e.supplierStatus !== "positive") throw Error(`Held product must stay out of this import: ${e.id}`);
+    const rajkot = /^https:\/\/rajkotwholesale\.in\/product\/[^/?#]+\/$/.test(e.supplierSource);
+    if (!rajkot && !/^https:\/\/wukusy\.app\/merchant\/product-details\/\d+$/.test(e.supplierSource)) throw Error(`Missing exact supplier source: ${e.id}`);
+    let c = Date.parse(e.supplierCheckedAt);
+    if (!Number.isFinite(c) || c > Date.now() + 6e4 || Date.now() - c > 3600 * 1e3) throw Error(`Supplier snapshot is older than one hour: ${e.id}`);
+    if (!e.fields || Object.keys(e.fields).some((o) => !/^[A-Za-z][A-Za-z0-9]*$/.test(o) || ["id", "updatedAt"].includes(o))) throw Error(`Invalid field mask: ${e.id}`);
+    let t = { ...e.expected, ...e.fields };
+    for (let [o, E] of [["name", 200], ["sku", 64], ["hsn", 16]]) if (typeof t[o] != "string" || !t[o] || t[o].length > E) throw Error(`Missing/invalid ${o}: ${e.id}`);
+    if (n.has(t.sku)) throw Error(`Duplicate SKU: ${t.sku}`);
+    if (n.add(t.sku), e.mode === "update" && e.expected?.sku !== t.sku) throw Error(`Cannot change SKU: ${e.id}`);
+    if (!C.includes(t.category) || ![5, 12, 18, 28].includes(t.gstRate)) throw Error(`Invalid category or GST: ${e.id}`);
+    if (typeof t.price != "number" || !Number.isFinite(t.price) || t.price < 0 || typeof t.stock != "number" || !Number.isSafeInteger(t.stock) || (rajkot ? t.stock !== 0 : t.stock <= 0)) throw Error(`Invalid price or positive stock: ${e.id}`);
+    if (e.mode === "create") {
+      if (typeof t.imageUrl != "string" || !t.imageUrl.startsWith("https://")) throw Error(`Missing supplier photo: ${e.id}`);
+      if (rajkot) {
+        if (t.supplier !== 'rajkot' || t.category !== 'wholesale' || t.stockManaged !== false || t.supplierInStock !== true || t.shippingMode !== 'quote' || t.gstExtra !== true || 'weightKg' in t || !Number.isSafeInteger(t.minimumOrderQty) || t.minimumOrderQty < 1 || !Number.isSafeInteger(t.quantityStep) || t.quantityStep < 1 || !t.hsnBasis || t.productLink !== e.supplierSource || t.minWholesaleQty !== t.minimumOrderQty || t.price !== t.wholesalePrice || !Number.isFinite(t.sourceRate) || t.sourceRate <= 0 || Math.abs(t.price - Math.floor((Math.round(t.sourceRate * 100) * 3 + 1) / 2) / 100) > 0.001) throw Error(`Invalid Rajkot quote-order fields: ${e.id}`);
+      } else if (typeof t.weightKg != "number" || !Number.isFinite(t.weightKg) || t.weightKg <= 0) throw Error(`Missing shipping weight: ${e.id}`);
+      for (let o of ["wholesalePrice", "minWholesaleQty", "minStockAlert", "rating", "reviewsCount"]) if (typeof t[o] != "number" || !Number.isFinite(t[o]) || t[o] < 0) throw Error(`Missing business field ${o}: ${e.id}`);
+    }
+  }
+  return s;
+}
+var k = $(y), m = A(k), h = N(k), L = ["ecommerceunickdigital@gmail.com", "sksaharukhossain1996@gmail.com"], H = document.getElementById("catalog-sync-root");
+H.innerHTML = '<style>body{font:16px system-ui;background:#f7f7f2;color:#14291d;max-width:980px;margin:30px auto;padding:20px}textarea{width:100%;min-height:170px}button{padding:12px;margin:8px 8px 8px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:20px}img{height:80px;width:80px;object-fit:contain}table{width:100%;background:white}td,th{padding:8px;text-align:left;border-bottom:1px solid #ddd}</style><h1>UDECS catalog review</h1><p>Rajkot Wholesale: per-piece price +50%, GST extra, verified minimum pieces; shipping quoted before payment. No numeric stock or weight invented.</p><p>Admin-only. Existing products are preserved. Held products cannot be imported. Review photos, prices and quantities before applying.</p><p id="identity">Checking sign-in...</p><button id="signin">Sign in with Google</button><label>Reviewed product manifest<textarea id="manifest" spellcheck="false"></textarea></label><button id="review" disabled>Check and preview</button><button id="apply" disabled>Apply reviewed records</button><div id="preview"></div><pre id="status">No changes made.</pre>';
+var a = (i) => document.getElementById(i), l = (i) => {
+  a("status").textContent = i;
+}, g = () => !!m.currentUser?.emailVerified && L.includes(m.currentUser.email.toLowerCase()), p = null, w = "", u = false;
+M(m, (i) => {
+  a("identity").textContent = i ? `Signed in: ${i.email}${g() ? " (admin)" : " - not authorized"}` : "Signed out", a("review").disabled = !g();
+});
+a("signin").onclick = async () => {
+  try {
+    await I(m, new T());
+  } catch (i) {
+    l(String(i));
+  }
+};
+a("manifest").oninput = () => {
+  p = null, u = false, a("apply").textContent = "Apply reviewed records", a("apply").disabled = true;
+};
+a("review").onclick = async () => {
+  p = null, u = false, a("apply").textContent = "Apply reviewed records", a("apply").disabled = true;
+  try {
+    if (!g()) throw Error("Admin sign-in required.");
+    w = a("manifest").value;
+    let i = f(JSON.parse(w));
+    for (let n of i.records) {
+      let e = await x(b(h, "products", n.id));
+      if (n.mode === "create" ? e.exists() : !e.exists() || d(e.data()) !== d(n.expected)) throw Error(`Live baseline changed: ${n.id}. Refresh the manifest; no writes made.`);
+    }
+    let s = document.createElement("table"), r = s.insertRow();
+    for (let n of ["Photo", "SKU", "Name", "Per-piece INR", "Availability", "Action"]) {
+      let e = document.createElement("th");
+      e.textContent = n, r.append(e);
+    }
+    for (let n of i.records) {
+      let e = { ...n.expected, ...n.fields }, c = s.insertRow(), t = document.createElement("img");
+      t.src = String(e.imageUrl || ""), t.alt = String(e.name), c.insertCell().append(t);
+      for (let o of [e.sku, e.name, e.price, e.stockManaged === false ? `Supplier in stock; min ${e.minimumOrderQty} pcs; shipping quote` : e.stock, n.mode]) c.insertCell().textContent = String(o);
+    }
+    a("preview").replaceChildren(s), p = i, a("apply").disabled = false, l(`Checked ${i.records.length} records against live data. Nothing written. Inspect every photo, price and stock before applying.`);
+  } catch (i) {
+    l(String(i));
+  }
+};
+a("apply").onclick = async () => {
+  if (!u) {
+    u = true, a("apply").textContent = "Confirm live import", l("Confirm the reviewed live import by clicking Confirm live import. Nothing written yet.");
+    return;
+  }
+  u = false, a("apply").disabled = true;
+  let i = [];
+  try {
+    if (!g() || !p || w !== a("manifest").value) throw Error("Review is missing or changed.");
+    let s = f(p);
+    for (let r of s.records) {
+      let n = b(h, "products", r.id);
+      await R(h, async (t) => {
+        let o = await t.get(n);
+        if (r.mode === "create") {
+          if (o.exists()) throw Error(`Already exists: ${r.id}`);
+          t.set(n, r.fields);
+        } else {
+          if (!o.exists() || d(o.data()) !== d(r.expected)) throw Error(`Changed baseline: ${r.id}`);
+          t.update(n, r.fields);
+        }
+      });
+      let e = await x(n), c = e.data();
+      if (!c || Object.keys(r.fields).some((t) => d(c[t]) !== d(r.fields[t])) || r.mode === "update" && Object.keys(r.expected).some((t) => !(t in r.fields) && d(c[t]) !== d(r.expected[t]))) throw Error(`Readback differs: ${r.id}. Stop and inspect.`);
+      i.push({ id: r.id, result: "written and server verified" }), l(JSON.stringify(i, null, 2));
+    }
+    l(`Complete: ${i.length} products written and independently read back.
+${JSON.stringify(i, null, 2)}`);
+  } catch (s) {
+    l(`STOPPED: ${String(s)}
+${JSON.stringify(i, null, 2)}
+Completed records remain live. Do not retry unchanged manifest.`);
+  } finally {
+    p = null;
+  }
+};
 </script></body></html>

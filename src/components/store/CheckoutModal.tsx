@@ -115,6 +115,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   if (!isOpen) return null;
 
+  const quoteShipping = checkoutItems.some(item => item.product.shippingMode === 'quote');
+  const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
   // Calculate totals & GST
   const subtotal = checkoutItems.reduce((sum, item) => {
     const isWholesale =
@@ -125,14 +127,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   // Is Intrastate (West Bengal) or Interstate (Outside WB)
   const isWestBengal = formData.state.toLowerCase().includes('bengal');
-  const taxableAmount = Math.round(subtotal / 1.18);
-  const totalGst = subtotal - taxableAmount;
-  const cgst = isWestBengal ? Math.round(totalGst / 2) : 0;
-  const sgst = isWestBengal ? totalGst - cgst : 0;
+  const taxableAmount = roundMoney(checkoutItems.reduce((sum, item) => {
+    const price = item.isWholesale || item.quantity >= item.product.minWholesaleQty ? item.product.wholesalePrice : item.product.price;
+    return sum + (item.product.gstExtra ? price * item.quantity : price * item.quantity / 1.18);
+  }, 0));
+  const totalGst = roundMoney(checkoutItems.reduce((sum, item) => {
+    const price = item.isWholesale || item.quantity >= item.product.minWholesaleQty ? item.product.wholesalePrice : item.product.price;
+    return sum + (item.product.gstExtra ? roundMoney(price * item.quantity * item.product.gstRate / 100) : price * item.quantity - price * item.quantity / 1.18);
+  }, 0));
+  const cgst = isWestBengal ? roundMoney(totalGst / 2) : 0;
+  const sgst = isWestBengal ? roundMoney(totalGst - cgst) : 0;
   const igst = !isWestBengal ? totalGst : 0;
-  const delivery = deliveryCharge(formData.pincode, checkoutItems, paymentMethod === 'cod', subtotal);
+  const delivery = quoteShipping ? { zone: zoneForPincode(formData.pincode), weightKg: 0, fee: 0 } : deliveryCharge(formData.pincode, checkoutItems, paymentMethod === 'cod', subtotal);
   const shippingFee = delivery.fee;
-  const totalAmount = subtotal + shippingFee;
+  const totalAmount = roundMoney(taxableAmount + totalGst + shippingFee);
 
   // UPI deep link + QR (amount-encoded, order ref in the note)
   const upiDeepLink = completedOrder
@@ -159,6 +167,22 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       return;
     }
 
+    if (quoteShipping) {
+      const lines = checkoutItems.map(item => {
+        const price = item.isWholesale || item.quantity >= item.product.minWholesaleQty ? item.product.wholesalePrice : item.product.price;
+        return `${item.product.sku}: ${item.product.name}, ${item.quantity} pcs, INR ${price}/piece, GST ${item.product.gstRate}% ${item.product.gstExtra ? 'extra' : 'included'}`;
+      });
+      const message = `Wholesale order request (not paid or confirmed)
+${lines.join('\n')}
+Goods + GST: INR ${totalAmount}. Shipping quote required before payment.
+Name: ${formData.name}
+Phone: ${formData.phone}
+Email: ${formData.email}
+Address: ${formData.address}, ${formData.city}, ${formData.state}, ${formData.pincode}
+GSTIN: ${formData.gstin || 'not provided'}`;
+      window.location.assign(generateWhatsAppLink(company.whatsapp, message));
+      return;
+    }
     if (paymentMethod === 'upi') {
       // Place the order first (pending), then show the UPI QR with the order ref
       executeOrderPlacement('upi', `UPI_${Date.now().toString().slice(-8)}`);
@@ -386,7 +410,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 </div>
 
                 {/* Payment Selection */}
-                <div className="pt-2">
+                <div className="pt-2" hidden={quoteShipping}>
                   <h4 className="text-sm font-bold text-[#0F1913] uppercase tracking-wider font-heading border-b border-[#CBCFB9] pb-1 mb-2.5">
                     2. {language === 'bn' ? 'পেমেন্ট মেথড নির্বাচন করুন' : 'Select Payment Method'}
                   </h4>
@@ -483,30 +507,30 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     {isWestBengal ? (
                       <>
                         <div className="flex justify-between">
-                          <span>CGST (9%):</span>
+                          <span>CGST:</span>
                           <span>{formatPrice(cgst)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>SGST (9%):</span>
+                          <span>SGST:</span>
                           <span>{formatPrice(sgst)}</span>
                         </div>
                       </>
                     ) : (
                       <div className="flex justify-between">
-                        <span>IGST (18% Interstate):</span>
+                        <span>IGST:</span>
                         <span>{formatPrice(igst)}</span>
                       </div>
                     )}
 
                     <div className="flex justify-between">
-                      <span>Shipping ({delivery.weightKg} kg, {ZONE_LABELS[delivery.zone]}):</span>
+                      <span>{quoteShipping ? 'Shipping:' : `Shipping (${delivery.weightKg} kg, ${ZONE_LABELS[delivery.zone]}):`}</span>
                       <span className="text-[#3C6656] font-semibold">
-                        {formatPrice(shippingFee)}
+                        {quoteShipping ? 'Quoted separately, not included' : formatPrice(shippingFee)}
                       </span>
                     </div>
 
                     <div className="pt-2 border-t border-[#CBCFB9] flex justify-between items-baseline text-sm font-bold text-[#0F1913]">
-                      <span>Total Amount:</span>
+                      <span>{quoteShipping ? 'Goods + GST (shipping extra):' : 'Total Amount:'}</span>
                       <span className="text-lg font-black text-[#3C6656]">
                         {formatPrice(totalAmount)}
                       </span>
@@ -521,7 +545,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   >
                     <Lock className="w-4 h-4 text-[#CC9A2E]" />
                     <span>
-                      {paymentMethod === 'upi'
+                      {quoteShipping ? 'Send order request for shipping quote on WhatsApp' : paymentMethod === 'upi'
                         ? language === 'bn'
                           ? 'অর্ডার করুন ও UPI QR দেখুন'
                           : 'Place Order & Show UPI QR'
@@ -532,7 +556,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   </button>
 
                   <div className="mt-2 text-center text-[10px] text-[#565F52]">
-                    Secure Checkout · Direct UPI to UDECS Bank Account · GST Invoice Included
+                    {quoteShipping ? 'Availability and shipping confirmed before payment. No payment or order is completed here.' : 'Secure Checkout · Direct UPI to UDECS Bank Account · GST Invoice Included'}
                   </div>
                 </div>
               </div>
@@ -719,13 +743,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   </div>
                   {completedOrder.cgst > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-[#565F52]">CGST (9%):</span>
+                      <span className="text-[#565F52]">CGST:</span>
                       <span>{formatPrice(completedOrder.cgst)}</span>
                     </div>
                   )}
                   {completedOrder.sgst > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-[#565F52]">SGST (9%):</span>
+                      <span className="text-[#565F52]">SGST:</span>
                       <span>{formatPrice(completedOrder.sgst)}</span>
                     </div>
                   )}

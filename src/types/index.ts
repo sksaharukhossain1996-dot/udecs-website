@@ -26,6 +26,16 @@ export interface Product {
   gstRate: number; // 5, 12, 18, 28%
   weightKg?: number; // kg per unit; checkout delivery defaults to 0.5 kg when missing
   featured?: boolean;
+  supplier?: 'rajkot';
+  supplierInStock?: boolean;
+  stockManaged?: boolean;
+  shippingMode?: 'quote';
+  gstExtra?: boolean;
+  minimumOrderQty?: number;
+  quantityStep?: number;
+  sourceCheckedAt?: string;
+  sourceRate?: number;
+  hsnBasis?: string;
 }
 
 export interface CartItem {
