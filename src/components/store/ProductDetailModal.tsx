@@ -22,6 +22,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   if (!product) return null;
 
   const isEligibleWholesale = quantity >= product.minWholesaleQty;
+  const hasWholesaleDiscount = isEligibleWholesale && product.wholesalePrice < product.price;
   const activeUnitPrice = isEligibleWholesale ? product.wholesalePrice : product.price;
   const totalPrice = activeUnitPrice * quantity;
 
@@ -36,7 +37,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F1913]/60 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-[#FBFAF5] border border-[#CBCFB9] rounded-lg max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <div className="bg-[#FBFAF5] border border-[#CBCFB9] rounded-lg max-w-2xl w-full min-w-0 p-4 sm:p-6 sm:p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto overflow-x-hidden">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -48,7 +49,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-start">
           {/* Media preview */}
-          <div className="sm:col-span-5 bg-[#E4E8D9] rounded-md p-6 flex flex-col items-center justify-center border border-[#CBCFB9] text-[#3C6656] min-h-[220px]">
+          <div className="sm:col-span-5 min-w-0 bg-[#E4E8D9] rounded-md p-6 flex flex-col items-center justify-center border border-[#CBCFB9] text-[#3C6656] min-h-[220px]">
             {product.imageUrl ? (
               <img
                 src={product.imageUrl}
@@ -58,8 +59,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             ) : (
               <ProductIcon name={product.imageIcon} className="w-32 h-32 text-[#3C6656]" />
             )}
-            <div className="mt-4 text-center">
-              <span className="text-[11px] font-mono font-bold text-[#A87C1F] block">
+            <div className="mt-4 text-center w-full min-w-0">
+              <span className="text-[11px] font-mono font-bold text-[#A87C1F] block break-all">
                 {product.sku}
               </span>
               <span className="text-[11px] text-[#565F52]">
@@ -82,33 +83,33 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           </div>
 
           {/* Details */}
-          <div className="sm:col-span-7 flex flex-col">
+          <div className="sm:col-span-7 min-w-0 flex flex-col">
             <div className="flex items-center gap-1 text-[#A87C1F] text-xs font-semibold mb-1">
               <Star className="w-3.5 h-3.5 fill-current" />
               <span>{product.rating}</span>
               <span className="text-[#565F52]">({product.reviewsCount} reviews)</span>
             </div>
 
-            <h3 className="text-xl sm:text-2xl font-black text-[#0F1913] font-heading mb-2">
+            <h3 className="text-xl sm:text-2xl font-black text-[#0F1913] font-heading mb-2 break-words">
               {language === 'bn' ? product.nameBn : product.name}
             </h3>
 
-            <p className="text-sm text-[#565F52] leading-relaxed mb-4">
+            <p className="text-sm text-[#565F52] leading-relaxed mb-4 break-words">
               {language === 'bn' ? product.descriptionBn : product.description}
             </p>
 
             {/* Pricing Box */}
             <div className="bg-[#EEF0E7] p-3.5 rounded border border-[#CBCFB9] mb-4">
-              <div className="flex items-baseline justify-between">
+              <div className="flex flex-wrap gap-2 items-baseline justify-between">
                 <div>
                   <span className="text-xs text-[#565F52] block">
-                    {isEligibleWholesale
+                    {hasWholesaleDiscount
                       ? language === 'bn'
                         ? 'পাইকারি ইউনিট রেট প্রয়োগ করা হয়েছে'
                         : 'Wholesale Tier Applied'
                       : language === 'bn'
-                      ? 'খুচরা মূল্য (GST সহ)'
-                      : 'Retail Price (Incl. GST)'}
+                      ? 'মূল্য (GST অতিরিক্ত)'
+                      : 'Price (GST extra)'}
                   </span>
                   <span className="text-2xl font-black text-[#0F1913]">
                     {formatPrice(activeUnitPrice)}
@@ -123,7 +124,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                       {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
                     </span>
                   )}
-                  {isEligibleWholesale && (
+                  {hasWholesaleDiscount && (
                     <span className="ml-2 text-xs line-through text-[#565F52]">
                       {formatPrice(product.price)}
                     </span>
@@ -162,7 +163,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </div>
 
             {/* Quantity Selector */}
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex flex-wrap items-center gap-3 mb-6">
               <span className="text-xs font-semibold text-[#0F1913]">
                 {language === 'bn' ? 'পরিমাণ:' : 'Quantity:'}
               </span>
@@ -228,7 +229,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </div>
 
             {/* Trust highlights */}
-            <div className="mt-5 pt-3 border-t border-[#CBCFB9]/60 flex items-center justify-between text-[11px] text-[#565F52]">
+            <div className="mt-5 pt-3 border-t border-[#CBCFB9]/60 flex items-center justify-between flex-wrap gap-2 text-[11px] text-[#565F52]">
               <span className="flex items-center gap-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#3C6656]" />
                 {language === 'bn' ? '৭ দিনের রিপ্লেসমেন্ট ওয়ারেন্টি' : '7-Day Return Guarantee'}
