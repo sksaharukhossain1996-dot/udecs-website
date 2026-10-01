@@ -113,7 +113,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<'details' | 'upi_pay' | 'complete'>('details');
 
-  if (!isOpen) return null;
+
 
   const quoteShipping = checkoutItems.some(item => item.product.shippingMode === 'quote');
   const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
@@ -153,6 +153,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     qr.make();
     return qr.createDataURL(6, 2);
   }, [upiDeepLink]);
+
+  if (!isOpen) return null;
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
