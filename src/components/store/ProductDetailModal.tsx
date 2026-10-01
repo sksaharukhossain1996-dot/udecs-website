@@ -17,6 +17,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onQuickCheckout,
 }) => {
   const { addToCart, formatPrice, language, company } = useStore();
+  const [photoIndex,setPhotoIndex]=useState(0);
+  useEffect(()=>setPhotoIndex(0),[product?.id]);
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
 
@@ -63,13 +65,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           <div className="sm:col-span-5 min-w-0 bg-[#E4E8D9] rounded-md p-6 flex flex-col items-center justify-center border border-[#CBCFB9] text-[#3C6656] min-h-[220px]">
             {product.imageUrl ? (
               <img
-                src={product.imageUrl}
+                src={product.photos?.[photoIndex] || product.imageUrl}
                 alt={product.name}
                 className="w-44 h-44 object-contain"
               />
             ) : (
               <ProductIcon name={product.imageIcon} className="w-32 h-32 text-[#3C6656]" />
             )}
+            {product.photos && product.photos.length>1 && <div className="flex gap-2 mt-3">{product.photos.map((src,i)=><button key={i} aria-label={'View photo '+(i+1)} onClick={()=>setPhotoIndex(i)} className={'border rounded p-1 '+(photoIndex===i?'border-blue-700':'border-slate-300')}><img src={src} alt="" className="w-12 h-12 object-contain"/></button>)}</div>}
             <div className="mt-4 text-center w-full min-w-0">
               <span className="text-[11px] font-mono font-bold text-[#A87C1F] block break-all">
                 {product.sku}
