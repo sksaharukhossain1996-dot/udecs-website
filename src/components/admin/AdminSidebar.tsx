@@ -125,6 +125,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             return (
               <button
                 key={item.id}
+                aria-current={isActive ? 'page' : undefined}
                 onClick={() => onSelectTab(item.id)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded text-xs font-medium transition-all ${
                   isActive

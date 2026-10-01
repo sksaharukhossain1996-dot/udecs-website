@@ -494,7 +494,7 @@ export const AdminWebsiteControl: React.FC = () => {
       {activeSubTab === 'domain_admin' && (
         <div className="space-y-6">
           {/* Hero Banner Card */}
-          <div className="bg-gradient-to-r from-[#182620] via-[#1f3329] to-[#253D32] text-white p-6 rounded-lg border border-[#3C6656] shadow-sm">
+          <div className="admin-dark-panel bg-gradient-to-r from-[#182620] via-[#1f3329] to-[#253D32] text-white p-6 rounded-lg border border-[#3C6656] shadow-sm">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div className="max-w-3xl">
                 <div className="flex items-center gap-2 mb-1.5">
@@ -1089,7 +1089,7 @@ export const AdminWebsiteControl: React.FC = () => {
       {activeSubTab === 'selling' && (
         <div className="space-y-6">
           {/* Quick Paste Hero Card */}
-          <div className="bg-gradient-to-r from-[#182620] to-[#253D32] text-white p-6 rounded-lg border border-[#3C6656] shadow-sm">
+          <div className="admin-dark-panel bg-gradient-to-r from-[#182620] to-[#253D32] text-white p-6 rounded-lg border border-[#3C6656] shadow-sm">
             <div className="max-w-3xl">
               <span className="text-[11px] font-mono uppercase tracking-wider text-[#CC9A2E] font-bold block mb-1">
                 Instant Online Selling
