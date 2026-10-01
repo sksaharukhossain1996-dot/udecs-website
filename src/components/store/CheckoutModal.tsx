@@ -60,8 +60,8 @@ const deliveryCharge = (pincode: string, items: { product: any; quantity: number
   return { zone, weightKg, fee: Math.ceil(fee) };
 };
 
-const UPI_ID = '9845485437@ybl'; // customer payments - user-chosen (twice) 01:58, PhonePe handle on business number
-const UPI_PAYEE_NAME = 'UDECS';
+const UPI_ID = '7319190514@upi'; // Owner-confirmed QR destination, 1 Oct 2026
+const UPI_PAYEE_NAME = 'SK SAHARUK HOSSAIN';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -144,7 +144,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   // UPI deep link + QR (amount-encoded, order ref in the note)
   const upiDeepLink = completedOrder
-    ? `upi://pay?pa=${UPI_ID}&pn=${UPI_PAYEE_NAME}&am=${completedOrder.totalAmount}&cu=INR&tn=${encodeURIComponent(`UDECS Order ${completedOrder.id}`)}`
+    ? `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_PAYEE_NAME)}&am=${completedOrder.totalAmount}&cu=INR&tn=${encodeURIComponent(`UDECS Order ${completedOrder.id}`)}`
     : '';
   const upiQrDataUrl = React.useMemo(() => {
     if (!upiDeepLink) return '';
