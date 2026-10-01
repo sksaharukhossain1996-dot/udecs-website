@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import './visual-redesign.css';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { Navbar } from './components/store/Navbar';
 import { Hero } from './components/store/Hero';
@@ -53,7 +54,7 @@ const StoreContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#EEF0E7] text-[#0F1913] font-sans selection:bg-[#CC9A2E] selection:text-white" id="top">
+    <div className="visual-store min-h-screen flex flex-col bg-[#EEF0E7] text-[#0F1913] font-sans selection:bg-[#CC9A2E] selection:text-white" id="top">
       {/* Top Navbar */}
       <Navbar
         onOpenCart={() => setIsCartOpen(true)}
