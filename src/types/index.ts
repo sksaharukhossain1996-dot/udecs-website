@@ -20,6 +20,7 @@ export interface Product {
   reviewsCount: number;
   imageIcon: string;
   imageUrl?: string;
+  photos?: string[];
   productLink?: string; // external or direct online selling link
   description: string;
   descriptionBn: string;

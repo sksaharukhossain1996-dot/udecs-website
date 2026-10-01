@@ -51,6 +51,7 @@ import {
   submitInquiryToFirestore,
   saveAuditLogInFirestore,
   fetchProductsFromFirestore,
+  subscribeToProducts,
   fetchSiteContentFromFirestore,
   fetchCompanyFromFirestore,
   ADMIN_EMAILS,
@@ -564,22 +565,15 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       console.warn('Firestore siteContent load fallback:', err);
     });
 
-    // 4. Products Sync & Bootstrapping
-    fetchProductsFromFirestore().then((fbProducts) => {
-      if (fbProducts && fbProducts.length > 0) {
-        setProducts(fbProducts);
-      } else {
-        // First time provisioning: seed initial catalog to Firestore
-        INITIAL_PRODUCTS.forEach((prod) => {
-          saveProductToFirestore(prod).catch(() => {});
-        });
-      }
-    }).catch((err) => {
-      console.warn('Firestore products load fallback:', err);
+    // Server catalog is canonical, including an intentionally empty catalog.
+    // Never resurrect deleted products by seeding demo records on a read.
+    const unsubscribeProducts = subscribeToProducts(setProducts, (err) => {
+      console.warn('Firestore product subscription failed:', err);
     });
 
     return () => {
       unsubscribeAuth();
+      unsubscribeProducts();
     };
   }, []);
 
