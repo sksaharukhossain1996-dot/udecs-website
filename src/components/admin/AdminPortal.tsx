@@ -140,7 +140,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
 
   // Logged-in full ERP View
   return (
-    <div className="fixed inset-0 z-50 bg-[#F4F6EE] flex overflow-hidden animate-fadeIn">
+    <div className="premium-admin fixed inset-0 z-50 bg-[#F4F6EE] flex overflow-hidden animate-fadeIn">
       {/* Sidebar */}
       <AdminSidebar
         currentTab={currentTab}
@@ -151,7 +151,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
       {/* Main Content Area with Executive Top Bar */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Executive Top Navigation Bar */}
-        <header className="bg-white border-b border-[#CBCFB9] px-4 sm:px-6 py-2.5 flex items-center justify-between shrink-0 shadow-xs gap-3">
+        <header className="admin-topbar bg-white border-b border-[#CBCFB9] px-4 sm:px-6 py-2.5 flex items-center justify-between shrink-0 shadow-xs gap-3">
           {/* Left: Domain Indicator & Tab Shortcuts */}
           <div className="flex items-center gap-2.5">
             <button
@@ -222,7 +222,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="admin-content flex-1 overflow-y-auto"><div className="admin-module">
           {currentTab === 'overview' && (
             <AdminOverview onNavigate={(tab) => setCurrentTab(tab)} />
           )}
@@ -238,7 +238,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           {currentTab === 'notifications' && <AdminNotifications />}
           {currentTab === 'audit' && <AdminAudit />}
           {currentTab === 'settings' && <AdminSettings />}
-        </main>
+        </div></main>
       </div>
     </div>
   );
