@@ -23,10 +23,7 @@ try {
 }
 
 export const GMAIL_SCOPES = [
-  'https://mail.google.com/',
-  'https://www.googleapis.com/auth/gmail.send',
-  'https://www.googleapis.com/auth/gmail.readonly',
-  'https://www.googleapis.com/auth/gmail.compose',
+  // Modify supports the existing inbox, compose, send and trash functions.
   'https://www.googleapis.com/auth/gmail.modify',
 ];
 

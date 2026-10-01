@@ -28,7 +28,7 @@ export interface GmailMessageDetail extends GmailMessageSummary {
 
 // In-Memory Token Cache (per Google Workspace security requirement, never stored in localStorage)
 let cachedAccessToken: string | null = null;
-let isSigningIn = false;
+let verifiedMailbox: string | null = null;
 
 export function getCachedGmailToken(): string | null {
   return cachedAccessToken;
@@ -36,10 +36,12 @@ export function getCachedGmailToken(): string | null {
 
 export function setCachedGmailToken(token: string | null): void {
   cachedAccessToken = token;
+  verifiedMailbox = null;
 }
 
 export function clearGmailToken(): void {
   cachedAccessToken = null;
+  verifiedMailbox = null;
 }
 
 /**
@@ -47,7 +49,7 @@ export function clearGmailToken(): void {
  */
 export async function connectGmailWithPopup(): Promise<{ email: string; token: string }> {
   try {
-    isSigningIn = true;
+    clearGmailToken();
     const result = await signInWithPopup(auth, googleProvider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
     const token = credential?.accessToken;
@@ -57,15 +59,16 @@ export async function connectGmailWithPopup(): Promise<{ email: string; token: s
     }
 
     cachedAccessToken = token;
+    const profile = await getGmailProfile();
+    if (profile.emailAddress.toLowerCase() !== result.user.email?.toLowerCase()) throw new Error("Mailbox does not match the signed-in account.");
     return {
-      email: result.user.email || '',
+      email: profile.emailAddress,
       token,
     };
   } catch (error: any) {
+    clearGmailToken();
     console.error('Gmail connection error:', error);
     throw error;
-  } finally {
-    isSigningIn = false;
   }
 }
 
@@ -78,11 +81,13 @@ export async function getGmailProfile(): Promise<GmailProfile> {
     throw new Error('Gmail is not connected. Please connect with your Google Account.');
   }
 
+  verifiedMailbox = null;
   const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile', {
     headers: { Authorization: `Bearer ${token}` },
   });
 
   if (!res.ok) {
+    if (res.status === 401) clearGmailToken();
     const errorData = await res.json().catch(() => ({}));
     if (res.status === 401) {
       clearGmailToken();
@@ -91,8 +96,13 @@ export async function getGmailProfile(): Promise<GmailProfile> {
     throw new Error(errorData.error?.message || `Failed to fetch Gmail profile: ${res.statusText}`);
   }
 
-  return res.json();
+  const profile = await res.json();
+  if (!profile.emailAddress || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profile.emailAddress)) { clearGmailToken(); throw new Error("Could not verify the Gmail mailbox."); }
+  verifiedMailbox = profile.emailAddress;
+  return profile;
 }
+
+export function getVerifiedGmailMailbox(): string | null { return cachedAccessToken ? verifiedMailbox : null; }
 
 /**
  * List messages with search query
@@ -118,6 +128,7 @@ export async function listGmailMessages(
   });
 
   if (!res.ok) {
+    if (res.status === 401) clearGmailToken();
     const errorData = await res.json().catch(() => ({}));
     if (res.status === 401) {
       clearGmailToken();
@@ -192,6 +203,7 @@ export async function getGmailMessageDetail(messageId: string): Promise<GmailMes
   });
 
   if (!res.ok) {
+    if (res.status === 401) clearGmailToken();
     throw new Error('Failed to retrieve full email content');
   }
 
@@ -259,7 +271,9 @@ export async function sendGmailEmail(options: {
     throw new Error('Gmail is not connected. Please connect your Gmail account.');
   }
 
-  const sender = options.fromName ? `${options.fromName} <me>` : 'me';
+  const mailbox = getVerifiedGmailMailbox();
+  if (!mailbox) throw new Error('Verify your Gmail mailbox in the Workspace Hub before sending.');
+  const sender = options.fromName ? `${options.fromName} <${mailbox}>` : mailbox;
 
   const emailLines = [
     `From: ${sender}`,
@@ -269,7 +283,7 @@ export async function sendGmailEmail(options: {
     'Content-Type: text/html; charset=utf-8',
     'Content-Transfer-Encoding: 7bit',
     '',
-    options.bodyHtml || options.bodyText.replace(/\n/g, '<br/>'),
+    options.bodyHtml || options.bodyText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>'),
   ];
 
   const emailRaw = emailLines.join('\r\n');
@@ -285,6 +299,7 @@ export async function sendGmailEmail(options: {
   });
 
   if (!res.ok) {
+    if (res.status === 401) clearGmailToken();
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.error?.message || `Failed to send email: ${res.statusText}`);
   }
@@ -310,6 +325,7 @@ export async function trashGmailEmail(messageId: string): Promise<void> {
   });
 
   if (!res.ok) {
+    if (res.status === 401) clearGmailToken();
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.error?.message || 'Failed to move message to trash');
   }

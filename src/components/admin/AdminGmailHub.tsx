@@ -3,6 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import {
   connectGmailWithPopup,
   getCachedGmailToken,
+  getVerifiedGmailMailbox,
   clearGmailToken,
   getGmailProfile,
   listGmailMessages,
@@ -37,7 +38,7 @@ export const AdminGmailHub: React.FC = () => {
   const { company, addAuditLog, sendNotification, currentUser } = useStore();
 
   const [profile, setProfile] = useState<GmailProfile | null>(null);
-  const [isConnected, setIsConnected] = useState<boolean>(Boolean(getCachedGmailToken()));
+  const [isConnected, setIsConnected] = useState<boolean>(Boolean(getVerifiedGmailMailbox()));
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [messages, setMessages] = useState<GmailMessageSummary[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<GmailMessageDetail | null>(null);
@@ -61,7 +62,6 @@ export const AdminGmailHub: React.FC = () => {
   // Initialize or check connection
   useEffect(() => {
     if (getCachedGmailToken()) {
-      setIsConnected(true);
       loadGmailData();
     }
   }, []);
@@ -71,6 +71,7 @@ export const AdminGmailHub: React.FC = () => {
     setErrorMessage('');
     try {
       await connectGmailWithPopup();
+      await getGmailProfile();
       setIsConnected(true);
       await loadGmailData();
       addAuditLog({
@@ -103,13 +104,9 @@ export const AdminGmailHub: React.FC = () => {
     setIsLoading(true);
     setErrorMessage('');
     try {
-      // 1. Profile
-      try {
-        const prof = await getGmailProfile();
-        setProfile(prof);
-      } catch (profErr) {
-        console.warn('Profile fetch note:', profErr);
-      }
+      const prof = await getGmailProfile();
+      setProfile(prof);
+      setIsConnected(true);
 
       // 2. Query formulation
       let finalQuery = searchQuery;
@@ -130,6 +127,7 @@ export const AdminGmailHub: React.FC = () => {
         loadMessageDetail(res.messages[0].id);
       }
     } catch (err: any) {
+      if (!getVerifiedGmailMailbox()) { setIsConnected(false); setProfile(null); setMessages([]); }
       console.error('Error fetching Gmail messages:', err);
       setErrorMessage(err?.message || 'Error loading Gmail messages.');
     } finally {
@@ -408,7 +406,7 @@ export const AdminGmailHub: React.FC = () => {
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[#565F52]">Active Mailbox:</span>
             <span className="font-bold font-mono text-[#0F1913] bg-[#FBFAF5] px-2 py-0.5 rounded border border-[#CBCFB9]">
-              {profile?.emailAddress || company.emailGmail}
+              {profile?.emailAddress || 'Mailbox not verified'}
             </span>
           </div>
 
@@ -717,7 +715,7 @@ export const AdminGmailHub: React.FC = () => {
               <div className="p-2.5 bg-amber-50 rounded border border-amber-200 text-[11px] text-amber-800 flex items-start gap-2">
                 <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <span>
-                  Per Google Workspace guidelines, you will be shown an explicit confirmation dialog before this email is dispatched from your official account ({profile?.emailAddress || company.emailGmail}).
+                  Per Google Workspace guidelines, you will be shown an explicit confirmation dialog before this email is dispatched from your official account ({profile?.emailAddress || 'Mailbox not verified'}).
                 </span>
               </div>
 
@@ -763,7 +761,7 @@ export const AdminGmailHub: React.FC = () => {
             <div className="bg-[#FBFAF5] p-3.5 rounded-lg border border-[#CBCFB9] text-xs space-y-1.5 font-mono">
               <div>
                 <span className="text-[#565F52]">Sender:</span>{' '}
-                <strong className="text-[#0F1913]">{profile?.emailAddress || company.emailGmail}</strong>
+                <strong className="text-[#0F1913]">{profile?.emailAddress || 'Mailbox not verified'}</strong>
               </div>
               <div>
                 <span className="text-[#565F52]">Recipient:</span>{' '}

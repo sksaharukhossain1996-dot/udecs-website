@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
+import { auth } from '../../firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
+import { subscribeToOrders, getServerOrder, updateOrderStatusInFirestore } from '../../firebase/firestoreService';
+import { isDemoOrTestOrder, validateOrderEmail } from '../../lib/orderEmailSafety';
 import { Order, OrderStatus } from '../../types';
-import { sendGmailEmail, getCachedGmailToken } from '../../services/gmailService';
+import { sendGmailEmail, getCachedGmailToken, getVerifiedGmailMailbox, getGmailProfile } from '../../services/gmailService';
 import {
   Search,
   Filter,
@@ -22,7 +26,22 @@ import {
 import { generateWhatsAppLink, buildOrderPlacedMessage, buildOrderShippedMessage } from '../../services/whatsappService';
 
 export const AdminOrders: React.FC = () => {
-  const { orders, updateOrderStatus, formatPrice, company, language, addAuditLog, whatsappConfig } = useStore();
+  const { formatPrice, company, language, addAuditLog, whatsappConfig } = useStore();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState('');
+  const [senderEmail, setSenderEmail] = useState('');
+  useEffect(() => {
+    let unsubscribeOrders = () => {};
+    const unsubscribeAuth = onAuthStateChanged(auth, user => {
+      unsubscribeOrders(); setOrders([]); setOrdersLoading(true); setOrdersError('');
+      if (!user) { setOrdersLoading(false); return; }
+      unsubscribeOrders = subscribeToOrders(items => { setOrders(items); setOrdersLoading(false); }, () => {
+        setOrders([]); setOrdersLoading(false); setOrdersError('Could not load server orders. Check your connection and admin access.');
+      });
+    });
+    return () => { unsubscribeAuth(); unsubscribeOrders(); };
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -36,6 +55,8 @@ export const AdminOrders: React.FC = () => {
   const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   const startEmailForOrder = (order: Order) => {
+    if (isDemoOrTestOrder(order)) { alert('Demo/test order: customer email sending is disabled.'); return; }
+    setSenderEmail('');
     setEmailingOrder(order);
     setEmailSubject(`[UDECS] Order Status Update: ${order.id} (${order.orderStatus.toUpperCase()})`);
     setEmailBody(
@@ -64,6 +85,9 @@ export const AdminOrders: React.FC = () => {
         return;
       }
 
+      const mailbox = await getGmailProfile();
+      if (!senderEmail || mailbox.emailAddress !== senderEmail) throw new Error('The Gmail sender changed. Review the email again before sending.');
+      validateOrderEmail(await getServerOrder(emailingOrder.id), emailingOrder);
       await sendGmailEmail({
         to: emailingOrder.customerEmail,
         subject: emailSubject,
@@ -90,15 +114,27 @@ export const AdminOrders: React.FC = () => {
   const filteredOrders = orders.filter((ord) => {
     const matchesSearch =
       ord.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ord.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ord.customerPhone.includes(searchTerm) ||
+      (ord.customerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ord.customerPhone || '').includes(searchTerm) ||
       (ord.trackingNumber && ord.trackingNumber.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || ord.orderStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
-    updateOrderStatus(orderId, newStatus);
+  const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
+    try { await updateOrderStatusInFirestore(orderId, newStatus); }
+    catch { alert('The server order status could not be updated. Please try again.'); }
+  };
+  const reviewEmail = async () => {
+    if (!emailingOrder) return;
+    setIsSendingEmail(true);
+    try {
+      validateOrderEmail(await getServerOrder(emailingOrder.id), emailingOrder);
+      const mailbox = await getGmailProfile();
+      setSenderEmail(mailbox.emailAddress);
+      setConfirmSendOpen(true);
+    } catch (err: any) { alert(err?.message || 'Could not verify the order and Gmail sender.'); }
+    finally { setIsSendingEmail(false); }
   };
 
   return (
@@ -121,6 +157,10 @@ export const AdminOrders: React.FC = () => {
         </div>
       </div>
 
+      <p className="text-xs text-[#565F52]">Server orders only. Demo/test orders cannot send customer emails.</p>
+      {ordersLoading && <p role="status" className="text-sm">Loading verified server orders...</p>}
+      {ordersError && <p role="alert" className="text-sm text-red-700">{ordersError}</p>}
+      {!ordersLoading && !ordersError && orders.length === 0 && <p className="text-sm">No orders found on the server.</p>}
       {/* Controls Bar: Search & Filter */}
       <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-white p-3.5 rounded-lg border border-[#CBCFB9]">
         <div className="relative w-full sm:w-80">
@@ -179,7 +219,7 @@ export const AdminOrders: React.FC = () => {
                 filteredOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-[#FBFAF5] transition-colors">
                     <td className="p-3 font-mono">
-                      <span className="font-bold text-[#0F1913] block">{order.id}</span>
+                      <span className="font-bold text-[#0F1913] block">{order.id}{isDemoOrTestOrder(order) ? ' (DEMO / TEST)' : ''}</span>
                       <span className="text-[10px] text-[#565F52]">{order.createdAt.slice(0, 10)}</span>
                     </td>
 
@@ -221,6 +261,7 @@ export const AdminOrders: React.FC = () => {
 
                     <td className="p-3">
                       <select
+                        disabled={isDemoOrTestOrder(order)}
                         value={order.orderStatus}
                         onChange={(e) =>
                           handleStatusChange(order.id, e.target.value as OrderStatus)
@@ -268,6 +309,7 @@ export const AdminOrders: React.FC = () => {
                       </button>
 
                       <button
+                        disabled={isDemoOrTestOrder(order)}
                         onClick={() => startEmailForOrder(order)}
                         className="p-1.5 bg-[#EEF0E7] hover:bg-red-100 text-red-700 rounded transition-colors inline-block"
                         title="Send Order Status Email via Gmail"
@@ -509,7 +551,7 @@ export const AdminOrders: React.FC = () => {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                setConfirmSendOpen(true);
+                void reviewEmail();
               }}
               className="p-4 space-y-3 flex-1 overflow-y-auto"
             >
@@ -555,7 +597,7 @@ export const AdminOrders: React.FC = () => {
               <div className="p-2.5 bg-amber-50 rounded border border-amber-200 text-[11px] text-amber-800 flex items-start gap-2">
                 <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <span>
-                  This email will be dispatched directly through your connected Gmail account ({company.emailGmail}). You will be asked to confirm before the email is sent.
+                  This email will be dispatched directly through your connected Gmail account ({getVerifiedGmailMailbox() || 'not yet verified'}). You will be asked to confirm before the email is sent.
                 </span>
               </div>
 
@@ -598,8 +640,10 @@ export const AdminOrders: React.FC = () => {
             </div>
 
             <div className="bg-[#FBFAF5] p-3 rounded-lg border border-[#CBCFB9] text-xs space-y-1 font-mono">
+              <p>From: <strong>{senderEmail}</strong></p>
               <p>To: <strong>{emailingOrder.customerEmail}</strong></p>
               <p>Subject: <strong>{emailSubject}</strong></p>
+              <p className="max-h-36 overflow-auto whitespace-pre-wrap font-sans pt-2">{emailBody}</p>
             </div>
 
             <p className="text-xs text-[#565F52] leading-relaxed">

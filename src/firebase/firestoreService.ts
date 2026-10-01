@@ -3,6 +3,7 @@ import {
   doc,
   getDocs,
   getDoc,
+  getDocFromServer,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -205,25 +206,20 @@ export async function updateOrderStatusInFirestore(
   }
 }
 
+export async function getServerOrder(orderId: string): Promise<Order | null> {
+  const snapshot = await getDocFromServer(doc(db, 'orders', orderId));
+  return snapshot.exists() ? { ...snapshot.data(), id: snapshot.id } as Order : null;
+}
+
 export function subscribeToOrders(
   onUpdate: (orders: Order[]) => void,
   onError?: (err: any) => void
 ) {
-  const path = 'orders';
-  return onSnapshot(
-    collection(db, path),
-    (snapshot) => {
-      const items: Order[] = [];
-      snapshot.forEach((docSnap) => {
-        items.push({ id: docSnap.id, ...(docSnap.data() as Omit<Order, 'id'>) });
-      });
-      onUpdate(items);
-    },
-    (error) => {
-      if (onError) onError(error);
-      handleFirestoreError(error, OperationType.LIST, path);
-    }
-  );
+  return onSnapshot(collection(db, 'orders'), { includeMetadataChanges: true }, (snapshot) => {
+    // Cached/local writes are not a verified server order list.
+    if (snapshot.metadata.fromCache || snapshot.metadata.hasPendingWrites) return;
+    onUpdate(snapshot.docs.map(item => ({ ...item.data(), id: item.id }) as Order));
+  }, error => { onUpdate([]); onError?.(error); });
 }
 
 // -------------------------------------------------------------

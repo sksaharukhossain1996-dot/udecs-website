@@ -54,6 +54,7 @@ import {
   fetchSiteContentFromFirestore,
   fetchCompanyFromFirestore,
   ADMIN_EMAILS,
+  subscribeToOrders,
 } from '../firebase/firestoreService';
 
 interface CurrencyRates {
@@ -274,6 +275,13 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const saved = localStorage.getItem('udecs_cart');
     return saved ? JSON.parse(saved) : [];
   });
+
+  const [serverOrders, setServerOrders] = useState<Order[]>([]);
+  useEffect(() => {
+    setServerOrders([]);
+    if (!firebaseUser || !ADMIN_EMAILS.includes(firebaseUser.email?.toLowerCase() || '')) return;
+    return subscribeToOrders(setServerOrders, () => setServerOrders([]));
+  }, [firebaseUser?.uid]);
 
   const [orders, setOrders] = useState<Order[]>(() => {
     const saved = localStorage.getItem('udecs_orders');
@@ -1090,7 +1098,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         logout,
         products,
         cart,
-        orders,
+        orders: userRole === 'customer' ? orders : serverOrders,
         employees,
         attendance,
         salarySlips,
