@@ -3,6 +3,7 @@ import { useStore } from '../../context/StoreContext';
 import { AdminSidebar, AdminTab } from './AdminSidebar';
 import { AdminOverview } from './AdminOverview';
 import { AdminOrders } from './AdminOrders';
+import {AdminProductListings} from './AdminProductListings';
 import { AdminInventory } from './AdminInventory';
 import { AdminGstReports } from './AdminGstReports';
 import { AdminInvestors } from './AdminInvestors';
@@ -229,6 +230,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           {currentTab === 'website_control' && <AdminWebsiteControl />}
           {currentTab === 'whatsapp_automation' && <AdminWhatsAppAutomation />}
           {currentTab === 'orders' && <AdminOrders />}
+          {currentTab === 'product_listing' && <AdminProductListings />}
           {currentTab === 'inventory' && <AdminInventory />}
           {currentTab === 'gst' && <AdminGstReports />}
           {currentTab === 'investors' && <AdminInvestors />}
