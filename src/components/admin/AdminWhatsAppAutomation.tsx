@@ -324,7 +324,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
       {activeTab === 'overview' && (
         <div className="space-y-6">
           {/* Status Banner */}
-          <div className="bg-gradient-to-r from-[#182620] to-[#0F1913] text-white p-5 rounded-xl border border-[#25D366]/40 shadow-md">
+          <div className="admin-dark-panel bg-gradient-to-r from-[#182620] to-[#0F1913] text-white p-5 rounded-xl border border-[#25D366]/40 shadow-md">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
