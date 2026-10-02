@@ -1,5 +1,6 @@
 rules_version = '2';
 
+
 service cloud.firestore {
   match /databases/{database}/documents {
     // Default Deny All
@@ -94,7 +95,8 @@ service cloud.firestore {
       allow update: if isValidId(orderId) && isAdmin() && isValidOrder(incoming())
         && incoming().diff(existing()).affectedKeys().hasOnly(['orderStatus','trackingNumber','courierName','updatedAt'])
         && incoming().orderStatus in ['pending','processing','packed','shipped','delivered']
-        && existing().orderStatus != 'cancelled';
+        && existing().orderStatus != 'cancelled'
+        && (incoming().orderStatus == 'pending' || existing().paymentMethod == 'cod' || existing().paymentStatus == 'paid');
     }
     match /orderRequests/{reference} {
       allow read, write: if false;
