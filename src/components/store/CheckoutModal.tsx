@@ -208,7 +208,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
       window.location.assign(generateWhatsAppLink(company.whatsapp, message));
       return;
     }
-    if(paymentMethod==='payu'){void executeOrderPlacement('payu');}
+    if(gatewayVerification||paymentMethod==='payu'){void executeOrderPlacement('payu');}
     else if (paymentMethod === 'upi') {
       // Place the order first (pending), then show the UPI QR with the order ref
       void executeOrderPlacement('upi');
@@ -260,7 +260,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   ? 'UPI Payment'
                   : language === 'bn'
                   ? 'নিরাপদ চেকআউট ও বিলিং'
-                  : 'Secure Checkout & Tax Billing'}
+                  : gatewayVerification?'Gateway verification - no delivery':'Secure Checkout & Tax Billing'}
               </span>
             </h3>
           </div>
@@ -422,8 +422,8 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   </h4>
 
                   <div className="space-y-2">
-                    <label className="flex items-center gap-3 p-3 bg-white border rounded"><input type="radio" name="payment" checked={paymentMethod==='payu'} onChange={()=>setPaymentMethod('payu')}/><span>PayU - UPI, cards and net banking. Review final total before paying.</span></label>
-                    <label className="flex items-center gap-3 p-3 bg-white border border-[#CC9A2E] rounded cursor-pointer">
+                    <label className="flex items-center gap-3 p-3 bg-white border rounded"><input type="radio" name="payment" checked={gatewayVerification||paymentMethod==='payu'} onChange={()=>setPaymentMethod('payu')}/><span>PayU - UPI, cards and net banking. Review final total before paying.</span></label>
+                    <label hidden={gatewayVerification} className="flex items-center gap-3 p-3 bg-white border border-[#CC9A2E] rounded cursor-pointer">
                       <input
                         type="radio"
                         name="payment"
@@ -447,7 +447,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                       </div>
                     </label>
 
-                    <label className="flex items-center gap-3 p-3 bg-white border border-[#CBCFB9] hover:border-[#0F1913] rounded cursor-pointer">
+                    <label hidden={gatewayVerification} className="flex items-center gap-3 p-3 bg-white border border-[#CBCFB9] hover:border-[#0F1913] rounded cursor-pointer">
                       <input
                         type="radio"
                         name="payment"
@@ -473,7 +473,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
               <div className="md:col-span-5 bg-[#EEF0E7] p-4 sm:p-5 rounded-md border border-[#CBCFB9] flex flex-col justify-between">
                 <div>
                   <h4 className="text-sm font-bold text-[#0F1913] uppercase tracking-wider font-heading border-b border-[#CBCFB9] pb-1.5 mb-3">
-                    {language === 'bn' ? 'অর্ডারের বিবরণ ও জিএসটি' : 'Order Summary & GST'}
+                    {gatewayVerification?'Verification summary':language === 'bn' ? 'অর্ডারের বিবরণ ও জিএসটি' : 'Order Summary & GST'}
                   </h4>
 
                   <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
@@ -495,7 +495,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                             </span>
                             <span className="text-[11px] text-[#565F52]">
                               Qty: {item.quantity} × {formatPrice(price)}
-                              {isWs && ' (Wholesale)'}
+                              {!gatewayVerification&&isWs && ' (Wholesale)'}
                             </span>
                           </div>
                           <span className="font-bold text-[#0F1913]">
@@ -554,7 +554,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   >
                     <Lock className="w-4 h-4 text-[#CC9A2E]" />
                     <span>
-                      {quoteShipping ? 'Send order request for shipping quote on WhatsApp' : paymentMethod === 'upi'
+                      {quoteShipping ? 'Send order request for shipping quote on WhatsApp' : gatewayVerification||paymentMethod==='payu' ? 'Save order and continue to PayU' : paymentMethod === 'upi'
                         ? language === 'bn'
                           ? 'অর্ডার করুন ও UPI QR দেখুন'
                           : 'Place Order & Show UPI QR'
@@ -565,7 +565,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   </button>
 
                   <div className="mt-2 text-center text-[10px] text-[#565F52]">
-                    {quoteShipping ? 'Availability and shipping confirmed before payment. No payment or order is completed here.' : 'Secure Checkout · Direct UPI to UDECS · Order Summary'}
+                    {quoteShipping ? 'Availability and shipping confirmed before payment. No payment or order is completed here.' : gatewayVerification||paymentMethod==='payu'?'Order saved before payment. Review final total on PayU.':'Secure Checkout · Direct UPI to UDECS · Order Summary'}
                   </div>
                 </div>
               </div>
