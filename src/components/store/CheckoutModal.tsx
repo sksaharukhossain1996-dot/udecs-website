@@ -164,6 +164,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    alert("Checkout is temporarily unavailable while we update order security. Please try again shortly. No order was placed.");return;
     if (!formData.name || !formData.email || !formData.phone || !formData.address) {
       alert('Please fill in all mandatory billing and shipping fields.');
       return;
