@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 
 export const AdminGstReports: React.FC = () => {
-  const { orders, formatPrice, company, language } = useStore();
+  const { orders:allOrders, formatPrice, company, language } = useStore();
+  const orders=allOrders.filter(o=>(o as any).taxReportingExcluded!==true);
   const [selectedMonth, setSelectedMonth] = useState('2026-09');
   const [reportType, setReportType] = useState<'gstr1' | 'gstr3b' | 'hsn'>('gstr1');
 
