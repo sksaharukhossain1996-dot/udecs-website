@@ -89,13 +89,14 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
               Catalogs & Sourcing
             </h4>
             <ul className="space-y-2 text-xs">
+              <li><a href="/?customer-portal" className="hover:text-white">Customer sign up / log in</a></li>
               <li>
-                <a href="#kitchen" className="hover:text-white transition-colors">
+                <a href="#products?category=kitchen" className="hover:text-white transition-colors">
                   Kitchenware & Home Cookware
                 </a>
               </li>
               <li>
-                <a href="#sports" className="hover:text-white transition-colors">
+                <a href="#products?category=sports" className="hover:text-white transition-colors">
                   Sports, Weights & Fitness Gear
                 </a>
               </li>
@@ -105,7 +106,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
                 </a>
               </li>
               <li>
-                <a href="#industrial" className="hover:text-white transition-colors">
+                <a href="#products?category=industrial" className="hover:text-white transition-colors">
                   Industrial Tools & Maintenance
                 </a>
               </li>
@@ -203,7 +204,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
           <div className="flex items-center gap-4">
             <span className="font-mono">udecs.store</span>
             <span>·</span>
-            <span>PayU Secured</span>
+            <span>UPI & COD</span>
             <span>·</span>
             <span>WhatsApp AI Customer Care</span>
           </div>

@@ -46,16 +46,16 @@ export const AdminNotifications: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-black font-heading text-[#0F1913]">
             {language === 'bn'
               ? 'স্বয়ংক্রিয় SMS ও ইমেইল নোটিফিকেশন হাব'
-              : 'Automated SMS & Email Notification System'}
+              : 'Local notification log & demo composer'}
           </h1>
           <p className="text-xs text-[#565F52] mt-0.5">
-            Real-time order status dispatch triggers and promotional marketing campaigns.
+            SMS/email gateway not connected here. These browser logs may include examples and are not proof of sending or delivery.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono bg-[#E4E8D9] text-[#182620] px-2.5 py-1 rounded font-bold">
-            Total Dispatched: {notifications.length} Logs
+            Local entries: {notifications.length} Logs
           </span>
         </div>
       </div>
@@ -137,7 +137,7 @@ export const AdminNotifications: React.FC = () => {
                 className="w-full bg-[#FBFAF5] border border-[#CBCFB9] rounded p-2 text-[#0F1913] focus:outline-none focus:border-[#A87C1F]"
               />
               <span className="text-[10px] text-[#565F52] mt-1 block">
-                Targeting: All verified customer phone numbers and emails in store database.
+                Demo only: this composer does not send to customers or verify phone numbers.
               </span>
             </div>
 
@@ -148,8 +148,8 @@ export const AdminNotifications: React.FC = () => {
               <Send className="w-3.5 h-3.5 text-[#CC9A2E]" />
               <span>
                 {isSent
-                  ? 'Campaign Dispatched Successfully!'
-                  : `Dispatch ${broadcastChannel.toUpperCase()} Broadcast`}
+                  ? 'Demo entry saved locally'
+                  : `Save ${broadcastChannel.toUpperCase()} demo entry`}
               </span>
             </button>
           </form>
@@ -162,11 +162,11 @@ export const AdminNotifications: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Radio className="w-4 h-4 text-[#3C6656]" />
                 <h3 className="font-heading font-bold text-sm text-[#0F1913] uppercase tracking-wider">
-                  Automated Gateway Notification Logs
+                  Local notification entries
                 </h3>
               </div>
               <span className="text-[10px] font-mono text-[#3C6656] font-bold">
-                100% Delivery Rate
+                Delivery not verified
               </span>
             </div>
 
@@ -204,7 +204,7 @@ export const AdminNotifications: React.FC = () => {
                   <div className="flex items-center justify-between pt-1 text-[9px] text-[#3C6656]">
                     <span className="flex items-center gap-1">
                       <CheckCircle className="w-3 h-3" />
-                      Carrier Ack: DELIVERED
+                      No verified delivery receipt
                     </span>
                     <span className="text-[#565F52] font-mono">{notif.id}</span>
                   </div>

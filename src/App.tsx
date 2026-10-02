@@ -5,7 +5,7 @@ import {PublicCustomerPortal} from './customer-stage/PublicCustomerPortal';
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './visual-redesign.css';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { Navbar } from './components/store/Navbar';
@@ -40,6 +40,8 @@ const StoreContent: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<
     'all' | 'kitchen' | 'sports' | 'wholesale' | 'industrial'
   >('all');
+
+  useEffect(()=>{const route=()=>{const cat=new URLSearchParams(window.location.hash.split('?')[1]||'').get('category');if(cat&&['kitchen','sports','industrial'].includes(cat)){setSelectedCategory(cat as 'kitchen'|'sports'|'industrial');document.getElementById('products')?.scrollIntoView({behavior:'smooth'});}};route();window.addEventListener('hashchange',route);return()=>window.removeEventListener('hashchange',route);},[]);
 
   const handleQuickCheckout = (
     product: Product,

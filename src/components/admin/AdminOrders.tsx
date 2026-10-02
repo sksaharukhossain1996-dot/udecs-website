@@ -146,7 +146,7 @@ export const AdminOrders: React.FC = () => {
             {language === 'bn' ? 'অর্ডার প্রসেসিং ও লজিস্টিকস শিপিং হাব' : 'Orders Fulfillment & Logistics Shipping Hub'}
           </h1>
           <p className="text-xs text-[#565F52] mt-0.5">
-            Automated courier AWB dispatch, Delhivery/Shiprocket tracking integration & GST invoices.
+            Recorded orders and manually entered courier details. Automatic courier tracking is not connected; tax invoices need review.
           </p>
         </div>
 
