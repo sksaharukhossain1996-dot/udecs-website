@@ -91,7 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-6 text-[14.5px] font-medium text-[#565F52]">
+          <nav className="hidden lg:flex items-center gap-3 text-[13px] font-medium text-[#565F52]">
             <a
               href="#products?category=kitchen"
               className="hover:text-[#0F1913] hover:border-b-2 hover:border-[#CC9A2E] py-1 transition-colors"
@@ -117,6 +117,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               {t('industrialNav')}
             </a>
+            <a href="/?customer-portal=1" className="hover:text-[#0F1913] py-1 whitespace-nowrap text-xs font-semibold">My Orders</a>
+            <button onClick={onOpenCart} className="hover:text-[#0F1913] py-1 whitespace-nowrap text-xs font-semibold">My Cart</button>
             <button
               onClick={onOpenTracking}
               className="hover:text-[#0F1913] py-1 transition-colors flex items-center gap-1.5 text-xs bg-[#FBFAF5] border border-[#CBCFB9] px-2.5 py-1 rounded hover:border-[#9CA48A]"
@@ -267,6 +269,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               {t('industrialNav')}
             </a>
+            <a href="/?customer-portal=1" onClick={() => setMobileMenuOpen(false)} className="py-2 border-b border-[#E4E8D9] text-[#182620] font-medium">My Orders</a>
+            <button onClick={() => { setMobileMenuOpen(false); onOpenCart(); }} className="py-2 text-left border-b border-[#E4E8D9] text-[#182620] font-medium">My Cart</button>
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
