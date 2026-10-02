@@ -27,8 +27,11 @@ export const GMAIL_SCOPES = [
   'https://www.googleapis.com/auth/gmail.modify',
 ];
 
+// Staff/admin identity never requests mailbox access.
+// Mailbox tools request their separate provider only when explicitly connected.
+export const gmailProvider = new GoogleAuthProvider();
 GMAIL_SCOPES.forEach((scope) => {
-  googleProvider.addScope(scope);
+  gmailProvider.addScope(scope);
 });
 
 export async function testConnection(): Promise<boolean> {
