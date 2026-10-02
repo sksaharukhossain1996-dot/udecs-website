@@ -42,10 +42,10 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ onNavigate }) => {
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#E4E8D9] text-[#3C6656] text-xs font-semibold">
             <span className="w-2 h-2 rounded-full bg-[#3C6656] animate-pulse"></span>
-            PayU Gateway Active
+            Customer PayU checkout off
           </span>
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#182620] text-[#CC9A2E] text-xs font-semibold font-mono">
-            Delhivery API Sync
+            Courier sync not verified
           </span>
         </div>
       </div>
@@ -65,7 +65,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ onNavigate }) => {
           </div>
           <div className="mt-2 text-[11px] text-[#3C6656] flex items-center gap-1 font-semibold">
             <ArrowUpRight className="w-3.5 h-3.5" />
-            <span>+18.4% this month · {orders.length} Orders</span>
+            <span>{orders.length} recorded orders · growth not calculated</span>
           </div>
         </div>
 
