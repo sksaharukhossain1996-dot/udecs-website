@@ -226,11 +226,11 @@ export const AdminSettings: React.FC = () => {
               Data is automatically indexed in local storage so orders, inventory updates, and HR attendance can be managed seamlessly even with low connectivity.
             </p>
             <button
-              onClick={handleResetCache}
+              disabled aria-disabled="true" title="Disabled: this would delete browser-only records"
               className="w-full bg-[#FBFAF5] hover:bg-[#E4E8D9] text-red-800 border border-[#CBCFB9] py-2 rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Reset Local Cache & Re-seed Initial Store Data</span>
+              <span>Reset disabled - protects browser-only data</span>
             </button>
           </div>
         </div>
