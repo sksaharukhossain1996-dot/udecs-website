@@ -1,3 +1,5 @@
+import {CUSTOMER_SUPPORT_ENABLED} from '../../customer-stage/featureFlags';
+import {CustomerPortalTab} from '../../customer-stage/CustomerPortalTab';
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { AdminSidebar, AdminTab } from './AdminSidebar';
@@ -230,6 +232,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           {currentTab === 'website_control' && <AdminWebsiteControl />}
           {currentTab === 'whatsapp_automation' && <AdminWhatsAppAutomation />}
           {currentTab === 'orders' && <AdminOrders />}
+          {CUSTOMER_SUPPORT_ENABLED && currentTab === 'customers' && <CustomerPortalTab enabled/>}
           {currentTab === 'product_listing' && <AdminProductListings />}
           {currentTab === 'inventory' && <AdminInventory />}
           {currentTab === 'gst' && <AdminGstReports />}
