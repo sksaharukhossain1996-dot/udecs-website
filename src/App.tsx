@@ -1,3 +1,5 @@
+import {CUSTOMER_SUPPORT_ENABLED} from './customer-stage/featureFlags';
+import {PublicCustomerPortal} from './customer-stage/PublicCustomerPortal';
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -53,6 +55,7 @@ const StoreContent: React.FC = () => {
     setIsCheckoutOpen(true);
   };
 
+  if(CUSTOMER_SUPPORT_ENABLED && new URLSearchParams(window.location.search).has('customer-portal'))return <PublicCustomerPortal/>;
   return (
     <div className="visual-store min-h-screen flex flex-col bg-[#EEF0E7] text-[#0F1913] font-sans selection:bg-[#CC9A2E] selection:text-white" id="top">
       {/* Top Navbar */}
