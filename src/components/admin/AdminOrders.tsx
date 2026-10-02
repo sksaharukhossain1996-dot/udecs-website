@@ -4,7 +4,7 @@ import { auth } from '../../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
 import {cancelReservedOrder} from '../../customer-stage/adminOrderRuntime';
 import { subscribeToOrders, getServerOrder, updateOrderStatusInFirestore } from '../../firebase/firestoreService';
-import { isDemoOrTestOrder, validateOrderEmail } from '../../lib/orderEmailSafety';
+import { canFulfilOrder, isDemoOrTestOrder, validateOrderEmail } from '../../lib/orderEmailSafety';
 import { Order, OrderStatus } from '../../types';
 import { sendGmailEmail, getCachedGmailToken, getVerifiedGmailMailbox, getGmailProfile } from '../../services/gmailService';
 import {
@@ -278,10 +278,10 @@ export const AdminOrders: React.FC = () => {
                         }`}
                       >
                         <option value="pending">Pending</option>
-                        <option value="processing">Processing</option>
-                        <option value="packed">Packed</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="delivered">Delivered</option>
+                        <option value="processing" disabled={!canFulfilOrder(order)}>Processing</option>
+                        <option value="packed" disabled={!canFulfilOrder(order)}>Packed</option>
+                        <option value="shipped" disabled={!canFulfilOrder(order)}>Shipped</option>
+                        <option value="delivered" disabled={!canFulfilOrder(order)}>Delivered</option>
                       </select>
                     </td>
 
