@@ -121,7 +121,7 @@ interface StoreContextType {
 
   // Order actions
   createOrder: (orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>) => Order;
-  updateOrderStatus: (orderId: string, status: OrderStatus, trackingNumber?: string, courierName?: string) => void;
+  updateOrderStatus: (orderId: string, status: OrderStatus, trackingNumber?: string, courierName?: string) => Promise<void>;
   getOrderById: (orderId: string) => Order | undefined;
 
   // HR & Employee actions
@@ -765,12 +765,13 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return newOrder;
   };
 
-  const updateOrderStatus = (
+  const updateOrderStatus = async (
     orderId: string,
     status: OrderStatus,
     trackingNumber?: string,
     courierName?: string
   ) => {
+    await updateOrderStatusInFirestore(orderId, status, trackingNumber, courierName);
     setOrders((prev) =>
       prev.map((ord) => {
         if (ord.id === orderId) {
@@ -829,9 +830,6 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             setNotifications((n) => [...statusNotifs, ...n]);
           }
 
-          updateOrderStatusInFirestore(orderId, status, trackingNumber, courierName).catch((err) =>
-            console.warn('Firestore update order status error:', err)
-          );
 
           return updated;
         }
