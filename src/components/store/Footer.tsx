@@ -1,3 +1,4 @@
+import {COMPANY_DETAILS} from '../../data/mockData';
 import React from 'react';
 import { useStore } from '../../context/StoreContext';
 import { BrandLogo } from '../common/BrandLogo';
@@ -36,13 +37,13 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
             </div>
 
             <p className="text-xs text-[#B9BFAE] leading-relaxed">
-              {company.legalName} — {siteContent?.footerAbout || company.description}
+              {COMPANY_DETAILS.legalName} (Proprietor, {COMPANY_DETAILS.name}) — {siteContent?.footerAbout || company.description}
             </p>
 
             <div className="pt-2 text-[11px] space-y-1.5">
               <p className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-[#3C6656] shrink-0" />
-                <span>{company.address}</span>
+                <span>{COMPANY_DETAILS.address}</span>
               </p>
             </div>
 
@@ -199,7 +200,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-white/60">
           <p>
-            © {new Date().getFullYear()} {company.legalName}. All rights reserved. Registered under Indian GST Act.
+            © {new Date().getFullYear()} {COMPANY_DETAILS.legalName} (Proprietor, {COMPANY_DETAILS.name}). All rights reserved. Registered under Indian GST Act.
           </p>
           <div className="flex items-center gap-4">
             <span className="font-mono">udecs.store</span>
