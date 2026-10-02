@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { auth } from '../../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
+import {cancelReservedOrder} from '../../customer-stage/adminOrderRuntime';
 import { subscribeToOrders, getServerOrder, updateOrderStatusInFirestore } from '../../firebase/firestoreService';
 import { isDemoOrTestOrder, validateOrderEmail } from '../../lib/orderEmailSafety';
 import { Order, OrderStatus } from '../../types';
@@ -122,8 +123,8 @@ export const AdminOrders: React.FC = () => {
   });
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
-    try { await updateOrderStatusInFirestore(orderId, newStatus); }
-    catch { alert('The server order status could not be updated. Please try again.'); }
+    try { if(newStatus==='cancelled')await cancelReservedOrder(orderId);else await updateOrderStatusInFirestore(orderId, newStatus); }
+    catch (e) { alert(e instanceof Error?e.message:'The server order status could not be updated. Please try again.'); }
   };
   const reviewEmail = async () => {
     if (!emailingOrder) return;
