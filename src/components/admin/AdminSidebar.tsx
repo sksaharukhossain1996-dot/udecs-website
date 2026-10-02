@@ -1,3 +1,4 @@
+import {CUSTOMER_SUPPORT_ENABLED} from '../../customer-stage/featureFlags';
 import React from 'react';
 import { useStore } from '../../context/StoreContext';
 import { BrandLogo } from '../common/BrandLogo';
@@ -26,6 +27,7 @@ export type AdminTab =
   | 'website_control'
   | 'whatsapp_automation'
   | 'orders'
+  | 'customers'
   | 'product_listing'
   | 'inventory'
   | 'gst'
@@ -75,6 +77,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'settings', labelBn: 'PayU ও সিস্টেম সেটিংস', labelEn: 'PayU & Settings', icon: Settings },
   ];
 
+  if(CUSTOMER_SUPPORT_ENABLED) navItems.push({id:'customers',labelBn:'Customer portal',labelEn:'Customer portal',icon:Users});
   return (
     <aside className="w-64 bg-[#0F1913] text-[#B9BFAE] border-r border-[#CBCFB9]/20 flex flex-col justify-between shrink-0">
       {/* Brand Header */}
