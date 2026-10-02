@@ -199,9 +199,9 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
 
                     {/* GST & Wholesale info */}
                     <div className="text-[11px] text-[#565F52] mb-3 flex items-center justify-between">
-                      <span>HSN: {product.hsn}</span>
+                      <span>{(product as any).gatewayVerification?'Owner verification only - no delivery':`HSN: ${product.hsn}`}</span>
                       <span className="text-[10px] bg-[#E4E8D9] px-1.5 py-0.5 rounded text-[#182620]">
-                        GST {product.gstRate}%
+                        {(product as any).gatewayVerification?'No tax invoice':`GST ${product.gstRate}%`}
                       </span>
                     </div>
                   </div>
@@ -225,7 +225,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                           {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
                         </span>
                       )}
-                      {product.wholesalePrice && (
+                      {!(product as any).gatewayVerification&&product.wholesalePrice && (
                         <div className="text-[10px] text-[#A87C1F] font-medium leading-none mt-1">
                           {language === 'bn' ? 'পাইকারি:' : 'Wholesale:'} {formatPrice(product.wholesalePrice)} ({product.minimumOrderQty ? `Min ${product.minimumOrderQty} pcs` : `${product.minWholesaleQty}+`})
                         </div>
