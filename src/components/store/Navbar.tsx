@@ -60,7 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {siteContent?.announcement && (
         <div className="bg-[#182620] text-[#FBFAF5] text-[11px] sm:text-xs py-1.5 px-4 text-center border-b border-black/20 flex items-center justify-center gap-2 font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse"></span>
-          <span>{siteContent.announcement}</span>
+          <span>{siteContent.announcement.replace(/PayU Secured Checkout/g, "UPI & COD available")}</span>
         </div>
       )}
 
@@ -93,13 +93,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Desktop Nav */}
           <nav className="hidden lg:flex items-center gap-6 text-[14.5px] font-medium text-[#565F52]">
             <a
-              href="#kitchen"
+              href="#products?category=kitchen"
               className="hover:text-[#0F1913] hover:border-b-2 hover:border-[#CC9A2E] py-1 transition-colors"
             >
               {t('kitchenNav')}
             </a>
             <a
-              href="#sports"
+              href="#products?category=sports"
               className="hover:text-[#0F1913] hover:border-b-2 hover:border-[#CC9A2E] py-1 transition-colors"
             >
               {t('sportsNav')}
@@ -112,7 +112,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               {t('wholesaleNav')}
             </a>
             <a
-              href="#industrial"
+              href="#products?category=industrial"
               className="hover:text-[#0F1913] hover:border-b-2 hover:border-[#CC9A2E] py-1 transition-colors"
             >
               {t('industrialNav')}
@@ -239,14 +239,14 @@ export const Navbar: React.FC<NavbarProps> = ({
         {mobileMenuOpen && (
           <div className="lg:hidden fixed inset-x-0 top-full bg-[#FBFAF5] border-b border-[#CBCFB9] shadow-lg p-5 flex flex-col gap-3 animate-fadeIn">
             <a
-              href="#kitchen"
+              href="#products?category=kitchen"
               onClick={() => setMobileMenuOpen(false)}
               className="py-2 border-b border-[#E4E8D9] text-[#182620] font-medium"
             >
               {t('kitchenNav')}
             </a>
             <a
-              href="#sports"
+              href="#products?category=sports"
               onClick={() => setMobileMenuOpen(false)}
               className="py-2 border-b border-[#E4E8D9] text-[#182620] font-medium"
             >
@@ -261,7 +261,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="text-[10px] bg-[#CC9A2E]/20 text-[#A87C1F] px-2 py-0.5 rounded font-mono">B2B</span>
             </a>
             <a
-              href="#industrial"
+              href="#products?category=industrial"
               onClick={() => setMobileMenuOpen(false)}
               className="py-2 border-b border-[#E4E8D9] text-[#182620] font-medium"
             >
