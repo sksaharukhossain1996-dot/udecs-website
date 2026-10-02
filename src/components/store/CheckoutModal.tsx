@@ -127,6 +127,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('upi');
   const [isProcessing, setIsProcessing] = useState(false);
+  const gatewayRef=useRef<HTMLDivElement>(null);const [payuError,setPayuError]=useState('');const [payuBusy,setPayuBusy]=useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<'details' | 'upi_pay' | 'payu_pay' | 'complete'>('details');
 
@@ -240,7 +241,6 @@ GSTIN: ${formData.gstin || 'not provided'}`;
     finally{requestBusy.current=false;setIsProcessing(false);}
   };
 
-  const gatewayRef=useRef<HTMLDivElement>(null);const [payuError,setPayuError]=useState('');const [payuBusy,setPayuBusy]=useState(false);
   const openPayU=async()=>{if(!completedOrder||payuBusy)return;setPayuBusy(true);setPayuError('');try{const u=customerAuth.currentUser;if(!isVerifiedGoogleCustomer(u))throw Error('Sign in to the original Google account first');const r=await fetch('https://udecs-payu-api.sksaharukhossain1996.workers.dev/api/payu/customer/form',{method:'POST',headers:{Authorization:'Bearer '+await u!.getIdToken(),'Content-Type':'application/json'},body:JSON.stringify({orderId:completedOrder.id})});const d=await r.json();if(!r.ok)throw Error(d.error||'PayU unavailable');if(d.action!=='https://secure.payu.in/_payment'||d.fields.udf1!==completedOrder.id||d.fields.amount!==Number(completedOrder.totalAmount).toFixed(2))throw Error('Gateway total mismatch. Do not pay.');const f=document.createElement('form');f.method='post';f.action=d.action;for(const[k,v]of Object.entries(d.fields)){const i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v);f.appendChild(i);}const b=document.createElement('button');b.type='submit';b.textContent='Continue to PayU - INR '+d.fields.amount;b.className='rounded border px-4 py-3';f.appendChild(b);gatewayRef.current?.replaceChildren(f);}catch(e){setPayuError(e instanceof Error?e.message:'Gateway unavailable');}finally{setPayuBusy(false);}};
   if(checkoutStep==='payu_pay'&&completedOrder)return <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"><section className="bg-white rounded p-6 max-w-lg space-y-4"><h3 className="text-xl font-bold">PayU payment for saved order</h3><p>{completedOrder.id}</p><p>Total INR {completedOrder.totalAmount}. Order saved, payment not confirmed.</p><p>Review this exact total on PayU before paying. Do not pay twice. If charged but pending, contact UDECS with this order ID.</p><button disabled={payuBusy} onClick={()=>void openPayU()} className="rounded border px-4 py-3">{payuBusy?'Preparing saved payment...':'Prepare PayU payment'}</button><div ref={gatewayRef}/>{payuError&&<p role="alert">{payuError}</p>}<button className="rounded border px-4 py-3" onClick={onClose}>Close and view My Orders</button></section></div>;
   return (
@@ -509,11 +509,11 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   {/* Calculations */}
                   <div className="pt-3 border-t border-[#CBCFB9] space-y-1.5 text-xs text-[#565F52]">
                     <div className="flex justify-between">
-                      <span>Taxable Value:</span>
-                      <span>{formatPrice(taxableAmount)}</span>
+                      <span>{gatewayVerification?'Gateway verification:':'Taxable Value:'}</span>
+                      <span>{formatPrice(gatewayVerification?50:taxableAmount)}</span>
                     </div>
 
-                    {isWestBengal ? (
+                    {!gatewayVerification&&(isWestBengal ? (
                       <>
                         <div className="flex justify-between">
                           <span>CGST:</span>
@@ -529,10 +529,10 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                         <span>IGST:</span>
                         <span>{formatPrice(igst)}</span>
                       </div>
-                    )}
+                    ))}
 
                     <div className="flex justify-between">
-                      <span>{quoteShipping ? 'Shipping:' : `Shipping (${delivery.weightKg} kg, ${ZONE_LABELS[delivery.zone]}):`}</span>
+                      <span>{gatewayVerification?'No delivery:':quoteShipping ? 'Shipping:' : `Shipping (${delivery.weightKg} kg, ${ZONE_LABELS[delivery.zone]}):`}</span>
                       <span className="text-[#3C6656] font-semibold">
                         {quoteShipping ? 'Quoted separately, not included' : formatPrice(shippingFee)}
                       </span>
