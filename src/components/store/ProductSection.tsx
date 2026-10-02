@@ -23,6 +23,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   const [filterLowStockOnly, setFilterLowStockOnly] = useState(false);
 
   const filteredProducts = products.filter((prod) => {
+    if((prod as any).hidden===true)return false;if((prod as any).gatewayVerification===true&&selectedCategory!=='verification')return false;
     const matchesCategory =
       selectedCategory === 'all' || prod.category === selectedCategory;
     const matchesSearch =
