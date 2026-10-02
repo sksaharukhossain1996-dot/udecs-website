@@ -1,4 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {customerAuth,customerSignIn,watchCustomerIdentity} from '../../customer-stage/customerIdentity';
+import {customerOrderClient} from '../../customer-stage/orderRuntime';
+import {retryKey, type OrderRequest} from '../../customer-stage/order-client';
+import {isVerifiedGoogleCustomer} from '../../customer-stage/customerOrderIdentity';
 import { useStore } from '../../context/StoreContext';
 import { CartItem, Order, OrderItem, PaymentMethod } from '../../types';
 import { BrandLogo } from '../common/BrandLogo';
@@ -79,7 +83,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const {
     cart,
     company,
-    createOrder,
+    clearCart,
     currency,
     formatPrice,
     language,
@@ -107,6 +111,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     pincode: '700091',
     gstin: '',
   });
+
+  const [customer,setCustomer]=useState(customerAuth.currentUser);
+  const [identityReady,setIdentityReady]=useState(false);
+  const [loginBusy,setLoginBusy]=useState(false);
+  const [loginError,setLoginError]=useState('');
+  const attempt=React.useRef<{uid:string;input:OrderRequest;key:string}|null>(null);
+  const requestBusy=React.useRef(false);
+  const [orderError,setOrderError]=useState('');
+  const [wasRecovered,setWasRecovered]=useState(false);
+  const [recoverOnLoad,setRecoverOnLoad]=useState(false);
+  useEffect(()=>{if(customer?.uid){setRecoverOnLoad(!!localStorage.getItem('udecs-order-retry-'+customer.uid));}else{setRecoverOnLoad(false);attempt.current=null;}},[customer?.uid]);
+  useEffect(()=>watchCustomerIdentity(user=>{setCustomer(user);setIdentityReady(true);setFormData(old=>({...old,email:isVerifiedGoogleCustomer(user)?user!.email!:''}));}),[]);
+  const signInForOrder=async()=>{setLoginBusy(true);setLoginError('');try{await customerSignIn();}catch{setLoginError('Google sign-in did not finish. Please try again. No order was placed.');}finally{setLoginBusy(false);}};
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('upi');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -164,7 +181,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Checkout is temporarily unavailable while we update order security. Please try again shortly. No order was placed.");return;
+    if(!quoteShipping&&checkoutItems.length>10){setLoginError("Each order can contain up to 10 different products. Remove extra products before continuing.");return;}
+    if(!quoteShipping&&(!identityReady||!isVerifiedGoogleCustomer(customerAuth.currentUser))){setLoginError('Sign in with Google before placing an order. No order was placed.');return;}
+    if(!quoteShipping&&formData.email!==customerAuth.currentUser?.email){setLoginError('Your Google account changed. Review your details before ordering.');return;}
     if (!formData.name || !formData.email || !formData.phone || !formData.address) {
       alert('Please fill in all mandatory billing and shipping fields.');
       return;
@@ -188,64 +207,34 @@ GSTIN: ${formData.gstin || 'not provided'}`;
     }
     if (paymentMethod === 'upi') {
       // Place the order first (pending), then show the UPI QR with the order ref
-      executeOrderPlacement('upi', `UPI_${Date.now().toString().slice(-8)}`);
+      void executeOrderPlacement('upi');
     } else {
-      executeOrderPlacement('cod', 'COD_ORDER_PLACED');
+      void executeOrderPlacement('cod');
     }
   };
 
-  const executeOrderPlacement = (method: PaymentMethod, txnId: string) => {
-    setIsProcessing(true);
-
-    const orderItems: OrderItem[] = checkoutItems.map((item) => {
-      const isWs =
-        item.isWholesale || item.quantity >= item.product.minWholesaleQty;
-      const unit = isWs ? item.product.wholesalePrice : item.product.price;
-      const tax = Math.round((unit * item.quantity) - ((unit * item.quantity) / 1.18));
-      return {
-        productId: item.product.id,
-        name: item.product.name,
-        sku: item.product.sku,
-        hsn: item.product.hsn,
-        quantity: item.quantity,
-        unitPrice: unit,
-        gstRate: item.product.gstRate,
-        taxAmount: tax,
-        totalPrice: unit * item.quantity,
-      };
-    });
-
-    const newOrder = createOrder({
-      customerName: formData.name,
-      customerEmail: formData.email,
-      customerPhone: formData.phone,
-      shippingAddress: formData.address,
-      city: formData.city,
-      state: formData.state,
-      pincode: formData.pincode,
-      gstin: formData.gstin || undefined,
-      items: orderItems,
-      subtotal,
-      taxableAmount,
-      cgst,
-      sgst,
-      igst,
-      totalGst,
-      shippingFee,
-      totalAmount,
-      currency,
-      paymentMethod: method,
-      paymentStatus: 'pending', // UPI + COD both stay pending until admin marks payment received
-      payuTxnId: txnId,
-      orderStatus: method === 'upi' ? 'pending' : 'processing',
-      courierName: undefined,
-      trackingNumber: undefined,
-    });
-
-    setIsProcessing(false);
-    setCompletedOrder(newOrder);
-    setCheckoutStep(method === 'upi' ? 'upi_pay' : 'complete');
-    onOrderSuccess(newOrder);
+  const executeOrderPlacement = async (method: 'upi'|'cod') => {
+    if(requestBusy.current)return;
+    const user=customerAuth.currentUser;
+    if(!isVerifiedGoogleCustomer(user)||formData.email!==user?.email){setLoginError('Sign in again and review your details. No order was placed.');return;}
+    if(currency!=='INR'){setOrderError('Only INR checkout is supported. No request was sent.');return;}
+    requestBusy.current=true;setIsProcessing(true);setOrderError('');
+    try{
+      const api=customerOrderClient(),reference=retryKey(user!.uid,localStorage);
+      // Always recover the prior key first. Do not start a new key after uncertain saves.
+      const recovered=await api.recover(reference.key);
+      let saved;
+      if(recovered.found)saved=recovered.order;
+      else{
+        if(attempt.current&&attempt.current.uid!==user!.uid)attempt.current=null;
+        if(!attempt.current)attempt.current={uid:user!.uid,key:reference.key,input:{customerName:formData.name,customerPhone:formData.phone,shippingAddress:formData.address,city:formData.city,state:formData.state,pincode:formData.pincode,gstin:formData.gstin||undefined,currency:'INR',paymentMethod:method,expectedTotal:totalAmount,items:checkoutItems.map(i=>({productId:i.product.id,quantity:i.quantity,isWholesale:i.isWholesale}))}};
+        saved=(await api.create(attempt.current.input,attempt.current.key)).order;
+      }
+      if(customerAuth.currentUser?.uid!==user!.uid)throw Error('Customer account changed. Sign in to the original account to recover the saved order.');
+      reference.confirmed();attempt.current=null;setWasRecovered(!!recovered.found);
+      setCompletedOrder(saved);setCheckoutStep(saved.paymentMethod==='upi'?'upi_pay':'complete');if(!recovered.found)clearCart();onOrderSuccess(saved);
+    }catch(e){setOrderError((e instanceof Error?e.message:'Order could not be confirmed')+'. Cart kept. Retry keeps the same order reference; it does not start a second order.');}
+    finally{requestBusy.current=false;setIsProcessing(false);}
   };
 
   return (
@@ -278,9 +267,16 @@ GSTIN: ${formData.gstin || 'not provided'}`;
           </button>
         </div>
 
+        {wasRecovered&&<p className="rounded border p-3">Your earlier saved order was recovered. No second order was placed. Your current cart was kept.</p>}
         {/* STEP 1: Details & Billing Form */}
-        {checkoutStep === 'details' && (
+        {checkoutStep === 'details'&&!quoteShipping&&(!identityReady||!isVerifiedGoogleCustomer(customer))&&<section className="space-y-4 p-4"><h3 className="text-xl font-bold">Sign in before ordering</h3><p>Use your Google account to continue with a UPI or COD order. Your cart stays here while you sign in.</p><p className="text-sm">Google sign-in shares your basic profile and email, not your Gmail inbox. It does not verify your phone number.</p><button type="button" disabled={!identityReady||loginBusy} onClick={signInForOrder} className="w-full rounded bg-[#182620] p-3 text-white">{!identityReady?'Checking customer sign-in...':loginBusy?'Opening Google...':'Sign in with Google to continue'}</button>{loginError&&<p role="alert">{loginError}</p>}</section>}
+        {checkoutStep === 'details'&&(quoteShipping||(identityReady&&isVerifiedGoogleCustomer(customer))) && (
           <form onSubmit={handleSubmit} className="space-y-6">
+            {!quoteShipping&&<p className="rounded border p-3">Signed in as {customer?.email}. Your order email uses this Google account.</p>}
+            {loginError&&<p role="alert">{loginError}</p>}
+            {orderError&&<p role="alert">{orderError}</p>}
+            {recoverOnLoad&&<p className="rounded border p-3">An earlier order request may still need confirmation. This checkout will check that reference before creating any new order.</p>}
+            {attempt.current&&<p className="rounded border p-3">An earlier request is not yet confirmed. Retrying sends those original details, not edited fields. Do not pay until an order is confirmed.</p>}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               {/* Customer and Shipping Details */}
               <div className="md:col-span-7 space-y-4">
@@ -311,6 +307,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                     <input
                       type="email"
                       name="email"
+                      readOnly={!quoteShipping}
                       required
                       placeholder="e.g. farooq@gmail.com"
                       value={formData.email}
@@ -320,7 +317,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#182620] mb-1">
-                      {language === 'bn' ? 'মোবাইল নম্বর (SMS ট্র্যাকিংয়ের জন্য) *' : 'Phone Number (for SMS Tracking) *'}
+                      {language === 'bn' ? 'মোবাইল নম্বর (SMS ট্র্যাকিংয়ের জন্য) *' : 'Phone Number (for order support) *'}
                     </label>
                     <input
                       type="tel"
@@ -559,7 +556,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   </button>
 
                   <div className="mt-2 text-center text-[10px] text-[#565F52]">
-                    {quoteShipping ? 'Availability and shipping confirmed before payment. No payment or order is completed here.' : 'Secure Checkout · Direct UPI to UDECS Bank Account · GST Invoice Included'}
+                    {quoteShipping ? 'Availability and shipping confirmed before payment. No payment or order is completed here.' : 'Secure Checkout · Direct UPI to UDECS · Order Summary'}
                   </div>
                 </div>
               </div>
@@ -609,8 +606,8 @@ GSTIN: ${formData.gstin || 'not provided'}`;
               </div>
 
               <p className="text-[11px] text-[#B9BFAE] text-center">
-                We confirm your payment on WhatsApp before dispatch. You can share the payment
-                screenshot with us there.
+                Payment remains pending until UDECS verifies it. You can contact UDECS
+                on WhatsApp with your payment screenshot.
               </p>
             </div>
 
@@ -620,7 +617,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                 onClick={() => setCheckoutStep('complete')}
                 className="bg-[#0F1913] text-white font-bold px-6 py-3 rounded text-sm hover:bg-[#182620] transition-all"
               >
-                I have paid - Continue
+                Continue to order summary
               </button>
             </div>
           </div>
@@ -638,7 +635,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                       : 'Order Received - Payment Verification Pending'
                     : language === 'bn'
                       ? 'অর্ডার কনফার্ম হয়েছে!'
-                      : 'COD Order Confirmed!'}
+                      : 'COD Order Saved'}
               </h4>
               <p className="text-xs text-[#565F52]">
                 Order Reference ID:{' '}
@@ -651,7 +648,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                 <span>
                   {language === 'bn'
                     ? 'অর্ডার সেভ হয়েছে - WhatsApp এ কনফার্মেশন আসবে'
-                    : 'Order saved - our team will confirm on WhatsApp'}
+                    : 'Order saved. Payment pending; dispatch not confirmed.'}
                 </span>
               </div>
             </div>
@@ -678,7 +675,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                 </div>
                 <div className="text-right">
                   <span className="bg-[#182620] text-[#CC9A2E] font-bold px-2 py-0.5 rounded text-[10px] uppercase font-mono">
-                    TAX INVOICE
+                    ORDER SUMMARY
                   </span>
                   <p className="font-mono font-bold mt-1 text-sm">{completedOrder.id}</p>
                   <p className="text-[11px] text-[#565F52]">
@@ -707,7 +704,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   <p>Courier: <span className="font-semibold">{completedOrder.courierName}</span></p>
                   <p>Tracking AWB: <span className="font-mono font-bold">{completedOrder.trackingNumber}</span></p>
                   <p>Status: <span className="text-[#3C6656] font-semibold uppercase">{completedOrder.orderStatus}</span></p>
-                  <p className="text-[#565F52] mt-1">Live tracking active on udecs.store/track</p>
+                  <p className="text-[#565F52] mt-1">No live courier tracking is connected.</p>
                 </div>
               </div>
 
@@ -763,14 +760,14 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                     </div>
                   )}
                   <div className="flex justify-between font-bold text-sm text-[#0F1913] pt-1 border-t border-[#CBCFB9]">
-                    <span>Invoice Total:</span>
+                    <span>Order Total:</span>
                     <span className="text-[#3C6656]">{formatPrice(completedOrder.totalAmount)}</span>
                   </div>
                 </div>
               </div>
 
               <div className="pt-3 border-t border-[#CBCFB9] flex justify-between items-center text-[10px] text-[#565F52]">
-                <span>This is a computer-generated GST invoice issued under Rule 46 of CGST Rules 2017.</span>
+                <span>This order summary is not proof of payment or a confirmed dispatch.</span>
                 <span className="font-semibold text-[#0F1913]">For UNICK DIGITAL E-COMMERCE SOLUTIONS</span>
               </div>
             </div>
@@ -796,7 +793,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                 className="flex-1 bg-[#182620] hover:bg-[#0F1913] text-white py-3 px-4 rounded text-xs font-semibold flex items-center justify-center gap-2 transition-all shadow-xs"
               >
                 <Printer className="w-4 h-4 text-[#CC9A2E]" />
-                <span>{language === 'bn' ? 'জিএসটি ট্যাক্স ইনভয়েস প্রিন্ট করুন' : 'Print Official GST Invoice'}</span>
+                <span>{language === 'bn' ? 'অর্ডার সারাংশ প্রিন্ট করুন' : 'Print Order Summary'}</span>
               </button>
 
               <button
