@@ -423,7 +423,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
 
                   <div className="space-y-2">
                     <label className="flex items-center gap-3 p-3 bg-white border rounded"><input type="radio" name="payment" checked={gatewayVerification||paymentMethod==='payu'} onChange={()=>setPaymentMethod('payu')}/><span>PayU - UPI, cards and net banking. Review final total before paying.</span></label>
-                    <label hidden={gatewayVerification} className="flex items-center gap-3 p-3 bg-white border border-[#CC9A2E] rounded cursor-pointer">
+                    <label className={gatewayVerification?"hidden":"flex items-center gap-3 p-3 bg-white border border-[#CC9A2E] rounded cursor-pointer"}>
                       <input
                         type="radio"
                         name="payment"
@@ -447,7 +447,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                       </div>
                     </label>
 
-                    <label hidden={gatewayVerification} className="flex items-center gap-3 p-3 bg-white border border-[#CBCFB9] hover:border-[#0F1913] rounded cursor-pointer">
+                    <label className={gatewayVerification?"hidden":"flex items-center gap-3 p-3 bg-white border border-[#CBCFB9] hover:border-[#0F1913] rounded cursor-pointer"}>
                       <input
                         type="radio"
                         name="payment"
