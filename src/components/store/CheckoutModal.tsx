@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {customerAuth,customerSignIn,watchCustomerIdentity} from '../../customer-stage/customerIdentity';
 import {customerOrderClient} from '../../customer-stage/orderRuntime';
 import {retryKey, type OrderRequest} from '../../customer-stage/order-client';
@@ -128,10 +128,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('upi');
   const [isProcessing, setIsProcessing] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
-  const [checkoutStep, setCheckoutStep] = useState<'details' | 'upi_pay' | 'complete'>('details');
+  const [checkoutStep, setCheckoutStep] = useState<'details' | 'upi_pay' | 'payu_pay' | 'complete'>('details');
 
 
 
+  const gatewayVerification=checkoutItems.length===1&&(checkoutItems[0].product as any).gatewayVerification===true&&checkoutItems[0].product.id==='UDECS_OWNER_GATEWAY_50';
+  useEffect(()=>{if(gatewayVerification)setPaymentMethod('payu');},[gatewayVerification]);
   const quoteShipping = checkoutItems.some(item => item.product.shippingMode === 'quote');
   const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
   // Calculate totals & GST
@@ -144,11 +146,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   // Is Intrastate (West Bengal) or Interstate (Outside WB)
   const isWestBengal = formData.state.toLowerCase().includes('bengal');
-  const taxableAmount = roundMoney(checkoutItems.reduce((sum, item) => {
+  const taxableAmount = gatewayVerification?0:roundMoney(checkoutItems.reduce((sum, item) => {
     const price = item.isWholesale || item.quantity >= item.product.minWholesaleQty ? item.product.wholesalePrice : item.product.price;
     return sum + (item.product.gstExtra ? price * item.quantity : price * item.quantity / 1.18);
   }, 0));
-  const totalGst = roundMoney(checkoutItems.reduce((sum, item) => {
+  const totalGst = gatewayVerification?0:roundMoney(checkoutItems.reduce((sum, item) => {
     const price = item.isWholesale || item.quantity >= item.product.minWholesaleQty ? item.product.wholesalePrice : item.product.price;
     return sum + (item.product.gstExtra ? roundMoney(price * item.quantity * item.product.gstRate / 100) : price * item.quantity - price * item.quantity / 1.18);
   }, 0));
@@ -156,8 +158,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const sgst = isWestBengal ? roundMoney(totalGst - cgst) : 0;
   const igst = !isWestBengal ? totalGst : 0;
   const delivery = quoteShipping ? { zone: zoneForPincode(formData.pincode), weightKg: 0, fee: 0 } : deliveryCharge(formData.pincode, checkoutItems, paymentMethod === 'cod', subtotal);
-  const shippingFee = delivery.fee;
-  const totalAmount = roundMoney(taxableAmount + totalGst + shippingFee);
+  const shippingFee = gatewayVerification?0:delivery.fee;
+  const totalAmount = gatewayVerification?50:roundMoney(taxableAmount + totalGst + shippingFee);
 
   // UPI deep link + QR (amount-encoded, order ref in the note)
   const upiDeepLink = completedOrder
@@ -205,7 +207,8 @@ GSTIN: ${formData.gstin || 'not provided'}`;
       window.location.assign(generateWhatsAppLink(company.whatsapp, message));
       return;
     }
-    if (paymentMethod === 'upi') {
+    if(paymentMethod==='payu'){void executeOrderPlacement('payu');}
+    else if (paymentMethod === 'upi') {
       // Place the order first (pending), then show the UPI QR with the order ref
       void executeOrderPlacement('upi');
     } else {
@@ -213,7 +216,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
     }
   };
 
-  const executeOrderPlacement = async (method: 'upi'|'cod') => {
+  const executeOrderPlacement = async (method: 'upi'|'cod'|'payu') => {
     if(requestBusy.current)return;
     const user=customerAuth.currentUser;
     if(!isVerifiedGoogleCustomer(user)||formData.email!==user?.email){setLoginError('Sign in again and review your details. No order was placed.');return;}
@@ -232,11 +235,14 @@ GSTIN: ${formData.gstin || 'not provided'}`;
       }
       if(customerAuth.currentUser?.uid!==user!.uid)throw Error('Customer account changed. Sign in to the original account to recover the saved order.');
       reference.confirmed();attempt.current=null;setWasRecovered(!!recovered.found);
-      setCompletedOrder(saved);setCheckoutStep(saved.paymentMethod==='upi'?'upi_pay':'complete');if(!recovered.found)clearCart();onOrderSuccess(saved);
+      setCompletedOrder(saved);setCheckoutStep(saved.paymentMethod==='payu'?'payu_pay':saved.paymentMethod==='upi'?'upi_pay':'complete');if(!recovered.found)clearCart();onOrderSuccess(saved);
     }catch(e){setOrderError((e instanceof Error?e.message:'Order could not be confirmed')+'. Cart kept. Retry keeps the same order reference; it does not start a second order.');}
     finally{requestBusy.current=false;setIsProcessing(false);}
   };
 
+  const gatewayRef=useRef<HTMLDivElement>(null);const [payuError,setPayuError]=useState('');const [payuBusy,setPayuBusy]=useState(false);
+  const openPayU=async()=>{if(!completedOrder||payuBusy)return;setPayuBusy(true);setPayuError('');try{const u=customerAuth.currentUser;if(!isVerifiedGoogleCustomer(u))throw Error('Sign in to the original Google account first');const r=await fetch('https://udecs-payu-api.sksaharukhossain1996.workers.dev/api/payu/customer/form',{method:'POST',headers:{Authorization:'Bearer '+await u!.getIdToken(),'Content-Type':'application/json'},body:JSON.stringify({orderId:completedOrder.id})});const d=await r.json();if(!r.ok)throw Error(d.error||'PayU unavailable');if(d.action!=='https://secure.payu.in/_payment'||d.fields.udf1!==completedOrder.id||d.fields.amount!==Number(completedOrder.totalAmount).toFixed(2))throw Error('Gateway total mismatch. Do not pay.');const f=document.createElement('form');f.method='post';f.action=d.action;for(const[k,v]of Object.entries(d.fields)){const i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v);f.appendChild(i);}const b=document.createElement('button');b.type='submit';b.textContent='Continue to PayU - INR '+d.fields.amount;b.className='rounded border px-4 py-3';f.appendChild(b);gatewayRef.current?.replaceChildren(f);}catch(e){setPayuError(e instanceof Error?e.message:'Gateway unavailable');}finally{setPayuBusy(false);}};
+  if(checkoutStep==='payu_pay'&&completedOrder)return <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"><section className="bg-white rounded p-6 max-w-lg space-y-4"><h3 className="text-xl font-bold">PayU payment for saved order</h3><p>{completedOrder.id}</p><p>Total INR {completedOrder.totalAmount}. Order saved, payment not confirmed.</p><p>Review this exact total on PayU before paying. Do not pay twice. If charged but pending, contact UDECS with this order ID.</p><button disabled={payuBusy} onClick={()=>void openPayU()} className="rounded border px-4 py-3">{payuBusy?'Preparing saved payment...':'Prepare PayU payment'}</button><div ref={gatewayRef}/>{payuError&&<p role="alert">{payuError}</p>}<button className="rounded border px-4 py-3" onClick={onClose}>Close and view My Orders</button></section></div>;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F1913]/60 backdrop-blur-xs animate-fadeIn overflow-y-auto">
       <div className="bg-[#FBFAF5] border border-[#CBCFB9] rounded-lg max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-6 max-h-[95vh] overflow-y-auto">
@@ -416,10 +422,12 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   </h4>
 
                   <div className="space-y-2">
+                    <label className="flex items-center gap-3 p-3 bg-white border rounded"><input type="radio" name="payment" checked={paymentMethod==='payu'} onChange={()=>setPaymentMethod('payu')}/><span>PayU - UPI, cards and net banking. Review final total before paying.</span></label>
                     <label className="flex items-center gap-3 p-3 bg-white border border-[#CC9A2E] rounded cursor-pointer">
                       <input
                         type="radio"
                         name="payment"
+                        disabled={gatewayVerification}
                         checked={paymentMethod === 'upi'}
                         onChange={() => setPaymentMethod('upi')}
                         className="accent-[#CC9A2E]"
@@ -443,6 +451,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                       <input
                         type="radio"
                         name="payment"
+                        disabled={gatewayVerification}
                         checked={paymentMethod === 'cod'}
                         onChange={() => setPaymentMethod('cod')}
                         className="accent-[#0F1913]"
