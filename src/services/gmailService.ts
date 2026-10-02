@@ -1,4 +1,4 @@
-import { auth, googleProvider } from '../firebase/config';
+import { auth, gmailProvider } from '../firebase/config';
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 export interface GmailProfile {
@@ -50,7 +50,7 @@ export function clearGmailToken(): void {
 export async function connectGmailWithPopup(): Promise<{ email: string; token: string }> {
   try {
     clearGmailToken();
-    const result = await signInWithPopup(auth, googleProvider);
+    const result = await signInWithPopup(auth, gmailProvider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
     const token = credential?.accessToken;
 
