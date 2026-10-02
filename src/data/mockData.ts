@@ -21,7 +21,7 @@ export const DEFAULT_SITE_CONTENT: SiteContent = {
 
 export const COMPANY_DETAILS: CompanyInfo = {
   name: 'UNICK DIGITAL E-COMMERCE SOLUTIONS',
-  legalName: 'UNICK DIGITAL E-COMMERCE SOLUTIONS PRIVATE LIMITED',
+  legalName: 'SK Saharuk Hossain',
   domain: 'udecs.store',
   whatsapp: '+91 9845485437',
   emailGmail: 'ecommerceunickdigital@gmail.com',
@@ -29,7 +29,7 @@ export const COMPANY_DETAILS: CompanyInfo = {
   gstin: '19AODPH1519N1ZS',
   state: 'West Bengal',
   stateCode: '19',
-  address: 'Pratappur, Panskura, Purba Medinipur, West Bengal 721152, India',
+  address: 'Garpurusottampur, Pratappur, Bahirgram, Purba Medinipur, West Bengal 721152, India',
   description: 'Authorized direct distributor and manufacturer partner for premium cookware, industrial kitchen appliances, sports fitness equipment, and wholesale container supplies.',
   socials: {
     facebook: 'https://www.facebook.com/people/Udecscom/61592413603341/',
