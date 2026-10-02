@@ -1,4 +1,5 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
     // Default Deny All
@@ -39,6 +40,17 @@ service cloud.firestore {
              data.gstRate is number && (data.gstRate in [5, 12, 18, 28]);
     }
 
+    function isValidInvestorLead(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 120 &&
+             data.company is string && data.company.size() > 0 && data.company.size() <= 160 &&
+             data.email is string && data.email.size() > 3 && data.email.size() <= 120 &&
+             data.phone is string && data.phone.size() > 5 && data.phone.size() <= 20 &&
+             data.city is string && data.city.size() > 0 && data.city.size() <= 120 &&
+             data.amount is string && data.amount.size() <= 60 &&
+             data.message is string && data.message.size() <= 1000 &&
+             data.approved is bool && data.approved == false;
+    }
+
     function isValidOrder(data) {
       return data.customerName is string && data.customerName.size() > 0 && data.customerName.size() <= 150 &&
              data.customerPhone is string && data.customerPhone.size() > 0 && data.customerPhone.size() <= 30 &&
@@ -73,13 +85,19 @@ service cloud.firestore {
       allow delete: if isValidId(productId) && isAdmin();
     }
 
-    // Customer Orders
+    // Order writes only through authorized server transactions.
     match /orders/{orderId} {
-      allow create: if isValidId(orderId) && isValidOrder(incoming());
-      allow get: if isValidId(orderId) && (isAdmin() || (isSignedIn() && resource.data.customerEmail == request.auth.token.email));
+      allow create, delete: if false;
+      allow get: if isValidId(orderId) && isAdmin();
       allow list: if isAdmin();
-      allow update: if isValidId(orderId) && isAdmin() && isValidOrder(incoming());
-      allow delete: if false;
+      // Staff can update fulfillment references only. Customer/price/payment/stock ownership is immutable.
+      allow update: if isValidId(orderId) && isAdmin() && isValidOrder(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['orderStatus','trackingNumber','courierName','updatedAt'])
+        && incoming().orderStatus in ['pending','processing','packed','shipped','delivered']
+        && existing().orderStatus != 'cancelled';
+    }
+    match /orderRequests/{reference} {
+      allow read, write: if false;
     }
 
     // Storefront CMS Texts
@@ -112,5 +130,65 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow write: if false;
     }
+    // Investor Leads (invest.html public form)
+    match /investorLeads/{leadId} {
+      allow create: if isValidInvestorLead(incoming());
+      allow get, list, update, delete: if isAdmin();
+    }
+
+    // Pitch-deck download tokens (doc id is the random 48-hex secret; only approved docs unlock deck.html)
+    match /deckTokens/{token} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+    // HR directory: only the two verified owner accounts. Admin documents do not grant HR access.
+    function isHROwner() {
+      return request.auth != null && request.auth.token.email_verified == true &&
+        request.auth.token.email in ['sksaharukhossain1996@gmail.com','ecommerceunickdigital@gmail.com'];
+    }
+    function validHREmployee(d,id) {
+      return d.keys().hasAll(['id','name','email','phone','designation','department','baseSalary','joiningDate','role','status','createdAt','updatedAt']) &&
+        d.keys().hasOnly(['id','name','email','phone','designation','department','baseSalary','joiningDate','role','status','createdAt','updatedAt']) &&
+        d.id == id && id.matches('^EMP-[a-zA-Z0-9-]{10,80}$') &&
+        d.name is string && d.name.size()>0 && d.name.size()<=120 &&
+        d.email is string && d.email.size()<=120 &&
+        d.phone is string && d.phone.size()<=24 &&
+        d.designation is string && d.designation.size()>0 && d.designation.size()<=120 &&
+        d.department is string && d.department.size()>0 && d.department.size()<=100 &&
+        d.baseSalary is number && d.baseSalary>=0 && d.baseSalary<=10000000 &&
+        d.joiningDate is string && d.joiningDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
+        d.role in ['manager','inventory','accountant'] && d.status == 'active' &&
+        d.createdAt is timestamp && d.updatedAt == request.time;
+    }
+    match /hrEmployees/{employeeId} {
+      allow get, list: if isHROwner();
+      allow create: if isHROwner() && validHREmployee(request.resource.data,employeeId) && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isHROwner();
+    }
+// Merge inside /databases/{database}/documents, preserving every existing rule.
+// Only verified owner emails may read the list. Each customer may access their own profile.
+match /customers/{uid} {
+  function customerListOwner(){return request.auth != null && request.auth.token.email_verified == true && request.auth.token.email in ['sksaharukhossain1996@gmail.com','ecommerceunickdigital@gmail.com'];}
+  function validContact() {
+    let d=request.resource.data;
+    return d.keys().hasOnly(['name','phone','email','gender','address','source','phoneVerified','noticeVersion','updatedAt'])
+      && d.name is string && d.name.size() >= 2 && d.name.size() <= 120
+      && d.phone is string && d.phone.matches('^\\+?[0-9]{7,15}$')
+      && d.email == request.auth.token.email
+      && d.gender in ['female','male','other','prefer_not_to_say']
+      && d.address is string && d.address.size()>=5 && d.address.size()<=500
+      && d.source == 'mysa' && d.phoneVerified == false
+      && d.noticeVersion == 'customer-profile-v2'
+      && d.updatedAt == request.time;
+  }
+  allow create, update: if request.auth != null && request.auth.uid == uid
+    && request.auth.token.email_verified == true && validContact();
+  allow get: if customerListOwner() || (request.auth != null && request.auth.uid == uid && request.auth.token.email_verified == true);
+  allow list: if customerListOwner();
+  allow delete: if customerListOwner();
+}
+
   }
 }
