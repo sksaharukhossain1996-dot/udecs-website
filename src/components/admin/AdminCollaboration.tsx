@@ -49,16 +49,16 @@ export const AdminCollaboration: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-black font-heading text-[#0F1913]">
             {language === 'bn'
               ? 'টিম কোলাবরেশন, লাইভ নোটস ও টাস্ক ম্যানেজার'
-              : 'Real-Time Team Collaboration & Operational Tasks'}
+              : 'Browser notes & tasks'}
           </h1>
           <p className="text-xs text-[#565F52] mt-0.5">
-            Simultaneous multi-user document collaboration and task workflow management.
+            Local browser tools. Notes and tasks are not synced across devices; initial examples may be present.
           </p>
         </div>
 
         {/* Presence Avatars */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-[#565F52]">Active Now:</span>
+          <span className="text-xs text-[#565F52]">Example people (not live):</span>
           <div className="flex -space-x-1.5">
             <div className="w-7 h-7 rounded-full bg-[#3C6656] text-white flex items-center justify-center font-bold text-[10px] ring-2 ring-white" title="Farooq (Admin)">
               F
@@ -82,16 +82,16 @@ export const AdminCollaboration: React.FC = () => {
               <div className="flex items-center gap-2">
                 <FileEdit className="w-4 h-4 text-[#3C6656]" />
                 <h3 className="font-heading font-bold text-sm text-[#0F1913] uppercase tracking-wider">
-                  Shared Dispatch & Operations Note
+                  Local operations note
                 </h3>
               </div>
               <span className="text-[10px] font-mono text-[#565F52]">
-                Auto-saved · by {collabDoc.updatedBy}
+                Saved locally · label: {collabDoc.updatedBy}
               </span>
             </div>
 
             <p className="text-xs text-[#565F52] mb-2">
-              Changes made here are synced live across all team member devices in real time.
+              Changes stay in this browser. There is no live team sync.
             </p>
 
             <textarea
@@ -104,7 +104,7 @@ export const AdminCollaboration: React.FC = () => {
 
           <div className="mt-3 pt-2 border-t border-[#CBCFB9] flex items-center justify-between text-[11px] text-[#565F52]">
             <span>Last revised: {collabDoc.lastModified.slice(0, 19)}</span>
-            <span className="text-[#3C6656] font-semibold">Live Real-time Sync Active</span>
+            <span className="text-[#3C6656] font-semibold">Browser-only storage</span>
           </div>
         </div>
 
