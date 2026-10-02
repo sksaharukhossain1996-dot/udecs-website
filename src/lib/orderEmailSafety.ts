@@ -13,3 +13,14 @@ export function validateOrderEmail(order: Order | null, reviewed: Order): void {
   const fields: (keyof Order)[] = ['id', 'customerEmail', 'customerName', 'orderStatus', 'paymentStatus', 'totalAmount', 'trackingNumber', 'courierName', 'shippingAddress', 'city', 'state', 'pincode', 'updatedAt'];
   if (fields.some(key => order[key] !== reviewed[key])) throw new Error('The server order changed. Close this email and review the current order before sending.');
 }
+
+export function canFulfilOrder(order: Pick<Order, 'paymentMethod' | 'paymentStatus'>): boolean {
+  return order.paymentMethod === 'cod' || order.paymentStatus === 'paid';
+}
+export function validateFulfilment(order: Order, status: Order['orderStatus']): void {
+  if (order.orderStatus === 'cancelled') throw new Error('Cancelled orders cannot be fulfilled.');
+  if (status === 'cancelled') throw new Error('Use server cancellation to release stock safely.');
+  if (status !== 'pending' && !canFulfilOrder(order)) {
+    throw new Error('Online payment is not confirmed. Verify payment before processing, packing or dispatching this order.');
+  }
+}
