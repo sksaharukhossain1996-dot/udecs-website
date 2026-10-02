@@ -1,3 +1,4 @@
+import { validateFulfilment } from '../lib/orderEmailSafety';
 import {
   collection,
   doc,
@@ -6,6 +7,7 @@ import {
   getDocFromServer,
   setDoc,
   updateDoc,
+  runTransaction,
   deleteDoc,
   onSnapshot,
 } from 'firebase/firestore';
@@ -200,7 +202,13 @@ export async function updateOrderStatusInFirestore(
     };
     if (trackingNumber !== undefined) updates.trackingNumber = trackingNumber;
     if (courierName !== undefined) updates.courierName = courierName;
-    await updateDoc(doc(db, 'orders', orderId), updates);
+    await runTransaction(db, async (transaction) => {
+      const ref = doc(db, 'orders', orderId);
+      const snapshot = await transaction.get(ref);
+      if (!snapshot.exists()) throw new Error('This order is not on the server.');
+      validateFulfilment({ ...snapshot.data(), id: snapshot.id } as Order, status);
+      transaction.update(ref, updates);
+    });
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, path);
   }
