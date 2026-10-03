@@ -1,4 +1,4 @@
-import { wholesaleAvailability } from '../../lib/wholesale';
+import { wholesaleAvailability, wholesaleMinimumQty } from '../../lib/wholesale';
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Product } from '../../types';
@@ -16,7 +16,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onClose,
   onQuickCheckout,
 }) => {
-  const { addToCart, formatPrice, language, company } = useStore();
+  const { addToCart, formatPrice: formatStorePrice, language, company } = useStore();
   const [photoIndex,setPhotoIndex]=useState(0);
   useEffect(()=>setPhotoIndex(0),[product?.id]);
   const [quantity, setQuantity] = useState(1);
@@ -30,9 +30,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     return () => { window.removeEventListener('resize', resize); window.visualViewport?.removeEventListener('resize', resize); };
   }, []);
 
-  useEffect(() => { setQuantity(product?.minimumOrderQty || 1); }, [product?.id]);
+  useEffect(() => { setQuantity(product ? wholesaleMinimumQty(product) : 1); }, [product?.id]);
   if (!product) return null;
   const canOrder = wholesaleAvailability(product);
+  const formatPrice = (amount:number) => product.supplier === 'rajkot' ? new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:2}).format(amount) : formatStorePrice(amount);
 
   const isEligibleWholesale = quantity >= product.minWholesaleQty;
   const hasWholesaleDiscount = isEligibleWholesale && product.wholesalePrice < product.price;
@@ -166,7 +167,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   </span>
                   {!isEligibleWholesale && (
                     <button
-                      onClick={() => setQuantity(product.minWholesaleQty)}
+                      onClick={() => setQuantity(Math.max(product.minWholesaleQty, wholesaleMinimumQty(product)))}
                       className="text-[11px] font-bold text-[#0F1913] underline hover:text-[#A87C1F]"
                     >
                       {language === 'bn' ? 'পাইকারিতে যোগ করুন' : 'Apply Wholesale Qty'}
@@ -176,7 +177,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               )}
             </div>
 
-            {product.shippingMode === 'quote' && <p className="text-xs text-[#565F52] mb-3">Minimum order: {product.minimumOrderQty} pcs. Price is per piece, GST extra. Shipping quoted separately before payment. No carton piece-count assumed.</p>}
+            {product.shippingMode === 'quote' && <p className="text-xs text-[#565F52] mb-3">Minimum order: {wholesaleMinimumQty(product)} pcs per product. Price is per piece, GST extra. Shipping quoted separately before payment. No carton piece-count assumed.</p>}
             {/* Quantity Selector */}
             <div className="flex flex-wrap items-center gap-3 mb-6">
               <span className="text-xs font-semibold text-[#0F1913]">
@@ -184,7 +185,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </span>
               <div className="flex items-center border border-[#CBCFB9] rounded bg-[#FBFAF5]">
                 <button
-                  onClick={() => setQuantity(Math.max(product.minimumOrderQty || 1, quantity - (product.quantityStep || 1)))}
+                  onClick={() => setQuantity(Math.max(wholesaleMinimumQty(product), quantity - (product.quantityStep || 1)))}
                   className="p-1.5 hover:bg-[#E4E8D9] text-[#0F1913] transition-colors"
                   aria-label="Decrease quantity"
                 >
