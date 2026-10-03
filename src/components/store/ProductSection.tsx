@@ -51,7 +51,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   };
 
   return (
-    <section className="py-14 sm:py-20 border-b border-[#CBCFB9]/70" id="products">
+    <section className="py-10 sm:py-14 border-b border-[#CBCFB9]/70" id="products">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
@@ -149,7 +149,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 min-[560px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-3">
             {visibleProducts.map((product) => {
               const isLowStock = product.stockManaged !== false && product.stock <= product.minStockAlert;
               const isAdded = addedProductId === product.id;
@@ -158,11 +158,11 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                 <div
                   key={product.id}
                   onClick={() => onOpenProductModal(product)}
-                  className="bg-[#FBFAF5] border border-[#CBCFB9] hover:border-[#A87C1F] rounded p-4 sm:p-5 flex flex-col justify-between transition-all duration-200 hover:-translate-y-1 shadow-xs cursor-pointer group"
+                  className="bg-white border border-[#CBCFB9]/70 hover:border-[#A87C1F] rounded-xl p-2.5 sm:p-3 flex flex-col justify-between transition-all duration-200 hover:shadow-md cursor-pointer group min-w-0"
                 >
                   <div>
                     {/* Media container with custom SVG or custom Image URL */}
-                    <div className="aspect-square bg-[#E4E8D9] rounded flex items-center justify-center text-[#3C6656] mb-4 relative overflow-hidden group-hover:bg-[#dbe0cf] transition-colors">
+                    <div className="aspect-square bg-[#F4F5EF] rounded-lg flex items-center justify-center text-[#3C6656] mb-2.5 relative overflow-hidden group-hover:bg-[#E4E8D9] transition-colors">
                       {product.imageUrl ? (
                         <img
                           src={product.imageUrl}
@@ -170,7 +170,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                           className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
-                        <ProductIcon name={product.imageIcon} className="w-20 h-20 text-[#3C6656] group-hover:scale-110 transition-transform duration-300" />
+                        <ProductIcon name={product.imageIcon} className="w-14 h-14 text-[#3C6656] group-hover:scale-110 transition-transform duration-300" />
                       )}
                       
                       {/* Low Stock or Wholesale Tag */}
@@ -193,21 +193,21 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                     </div>
 
                     {/* Meta info */}
-                    <div className="flex items-center justify-between text-[11px] font-mono-code text-[#565F52] mb-1.5">
-                      <span>{product.sku}</span>
-                      <span className="flex items-center gap-1 text-[#A87C1F]">
+                    <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-mono-code text-[#565F52] mb-1.5 gap-1 min-w-0">
+                      <span className="truncate" title={product.sku}>{product.sku}</span>
+                      <span className="flex items-center gap-0.5 text-[#A87C1F] shrink-0">
                         <Star className="w-3 h-3 fill-current" />
                         <span className="font-sans font-medium">{product.rating}</span>
                       </span>
                     </div>
 
                     {/* Title */}
-                    <h4 className="text-[14.5px] font-semibold text-[#0F1913] leading-snug mb-2 font-heading group-hover:text-[#3C6656] transition-colors line-clamp-2">
+                    <h4 className="text-[12px] sm:text-[13px] font-semibold text-[#0F1913] leading-[1.4] mb-2 min-h-[2.8em] font-heading group-hover:text-[#3C6656] transition-colors line-clamp-2">
                       {language === 'bn' ? product.nameBn : product.name}
                     </h4>
 
                     {/* GST & Wholesale info */}
-                    <div className="text-[11px] text-[#565F52] mb-3 flex items-center justify-between">
+                    <div className="text-[9px] text-[#565F52] mb-2 flex flex-wrap items-center justify-between gap-1">
                       <span>{(product as any).gatewayVerification?'Owner verification only - no delivery':`HSN: ${product.hsn}`}</span>
                       <span className="text-[10px] bg-[#E4E8D9] px-1.5 py-0.5 rounded text-[#182620]">
                         {(product as any).gatewayVerification?'No tax invoice':`GST ${product.gstRate}%`}
@@ -216,9 +216,9 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                   </div>
 
                   {/* Foot with Price and Action Button */}
-                  <div className="pt-3 border-t border-[#CBCFB9]/70 flex items-end justify-between gap-2 mt-2">
-                    <div>
-                      <div className="text-[11px] text-[#565F52] leading-none mb-1">
+                  <div className="pt-2 border-t border-[#CBCFB9]/50 flex flex-wrap items-end justify-between gap-1.5 mt-1">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[10px] text-[#565F52] leading-none mb-1">
                         {product.gstExtra ? 'Per piece (GST extra):' : language === 'bn' ? 'মূল্য:' : 'Price:'}
                       </div>
                       {product.originalPrice && product.originalPrice > product.price && (
@@ -226,11 +226,11 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                           {formatPrice(product.originalPrice)}
                         </span>
                       )}
-                      <span className="font-bold text-[16px] text-[#0F1913] font-sans">
+                      <span className="font-bold text-[15px] sm:text-[16px] text-[#0F1913] font-sans">
                         {formatPrice(product.price)}
                       </span>
                       {product.originalPrice && product.originalPrice > product.price && (
-                        <span className="ml-1.5 align-middle text-[9.5px] font-bold bg-[#3C6656] text-white px-1.5 py-0.5 rounded whitespace-nowrap">
+                        <span className="ml-1 align-middle text-[8px] font-bold bg-[#3C6656] text-white px-1.5 py-0.5 rounded whitespace-nowrap inline-block">
                           {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
                         </span>
                       )}
@@ -246,10 +246,10 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                       onClick={(e) => handleAddToCart(e, product)}
                       aria-label="Add to cart"
                       title="Add to shopping cart"
-                      className={`w-9 h-9 rounded-full border border-[#0F1913] flex items-center justify-center transition-all shrink-0 ${
+                      className={`w-11 h-11 rounded-lg border border-[#0F1913] flex items-center justify-center transition-all shrink-0 ${
                         isAdded
                           ? 'bg-[#3C6656] text-white border-[#3C6656]'
-                          : 'bg-transparent hover:bg-[#0F1913] text-[#0F1913] hover:text-white'
+                          : 'bg-[#0F1913] hover:bg-[#3C6656] text-[#CC9A2E] hover:text-white'
                       }`}
                     >
                       {isAdded ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
