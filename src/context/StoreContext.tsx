@@ -87,6 +87,7 @@ interface StoreContextType {
   currentUser: { name: string; email: string; role: string } | null;
   login: (email: string, pass: string) => boolean;
   logout: () => void;
+  catalogStatus: "loading" | "ready" | "error";
   products: Product[];
   cart: CartItem[];
   orders: Order[];
@@ -266,9 +267,11 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     });
   };
 
+  const [catalogStatus, setCatalogStatus] = useState<"loading" | "ready" | "error">("loading");
   // Persistent States
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('udecs_products');
+    if (window.location.pathname.endsWith('/customer-app.html')) return [];
     return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
   });
 
@@ -567,7 +570,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     // Server catalog is canonical, including an intentionally empty catalog.
     // Never resurrect deleted products by seeding demo records on a read.
-    const unsubscribeProducts = subscribeToProducts(setProducts, (err) => {
+    const unsubscribeProducts = subscribeToProducts((items) => { setProducts(items); setCatalogStatus("ready"); }, (err) => {
+      setCatalogStatus("error");
       console.warn('Firestore product subscription failed:', err);
     });
 
@@ -1088,6 +1092,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         currentUser,
         login,
         logout,
+        catalogStatus,
         products,
         cart,
         orders: userRole === 'customer' ? orders : serverOrders,
