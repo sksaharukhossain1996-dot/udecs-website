@@ -1,3 +1,4 @@
+import { customerProductText, customerProductTitle } from '../../lib/wholesale';
 import { wholesaleMinimumQty, normalizeWholesaleQty } from '../../lib/wholesale';
 import React, { useState, useEffect, useRef } from 'react';
 import {customerAuth,customerSignIn,watchCustomerIdentity} from '../../customer-stage/customerIdentity';
@@ -198,7 +199,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     if (quoteShipping) {
       const lines = checkoutItems.map(item => {
         const price = item.isWholesale || item.quantity >= item.product.minWholesaleQty ? item.product.wholesalePrice : item.product.price;
-        return `${item.product.sku}: ${item.product.name}, ${item.quantity} pcs, INR ${price}/piece, GST ${item.product.gstRate}% ${item.product.gstExtra ? 'extra' : 'included'}`;
+        return `${item.product.sku}: ${customerProductTitle(item.product, language)}, ${item.quantity} pcs, INR ${price}/piece, GST ${item.product.gstRate}% ${item.product.gstExtra ? 'extra' : 'included'}`;
       });
       const message = `Wholesale order request (not paid or confirmed)
 ${lines.join('\n')}
@@ -494,7 +495,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                         >
                           <div>
                             <span className="font-semibold text-[#0F1913] block line-clamp-1">
-                              {language === 'bn' ? item.product.nameBn : item.product.name}
+                              {customerProductTitle(item.product, language)}
                             </span>
                             <span className="text-[11px] text-[#565F52]">
                               Qty: {item.quantity} × {formatPrice(price)}
