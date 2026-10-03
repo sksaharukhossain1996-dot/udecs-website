@@ -1,3 +1,4 @@
+import {prepareIndexMutation} from '../../public/catalog-index-core.mjs';
 import { validateFulfilment } from '../lib/orderEmailSafety';
 import {
   collection,
@@ -111,7 +112,7 @@ export function subscribeToProducts(
 export async function saveProductToFirestore(product: Product): Promise<void> {
   const path = `products/${product.id}`;
   try {
-    await setDoc(doc(db, 'products', product.id), {
+    const fields = {
       name: product.name,
       nameBn: product.nameBn || product.name,
       nameHi: product.nameHi || product.name,
@@ -134,6 +135,11 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
       featured: Boolean(product.featured),
       ...(product.supplier ? { supplier: product.supplier, supplierInStock: product.supplierInStock === true, stockManaged: product.stockManaged !== false, shippingMode: product.shippingMode || '', gstExtra: product.gstExtra === true, minimumOrderQty: product.minimumOrderQty || 1, quantityStep: product.quantityStep || 1, sourceCheckedAt: product.sourceCheckedAt || '', sourceRate: product.sourceRate || 0, hsnBasis: product.hsnBasis || '' } : {}),
       updatedAt: new Date().toISOString(),
+    };
+    await runTransaction(db, async tx => {
+      const ref=doc(db,'products',product.id), before=await tx.get(ref);
+      const indexWrite=await prepareIndexMutation(tx,db,doc,product.id,before.exists()?before.data():null,fields);
+      tx.set(ref,fields);indexWrite();
     });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
@@ -143,7 +149,7 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
 export async function deleteProductFromFirestore(productId: string): Promise<void> {
   const path = `products/${productId}`;
   try {
-    await deleteDoc(doc(db, 'products', productId));
+    await runTransaction(db,async tx=>{const ref=doc(db,'products',productId);const before=await tx.get(ref);if(!before.exists())return;const indexWrite=await prepareIndexMutation(tx,db,doc,productId,before.data(),null);tx.delete(ref);indexWrite();});
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }
