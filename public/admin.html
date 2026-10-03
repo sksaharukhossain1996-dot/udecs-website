@@ -132,7 +132,8 @@
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-  import { getFirestore, collection, doc, getDocs, setDoc, updateDoc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+  import {prepareIndexMutation} from "/catalog-index-core.mjs";
+  import { getFirestore, collection, doc, getDocs, setDoc, updateDoc, deleteDoc, serverTimestamp, runTransaction } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
   const app = initializeApp({
     apiKey: 'AIzaSyANRNCASxjGE-IZSLdCws_6W4VpjemO1aI',
@@ -227,7 +228,7 @@
     const p = products.find(x => x.id === id);
     if (!confirm('Delete "' + (p ? p.name : id) + '" from the store? This cannot be undone.')) return;
     try {
-      await deleteDoc(doc(db, 'products', id));
+      await runTransaction(db,async tx=>{const ref=doc(db,'products',id),before=await tx.get(ref);if(!before.exists())return;const apply=await prepareIndexMutation(tx,db,doc,id,before.data(),null);tx.delete(ref);apply();});
       products = products.filter(x => x.id !== id);
       msg('Deleted: ' + (p ? p.name : id), 'okm'); renderProducts();
       $('ov-products').textContent = products.length;
@@ -251,12 +252,13 @@
     if (products.some(p => p.id === sku)) { msg('SKU already exists: ' + sku, 'err'); return; }
     $('addsave').disabled = true;
     try {
-      await setDoc(doc(db, 'products', sku), {
+      const fields = {
         name, sku, hsn, price, stock, category, gstRate, minStockAlert,
         nameBn: '', nameHi: '', description: '', descriptionBn: '',
         imageIcon: 'i-pot', imageUrl: '', featured: false, sourcePdfCategory: category,
         updatedAt: serverTimestamp()
-      });
+      };
+      await runTransaction(db,async tx=>{const ref=doc(db,'products',sku),before=await tx.get(ref);if(before.exists())throw Error('SKU already exists');const apply=await prepareIndexMutation(tx,db,doc,sku,null,fields);tx.set(ref,fields);apply();});
       msg('Added: ' + name + '. It is live on the store now.', 'okm');
       $('f-name').value = ''; $('f-sku').value = ''; $('f-price').value = '';
       await loadProducts();
