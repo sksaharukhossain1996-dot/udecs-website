@@ -27,7 +27,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
   if (!isOpen) return null;
 
-  const results = products.filter(
+  const results = products.filter(p => p.supplier !== 'rajkot' && !(p as any).hidden && !(p as any).gatewayVerification).filter(
     (p) =>
       p.name.toLowerCase().includes(query.toLowerCase()) ||
       p.nameBn.includes(query) ||
