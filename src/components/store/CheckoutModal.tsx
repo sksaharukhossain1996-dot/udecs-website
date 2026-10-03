@@ -106,9 +106,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     email: '',
     phone: '',
     address: '',
-    city: 'Kolkata',
-    state: 'West Bengal',
-    pincode: '700091',
+    city: window.location.pathname.endsWith('/customer-app.html') ? '' : 'Kolkata',
+    state: window.location.pathname.endsWith('/customer-app.html') ? '' : 'West Bengal',
+    pincode: window.location.pathname.endsWith('/customer-app.html') ? '' : '700091',
     gstin: '',
   });
 
