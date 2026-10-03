@@ -1,3 +1,4 @@
+import { customerProductText, customerProductTitle } from '../../lib/wholesale';
 import { wholesaleAvailability, wholesaleMinimumQty } from '../../lib/wholesale';
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
@@ -67,7 +68,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             {product.imageUrl ? (
               <img
                 src={product.photos?.[photoIndex] || product.imageUrl}
-                alt={product.name}
+                alt={customerProductTitle(product, language)}
                 className="w-44 h-44 object-contain"
               />
             ) : (
@@ -81,7 +82,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <span className="text-[11px] text-[#565F52]">
                 HSN: {product.hsn} · GST {product.gstRate}%
               </span>
-              {product.productLink && (
+              {product.supplier !== 'rajkot' && product.productLink && (
                 <div className="mt-2">
                   <a
                     href={product.productLink}
@@ -106,11 +107,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </div>
 
             <h3 className="text-xl sm:text-2xl font-black text-[#0F1913] font-heading mb-2 break-words">
-              {language === 'bn' ? product.nameBn : product.name}
+              {customerProductTitle(product, language)}
             </h3>
 
             <p className="text-sm text-[#565F52] leading-relaxed mb-4 break-words">
-              {language === 'bn' ? product.descriptionBn : product.description}
+              {customerProductText(product, language === 'bn' ? product.descriptionBn : product.description)}
             </p>
 
             {/* Pricing Box */}
