@@ -11,3 +11,9 @@ export const quoteTotals = (items:{price:number;qty:number;rate:number}[]) => {
  const tax=money(items.reduce((n,p)=>n+money(p.price*p.qty*p.rate/100),0));
  return {net,tax,total:money(net+tax)};
 };
+
+// Presentation only: retain supplier/catalog data for inventory and sourcing.
+export const customerProductText = (product: {supplier?:string}, text?:string) =>
+ product.supplier === 'rajkot' ? (text || '').replace(/ali\s*rajkot|rajkot/gi, 'UDECS') : (text || '');
+export const customerProductTitle = (product: {supplier?:string;name:string;nameBn?:string}, language='en') =>
+ customerProductText(product, language === 'bn' ? product.nameBn || product.name : product.name);
