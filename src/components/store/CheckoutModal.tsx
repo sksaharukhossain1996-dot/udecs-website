@@ -1,3 +1,4 @@
+import { wholesaleMinimumQty, normalizeWholesaleQty } from '../../lib/wholesale';
 import React, { useState, useEffect, useRef } from 'react';
 import {customerAuth,customerSignIn,watchCustomerIdentity} from '../../customer-stage/customerIdentity';
 import {customerOrderClient} from '../../customer-stage/orderRuntime';
@@ -184,6 +185,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const invalidBulkItem = checkoutItems.find(i => i.product.supplier === 'rajkot' && i.quantity !== normalizeWholesaleQty(i.product, i.quantity));
+    if (invalidBulkItem) { setLoginError(`Review ${invalidBulkItem.product.sku}: minimum ${wholesaleMinimumQty(invalidBulkItem.product)} pieces per product in full carton multiples. Update your cart before requesting a quote. No request was sent.`); return; }
     if(!quoteShipping&&checkoutItems.length>10){setLoginError("Each order can contain up to 10 different products. Remove extra products before continuing.");return;}
     if(!quoteShipping&&(!identityReady||!isVerifiedGoogleCustomer(customerAuth.currentUser))){setLoginError('Sign in with Google before placing an order. No order was placed.');return;}
     if(!quoteShipping&&formData.email!==customerAuth.currentUser?.email){setLoginError('Your Google account changed. Review your details before ordering.');return;}
