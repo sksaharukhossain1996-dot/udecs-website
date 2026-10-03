@@ -41,7 +41,7 @@ const StoreContent: React.FC = () => {
     'all' | 'kitchen' | 'sports' | 'wholesale' | 'industrial'
   >('all');
 
-  useEffect(()=>{const route=()=>{const cat=new URLSearchParams(window.location.hash.split('?')[1]||'').get('category');if(cat&&['kitchen','sports','industrial','verification'].includes(cat)){setSelectedCategory(cat as 'kitchen'|'sports'|'industrial');document.getElementById('products')?.scrollIntoView({behavior:'smooth'});}};route();window.addEventListener('hashchange',route);return()=>window.removeEventListener('hashchange',route);},[]);
+  useEffect(()=>{const route=()=>{const cat=new URLSearchParams(window.location.hash.split('?')[1]||'').get('category');if(cat&&['kitchen','sports','industrial','wholesale','verification'].includes(cat)){setSelectedCategory(cat as 'kitchen'|'sports'|'industrial'|'wholesale');document.getElementById('products')?.scrollIntoView({behavior:'smooth'});}};route();window.addEventListener('hashchange',route);return()=>window.removeEventListener('hashchange',route);},[]);
 
   const handleQuickCheckout = (
     product: Product,
