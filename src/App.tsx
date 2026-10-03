@@ -41,7 +41,7 @@ const StoreContent: React.FC = () => {
     'all' | 'kitchen' | 'sports' | 'wholesale' | 'industrial' | 'rajkot'
   >('all');
 
-  useEffect(()=>{const route=()=>{const cat=new URLSearchParams(window.location.hash.split('?')[1]||'').get('category');if(cat&&['kitchen','sports','industrial','wholesale','rajkot','verification'].includes(cat)){setSelectedCategory(cat as 'kitchen'|'sports'|'industrial'|'wholesale'|'rajkot');document.getElementById('products')?.scrollIntoView({behavior:'smooth'});}};route();window.addEventListener('hashchange',route);return()=>window.removeEventListener('hashchange',route);},[]);
+  useEffect(()=>{const route=()=>{const raw=new URLSearchParams(window.location.hash.split('?')[1]||'').get('category');const cat=raw==='b2b'?'rajkot':raw;if(cat&&['kitchen','sports','industrial','wholesale','rajkot','verification'].includes(cat)){setSelectedCategory(cat as 'kitchen'|'sports'|'industrial'|'wholesale'|'rajkot');document.getElementById('products')?.scrollIntoView({behavior:'smooth'});}};route();window.addEventListener('hashchange',route);return()=>window.removeEventListener('hashchange',route);},[]);
 
   const handleQuickCheckout = (
     product: Product,
