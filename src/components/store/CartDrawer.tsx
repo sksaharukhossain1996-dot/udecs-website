@@ -1,3 +1,4 @@
+import { customerProductText, customerProductTitle } from '../../lib/wholesale';
 import React from 'react';
 import { useStore } from '../../context/StoreContext';
 import { ProductIcon } from '../common/ProductIcon';
@@ -88,7 +89,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       {product.imageUrl ? (
                         <img
                           src={product.imageUrl}
-                          alt={product.name}
+                          alt={customerProductTitle(product, language)}
                           className="w-full h-full object-contain p-1"
                         />
                       ) : (
@@ -99,7 +100,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <h4 className="text-xs font-semibold text-[#0F1913] font-heading leading-snug">
-                          {language === 'bn' ? product.nameBn : product.name}
+                          {customerProductTitle(product, language)}
                         </h4>
                         <button
                           onClick={() => removeFromCart(product.id)}
