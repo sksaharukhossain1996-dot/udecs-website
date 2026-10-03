@@ -105,7 +105,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               {t('sportsNav')}
             </a>
             <a
-              href="#wholesale"
+              href="#products?category=wholesale"
               className="hover:text-[#0F1913] hover:border-b-2 hover:border-[#CC9A2E] py-1 transition-colors flex items-center gap-1 text-[#3C6656] font-semibold"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-[#A87C1F]"></span>
@@ -255,7 +255,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               {t('sportsNav')}
             </a>
             <a
-              href="#wholesale"
+              href="#products?category=wholesale"
               onClick={() => setMobileMenuOpen(false)}
               className="py-2 border-b border-[#E4E8D9] text-[#3C6656] font-semibold flex items-center justify-between"
             >
