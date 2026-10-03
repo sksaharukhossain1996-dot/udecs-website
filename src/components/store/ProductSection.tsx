@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Product } from '../../types';
 import { ProductIcon } from '../common/ProductIcon';
@@ -22,6 +22,13 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterLowStockOnly, setFilterLowStockOnly] = useState(false);
 
+  // Pagination: render catalog in pages so large catalogs do not render all cards at once
+  const PAGE_SIZE = 24;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [selectedCategory, searchQuery, filterLowStockOnly]);
+
   const filteredProducts = products.filter((prod) => {
     if((prod as any).hidden===true)return false;if((prod as any).gatewayVerification===true&&selectedCategory!=='verification')return false;
     const matchesCategory =
@@ -33,6 +40,8 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
     const matchesStock = filterLowStockOnly ? prod.stock <= prod.minStockAlert : true;
     return matchesCategory && matchesSearch && matchesStock;
   });
+
+  const visibleProducts = filteredProducts.slice(0, visibleCount);
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
@@ -141,7 +150,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {filteredProducts.map((product) => {
+            {visibleProducts.map((product) => {
               const isLowStock = product.stockManaged !== false && product.stock <= product.minStockAlert;
               const isAdded = addedProductId === product.id;
 
@@ -249,6 +258,21 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                 </div>
               );
             })}
+          </div>
+        )}
+        {visibleCount < filteredProducts.length && (
+          <div className="mt-8 flex flex-col items-center gap-2">
+            <p className="text-xs text-[#565F52]">
+              {language === 'bn'
+                ? `দেখানো হচ্ছে ${visibleProducts.length} / ${filteredProducts.length}টি পণ্য`
+                : `Showing ${visibleProducts.length} of ${filteredProducts.length} products`}
+            </p>
+            <button
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="px-6 py-2.5 rounded-full border border-[#0F1913] text-sm font-semibold text-[#0F1913] hover:bg-[#0F1913] hover:text-white transition-all"
+            >
+              {language === 'bn' ? 'আরও পণ্য দেখুন' : 'Show more products'}
+            </button>
           </div>
         )}
       </div>
