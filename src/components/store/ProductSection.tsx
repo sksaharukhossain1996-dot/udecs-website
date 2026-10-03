@@ -1,3 +1,4 @@
+import { wholesaleMinimumQty } from '../../lib/wholesale';
 import React, { useEffect, useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Product } from '../../types';
@@ -32,7 +33,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   const filteredProducts = products.filter((prod) => {
     if((prod as any).hidden===true)return false;if((prod as any).gatewayVerification===true&&selectedCategory!=='verification')return false;
     const matchesCategory =
-      selectedCategory === 'all' || prod.category === selectedCategory;
+      selectedCategory === 'rajkot' ? prod.supplier === 'rajkot' : selectedCategory === 'all' ? prod.supplier !== 'rajkot' : prod.category === selectedCategory && prod.supplier !== 'rajkot';
     const matchesSearch =
       prod.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       prod.nameBn.includes(searchQuery) ||
@@ -57,10 +58,10 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-[#0F1913] tracking-tight font-heading">
-              {t('popularProducts')}
+              {selectedCategory === 'rajkot' ? 'Ali Rajkot B2B Wholesale' : t('popularProducts')}
             </h2>
             <p className="text-[#565F52] text-sm mt-1.5">
-              {language === 'bn'
+              {selectedCategory === 'rajkot' ? 'For resellers. Minimum 100 pieces per product, rounded up to full cartons. Existing listed wholesale prices; shipping quoted before payment.' : language === 'bn'
                 ? 'ক্যাটাগরি অনুযায়ী বেছে নিন — প্রতিটি পণ্য গুণমান যাচাই করে তালিকাভুক্ত করা হয়েছে।'
                 : 'Select by department — every product is quality inspected with official GST invoices.'}
             </p>
@@ -78,6 +79,8 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
           </div>
         </div>
 
+        {/* Supplier-only B2B view, no catalog mutations */}
+        <div className="mb-4"><button onClick={() => onSelectCategory('rajkot')} aria-pressed={selectedCategory === 'rajkot'} className={`px-4 py-3 rounded-lg text-sm font-bold border ${selectedCategory === 'rajkot' ? 'bg-[#0F1913] text-white' : 'bg-[#FBFAF5] text-[#182620] border-[#CBCFB9]'}`}>Ali Rajkot B2B Wholesale</button></div>
         {/* Category Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-8 no-scrollbar">
           <button
@@ -88,7 +91,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                 : 'bg-[#FBFAF5] text-[#565F52] border border-[#CBCFB9] hover:border-[#0F1913] hover:text-[#0F1913]'
             }`}
           >
-            {t('allProducts')} ({products.length})
+            {t('allProducts')} ({products.filter(p => p.supplier !== 'rajkot' && !(p as any).hidden && !(p as any).gatewayVerification).length})
           </button>
           <button
             onClick={() => onSelectCategory('kitchen')}
@@ -227,7 +230,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                         </span>
                       )}
                       <span className="font-bold text-[15px] sm:text-[16px] text-[#0F1913] font-sans">
-                        {formatPrice(product.price)}
+                        {product.supplier === 'rajkot' ? new Intl.NumberFormat('en-IN', {style:'currency',currency:'INR',minimumFractionDigits:2}).format(product.wholesalePrice) : formatPrice(product.price)}
                       </span>
                       {product.originalPrice && product.originalPrice > product.price && (
                         <span className="ml-1 align-middle text-[8px] font-bold bg-[#3C6656] text-white px-1.5 py-0.5 rounded whitespace-nowrap inline-block">
@@ -236,7 +239,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                       )}
                       {!(product as any).gatewayVerification&&product.wholesalePrice && (
                         <div className="text-[10px] text-[#A87C1F] font-medium leading-none mt-1">
-                          {language === 'bn' ? 'পাইকারি:' : 'Wholesale:'} {formatPrice(product.wholesalePrice)} ({product.minimumOrderQty ? `Min ${product.minimumOrderQty} pcs` : `${product.minWholesaleQty}+`})
+                          {language === 'bn' ? 'পাইকারি:' : 'Wholesale:'} {product.supplier === 'rajkot' ? new Intl.NumberFormat('en-IN', {style:'currency',currency:'INR',minimumFractionDigits:2}).format(product.wholesalePrice) : formatPrice(product.wholesalePrice)} ({product.supplier === 'rajkot' ? `Min ${wholesaleMinimumQty(product)} pcs / product` : product.minimumOrderQty ? `Min ${product.minimumOrderQty} pcs` : `${product.minWholesaleQty}+`})
                         </div>
                       )}
                     </div>
