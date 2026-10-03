@@ -1,5 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>UDECS catalog review</title></head><body><div id="catalog-sync-root"></div><script type="module">import { initializeApp as $ } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import { getAuth as A, onAuthStateChanged as M, signInWithPopup as I, GoogleAuthProvider as T } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import {prepareIndexMutation} from './catalog-index-core.mjs';
 import { getFirestore as N, doc as b, getDocFromServer as x, runTransaction as R } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 var y = { projectId: "udecs-store", appId: "1:859203239571:web:9ebdafe1c6a28ad2a41766", apiKey: "AIzaSyANRNCASxjGE-IZSLdCws_6W4VpjemO1aI", authDomain: "udecs-store.firebaseapp.com", storageBucket: "udecs-store.firebasestorage.app", messagingSenderId: "859203239571", measurementId: "G-C4ER2KX5SD", oAuthClientId: "859203239571-o53emdth2bfi7hlmt5dsscplm4f8j4sh.apps.googleusercontent.com", recaptchaSiteKey: "" };
 var S = /^[A-Za-z0-9_-]{1,128}$/, C = ["kitchen", "sports", "wholesale", "industrial"];
@@ -92,6 +93,7 @@ a("apply").onclick = async () => {
       let n = b(h, "products", r.id);
       await R(h, async (t) => {
         let o = await t.get(n);
+        const indexWrite=await prepareIndexMutation(t,h,b,r.id,o.exists()?o.data():null,r.mode==="create"?r.fields:{...o.data(),...r.fields});
         if (r.mode === "create") {
           if (o.exists()) throw Error(`Already exists: ${r.id}`);
           t.set(n, r.fields);
@@ -99,6 +101,7 @@ a("apply").onclick = async () => {
           if (!o.exists() || d(o.data()) !== d(r.expected)) throw Error(`Changed baseline: ${r.id}`);
           t.update(n, r.fields);
         }
+        indexWrite();
       });
       let e = await x(n), c = e.data();
       if (!c || Object.keys(r.fields).some((t) => d(c[t]) !== d(r.fields[t])) || r.mode === "update" && Object.keys(r.expected).some((t) => !(t in r.fields) && d(c[t]) !== d(r.expected[t]))) throw Error(`Readback differs: ${r.id}. Stop and inspect.`);
