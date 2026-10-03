@@ -84,13 +84,21 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                 return (
                   <div key={product.id} className="py-4 flex gap-3.5 items-center">
-                    <div className="w-16 h-16 rounded bg-[#E4E8D9] flex items-center justify-center text-[#3C6656] shrink-0 border border-[#CBCFB9]">
-                      <ProductIcon name={product.imageIcon} className="w-9 h-9 text-[#3C6656]" />
+                    <div className="w-16 h-16 rounded bg-[#E4E8D9] flex items-center justify-center text-[#3C6656] shrink-0 border border-[#CBCFB9] overflow-hidden">
+                      {product.imageUrl ? (
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          className="w-full h-full object-contain p-1"
+                        />
+                      ) : (
+                        <ProductIcon name={product.imageIcon} className="w-9 h-9 text-[#3C6656]" />
+                      )}
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <h4 className="text-xs font-semibold text-[#0F1913] truncate font-heading">
+                        <h4 className="text-xs font-semibold text-[#0F1913] font-heading leading-snug">
                           {language === 'bn' ? product.nameBn : product.name}
                         </h4>
                         <button
