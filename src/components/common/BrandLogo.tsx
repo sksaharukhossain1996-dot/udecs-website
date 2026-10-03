@@ -39,7 +39,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         style={{ width: current.icon, height: current.icon }}
       >
         <img
-          src={window.location.pathname.endsWith('/customer-app.html') ? '/udecs-app-logo.jpg' : '/UDECS_Logo_Premium_Transparent.png'}
+          src={window.location.pathname.endsWith('/customer-app.html') ? '/6-udecs-app-logo.jpg' : '/UDECS_Logo_Premium_Transparent.png'}
           alt="UDECS COMMERCE SOLUTIONS Logo"
           className="w-full h-full object-contain filter drop-shadow-xs"
           loading="eager"
