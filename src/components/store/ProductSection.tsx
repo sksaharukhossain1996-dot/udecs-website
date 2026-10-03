@@ -1,3 +1,4 @@
+import { customerProductText, customerProductTitle } from '../../lib/wholesale';
 import { wholesaleMinimumQty } from '../../lib/wholesale';
 import React, { useEffect, useState } from 'react';
 import { useStore } from '../../context/StoreContext';
@@ -58,7 +59,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-[#0F1913] tracking-tight font-heading">
-              {selectedCategory === 'rajkot' ? 'Ali Rajkot B2B Wholesale' : t('popularProducts')}
+              {selectedCategory === 'rajkot' ? 'UDECS B2B Wholesale' : t('popularProducts')}
             </h2>
             <p className="text-[#565F52] text-sm mt-1.5">
               {selectedCategory === 'rajkot' ? 'For resellers. Minimum 100 pieces per product, rounded up to full cartons. Existing listed wholesale prices; shipping quoted before payment.' : language === 'bn'
@@ -80,7 +81,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
         </div>
 
         {/* Supplier-only B2B view, no catalog mutations */}
-        <div className="mb-4"><button onClick={() => onSelectCategory('rajkot')} aria-pressed={selectedCategory === 'rajkot'} className={`px-4 py-3 rounded-lg text-sm font-bold border ${selectedCategory === 'rajkot' ? 'bg-[#0F1913] text-white' : 'bg-[#FBFAF5] text-[#182620] border-[#CBCFB9]'}`}>Ali Rajkot B2B Wholesale</button></div>
+        <div className="mb-4"><button onClick={() => onSelectCategory('rajkot')} aria-pressed={selectedCategory === 'rajkot'} className={`px-4 py-3 rounded-lg text-sm font-bold border ${selectedCategory === 'rajkot' ? 'bg-[#0F1913] text-white' : 'bg-[#FBFAF5] text-[#182620] border-[#CBCFB9]'}`}>UDECS B2B Wholesale</button></div>
         {/* Category Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-8 no-scrollbar">
           <button
@@ -169,7 +170,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                       {product.imageUrl ? (
                         <img
                           src={product.imageUrl}
-                          alt={product.name}
+                          alt={customerProductTitle(product, language)}
                           className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
@@ -187,7 +188,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                           B2B BULK
                         </span>
                       )}
-                      {product.productLink && (
+                      {product.supplier !== 'rajkot' && product.productLink && (
                         <span className="absolute bottom-2 left-2 bg-[#182620]/90 text-[#25D366] text-[9px] font-mono px-1.5 py-0.5 rounded flex items-center gap-1 shadow-xs border border-white/20">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse"></span>
                           Online Link
@@ -206,7 +207,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
 
                     {/* Title */}
                     <h4 className="text-[12px] sm:text-[13px] font-semibold text-[#0F1913] leading-[1.4] mb-2 min-h-[2.8em] font-heading group-hover:text-[#3C6656] transition-colors line-clamp-2">
-                      {language === 'bn' ? product.nameBn : product.name}
+                      {customerProductTitle(product, language)}
                     </h4>
 
                     {/* GST & Wholesale info */}
