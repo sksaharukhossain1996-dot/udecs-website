@@ -1,6 +1,7 @@
 import { customerProductText, customerProductTitle } from '../../lib/wholesale';
 import { wholesaleMinimumQty, normalizeWholesaleQty } from '../../lib/wholesale';
 import React, { useState, useEffect, useRef } from 'react';
+import {getCustomerContact} from '../../customer-stage/customerService';
 import {customerAuth,customerSignIn,watchCustomerIdentity} from '../../customer-stage/customerIdentity';
 import {customerOrderClient} from '../../customer-stage/orderRuntime';
 import {retryKey, type OrderRequest} from '../../customer-stage/order-client';
@@ -118,6 +119,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [identityReady,setIdentityReady]=useState(false);
   const [loginBusy,setLoginBusy]=useState(false);
   const [loginError,setLoginError]=useState('');
+  const [registrationReady,setRegistrationReady]=useState(false);
+  const [registrationChecked,setRegistrationChecked]=useState(false);
+  useEffect(()=>{let alive=true;setRegistrationReady(false);setRegistrationChecked(false);if(!isVerifiedGoogleCustomer(customer)){setRegistrationChecked(true);return;}getCustomerContact(customer!.uid).then(p=>{if(alive){setRegistrationReady(!!p);setRegistrationChecked(true)}}).catch(()=>{if(alive){setRegistrationChecked(true);setLoginError('Customer registration could not be checked. Review your customer details before ordering.')}});return()=>{alive=false}},[customer?.uid,isOpen]);
   const attempt=React.useRef<{uid:string;input:OrderRequest;key:string}|null>(null);
   const requestBusy=React.useRef(false);
   const [orderError,setOrderError]=useState('');
@@ -127,7 +131,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   useEffect(()=>watchCustomerIdentity(user=>{setCustomer(user);setIdentityReady(true);setFormData(old=>({...old,email:isVerifiedGoogleCustomer(user)?user!.email!:''}));}),[]);
   const signInForOrder=async()=>{setLoginBusy(true);setLoginError('');try{await customerSignIn();}catch{setLoginError('Google sign-in did not finish. Please try again. No order was placed.');}finally{setLoginBusy(false);}};
 
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('upi');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('payu');
   const [isProcessing, setIsProcessing] = useState(false);
   const gatewayRef=useRef<HTMLDivElement>(null);const [payuError,setPayuError]=useState('');const [payuBusy,setPayuBusy]=useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
@@ -189,8 +193,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     const invalidBulkItem = checkoutItems.find(i => i.product.supplier === 'rajkot' && i.quantity !== normalizeWholesaleQty(i.product, i.quantity));
     if (invalidBulkItem) { setLoginError(`Review ${invalidBulkItem.product.sku}: minimum ${wholesaleMinimumQty(invalidBulkItem.product)} pieces per product in full carton multiples. Update your cart before requesting a quote. No request was sent.`); return; }
     if(!quoteShipping&&checkoutItems.length>10){setLoginError("Each order can contain up to 10 different products. Remove extra products before continuing.");return;}
-    if(!quoteShipping&&(!identityReady||!isVerifiedGoogleCustomer(customerAuth.currentUser))){setLoginError('Sign in with Google before placing an order. No order was placed.');return;}
-    if(!quoteShipping&&formData.email!==customerAuth.currentUser?.email){setLoginError('Your Google account changed. Review your details before ordering.');return;}
+    if(!quoteShipping&&(!identityReady||!isVerifiedGoogleCustomer(customerAuth.currentUser))){setLoginError('Sign in with your verified email before placing an order. No order was placed.');return;}
+    if(!quoteShipping&&paymentMethod==='cod'&&!recoverOnLoad&&!attempt.current){setLoginError('New COD checkout is temporarily paused. Choose PayU online payment.');return;}
+    if(!quoteShipping&&!registrationReady){setLoginError('Complete your customer registration first. No order was placed.');return;}
+    if(!quoteShipping&&formData.email!==customerAuth.currentUser?.email){setLoginError('Your signed-in account changed. Review your details before ordering.');return;}
     if (!formData.name || !formData.email || !formData.phone || !formData.address) {
       alert('Please fill in all mandatory billing and shipping fields.');
       return;
@@ -246,9 +252,9 @@ GSTIN: ${formData.gstin || 'not provided'}`;
   };
 
   const openPayU=async()=>{if(!completedOrder||payuBusy)return;setPayuBusy(true);setPayuError('');try{const u=customerAuth.currentUser;if(!isVerifiedGoogleCustomer(u))throw Error('Sign in to the original Google account first');const r=await fetch('https://udecs-payu-api.sksaharukhossain1996.workers.dev/api/payu/customer/form',{method:'POST',headers:{Authorization:'Bearer '+await u!.getIdToken(),'Content-Type':'application/json'},body:JSON.stringify({orderId:completedOrder.id})});const d=await r.json();if(!r.ok)throw Error(d.error||'PayU unavailable');if(d.action!=='https://secure.payu.in/_payment'||d.fields.udf1!==completedOrder.id||d.fields.amount!==Number(completedOrder.totalAmount).toFixed(2))throw Error('Gateway total mismatch. Do not pay.');const f=document.createElement('form');f.method='post';f.action=d.action;for(const[k,v]of Object.entries(d.fields)){const i=document.createElement('input');i.type='hidden';i.name=k;i.value=String(v);f.appendChild(i);}const b=document.createElement('button');b.type='submit';b.textContent='Continue to PayU - INR '+d.fields.amount;b.className='rounded border px-4 py-3';f.appendChild(b);gatewayRef.current?.replaceChildren(f);}catch(e){setPayuError(e instanceof Error?e.message:'Gateway unavailable');}finally{setPayuBusy(false);}};
-  if(checkoutStep==='payu_pay'&&completedOrder)return <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"><section className="bg-white rounded p-6 max-w-lg space-y-4"><h3 className="text-xl font-bold">PayU payment for saved order</h3><p>{completedOrder.id}</p><p>Total INR {completedOrder.totalAmount}. Order saved, payment not confirmed.</p><p>Review this exact total on PayU before paying. Do not pay twice. If charged but pending, contact UDECS with this order ID.</p><button disabled={payuBusy} onClick={()=>void openPayU()} className="rounded border px-4 py-3">{payuBusy?'Preparing saved payment...':'Prepare PayU payment'}</button><div ref={gatewayRef}/>{payuError&&<p role="alert">{payuError}</p>}<button className="rounded border px-4 py-3" onClick={onClose}>Close and view My Orders</button></section></div>;
+  if(checkoutStep==='payu_pay'&&completedOrder)return <div className="udecs-checkout fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"><section className="bg-white rounded p-6 max-w-lg space-y-4"><h3 className="text-xl font-bold">PayU payment for saved order</h3><p>{completedOrder.id}</p><p>Total INR {completedOrder.totalAmount}. Order saved, payment not confirmed.</p><p>Review this exact total on PayU before paying. Do not pay twice. If charged but pending, contact UDECS with this order ID.</p><button disabled={payuBusy} onClick={()=>void openPayU()} className="rounded border px-4 py-3">{payuBusy?'Preparing saved payment...':'Prepare PayU payment'}</button><div ref={gatewayRef}/>{payuError&&<p role="alert">{payuError}</p>}<button className="rounded border px-4 py-3" onClick={onClose}>Close and view My Orders</button></section></div>;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F1913]/60 backdrop-blur-xs animate-fadeIn overflow-y-auto">
+    <div className="udecs-checkout fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F1913]/60 backdrop-blur-xs animate-fadeIn overflow-y-auto">
       <div className="bg-[#FBFAF5] border border-[#CBCFB9] rounded-lg max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-6 max-h-[95vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[#CBCFB9] mb-6">
@@ -279,10 +285,11 @@ GSTIN: ${formData.gstin || 'not provided'}`;
 
         {wasRecovered&&<p className="rounded border p-3">Your earlier saved order was recovered. No second order was placed. Your current cart was kept.</p>}
         {/* STEP 1: Details & Billing Form */}
-        {checkoutStep === 'details'&&!quoteShipping&&(!identityReady||!isVerifiedGoogleCustomer(customer))&&<section className="space-y-4 p-4"><h3 className="text-xl font-bold">Sign in before ordering</h3><p>Use your Google account to continue with a UPI or COD order. Your cart stays here while you sign in.</p><p className="text-sm">Google sign-in shares your basic profile and email, not your Gmail inbox. It does not verify your phone number.</p><button type="button" disabled={!identityReady||loginBusy} onClick={signInForOrder} className="w-full rounded bg-[#182620] p-3 text-white">{!identityReady?'Checking customer sign-in...':loginBusy?'Opening Google...':'Sign in with Google to continue'}</button>{loginError&&<p role="alert">{loginError}</p>}</section>}
-        {checkoutStep === 'details'&&(quoteShipping||(identityReady&&isVerifiedGoogleCustomer(customer))) && (
+        {checkoutStep === 'details'&&!quoteShipping&&(!identityReady||!isVerifiedGoogleCustomer(customer))&&<section className="space-y-4 p-4"><h3 className="text-xl font-bold">Sign in before ordering</h3><p>Sign in with Google or use an email link from the customer portal. Your cart stays here while you sign in.</p><p className="text-sm">Google sign-in shares your basic profile and email, not your Gmail inbox. It does not verify your phone number.</p><button type="button" disabled={!identityReady||loginBusy} onClick={signInForOrder} className="w-full rounded bg-[#182620] p-3 text-white">{!identityReady?'Checking customer sign-in...':loginBusy?'Opening Google...':'Sign in with Google to continue'}</button><a href="/?customer-portal=1" className="block underline">Sign up / log in by email link</a>{loginError&&<p role="alert">{loginError}</p>}</section>}
+        {checkoutStep === 'details'&&!quoteShipping&&identityReady&&isVerifiedGoogleCustomer(customer)&&(!registrationChecked||!registrationReady)&&<section className="space-y-3 p-4"><h3 className="text-xl font-bold">Complete customer registration</h3><p>{!registrationChecked?'Checking saved customer details...':'Save your name, contact and delivery address before purchasing. Your cart stays here.'}</p><a className="block underline" href="/?customer-portal=1">Open customer registration</a>{loginError&&<p role="alert">{loginError}</p>}</section>}
+        {checkoutStep === 'details'&&(quoteShipping||(identityReady&&isVerifiedGoogleCustomer(customer)&&registrationReady)) && (
           <form onSubmit={handleSubmit} className="space-y-6">
-            {!quoteShipping&&<p className="rounded border p-3">Signed in as {customer?.email}. Your order email uses this Google account.</p>}
+            {!quoteShipping&&<p className="rounded border p-3">Signed in as {customer?.email}. Your order email uses this verified account.</p>}
             {loginError&&<p role="alert">{loginError}</p>}
             {orderError&&<p role="alert">{orderError}</p>}
             {recoverOnLoad&&<p className="rounded border p-3">An earlier order request may still need confirmation. This checkout will check that reference before creating any new order.</p>}
@@ -455,17 +462,17 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                       <input
                         type="radio"
                         name="payment"
-                        disabled={gatewayVerification}
-                        checked={paymentMethod === 'cod'}
-                        onChange={() => setPaymentMethod('cod')}
+                        disabled
+                        checked={false}
+                        onChange={() => {}}
                         className="accent-[#0F1913]"
                       />
                       <div>
                         <span className="text-xs font-bold text-[#0F1913] block">
-                          Cash on Delivery (COD)
+                          Cash on Delivery (temporarily paused)
                         </span>
                         <span className="text-[11px] text-[#565F52]">
-                          Pay cash or UPI upon doorstep delivery by courier
+                          New COD orders are paused while customer confirmation is set up. Existing orders are unchanged.
                         </span>
                       </div>
                     </label>
