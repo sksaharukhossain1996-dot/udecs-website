@@ -228,6 +228,13 @@ match /hrAttendance/{id} { function valid() { let d=request.resource.data; let e
       allow create: if expenseOwner() && validExpense();
       allow update,delete: if false;
     }
+    match /erpBankTransactions/{id} {
+      function bankOwner(){return request.auth!=null && request.auth.token.email_verified==true && request.auth.token.email in ['sksaharukhossain1996@gmail.com','ecommerceunickdigital@gmail.com'];}
+      function validBank(){let d=request.resource.data;return id.matches('^bank_[a-f0-9]{64}$') && d.keys().hasOnly(['date','description','debitPaise','creditPaise','reference','bankAlias','currency','source','classification','createdBy','createdAt']) && d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') && d.description is string && d.description.size()>0 && d.description.size()<=300 && d.debitPaise is int && d.creditPaise is int && d.debitPaise>=0 && d.creditPaise>=0 && d.debitPaise<=1000000000 && d.creditPaise<=1000000000 && ((d.debitPaise>0 && d.creditPaise==0)||(d.creditPaise>0 && d.debitPaise==0)) && d.reference is string && d.reference.size()<=120 && d.bankAlias is string && d.bankAlias.matches('^[a-zA-Z][a-zA-Z0-9 _-]{2,39}$') && d.currency=='INR' && d.source=='statement_csv' && d.classification=='unclassified' && d.createdBy==request.auth.uid && d.createdAt==request.time;}
+      allow get,list: if bankOwner();
+      allow create: if bankOwner() && validBank();
+      allow update,delete: if false;
+    }
 
   }
 }
