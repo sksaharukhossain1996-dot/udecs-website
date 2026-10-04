@@ -101,7 +101,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Desktop Nav */}
-          <nav className="hidden lg:flex items-center gap-3 text-[13px] font-medium text-[#565F52]">
+          <nav className="hidden xl:flex items-center gap-2 text-[13px] font-medium text-[#565F52]">
             <a
               href="#products?category=kitchen"
               className="hover:text-[#0F1913] hover:border-b-2 hover:border-[#CC9A2E] py-1 transition-colors"
