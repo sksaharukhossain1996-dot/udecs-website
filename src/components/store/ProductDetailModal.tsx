@@ -205,7 +205,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
 
               <span className="text-xs text-[#565F52]">
-                {product.stockManaged === false ? (product.supplierInStock ? 'Supplier in stock - availability confirmed on order' : 'Supplier out of stock') : product.stock > 0
+                {product.supplierInStock === false ? 'Supplier out of stock' : product.stockManaged === false ? (product.supplierInStock ? 'Supplier in stock - availability confirmed on order' : 'Supplier out of stock') : product.stock > 0
                   ? `${product.stock} ${language === 'bn' ? 'ইউনিট স্টকে আছে' : 'units in stock'}`
                   : language === 'bn'
                   ? 'স্টক শেষ'
