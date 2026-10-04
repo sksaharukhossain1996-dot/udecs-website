@@ -1,5 +1,5 @@
 // Staged, not imported by production. Receives only the signed-in customer's token.
-export type SavedOrder={id:string;customerUid:string;customerEmail:string;customerPhone?:string;createdAt:string;paymentStatus:string;orderStatus:string;paymentMethod:'upi'|'cod'|'payu';totalAmount:number;currency:string;items:{name:string;quantity:number}[];trackingNumber?:string;courierName?:string};
+export type SavedOrder={id:string;customerUid:string;customerEmail:string;customerPhone?:string;createdAt:string;paymentStatus:string;orderStatus:string;paymentMethod:'upi'|'cod'|'payu';totalAmount:number;subtotal?:number;shippingFee?:number;smallOrderDeliveryFee?:number;shoppingCharge?:number;currency:string;items:{name:string;quantity:number}[];trackingNumber?:string;courierName?:string};
 export type OrderRequest={items:{productId:string;quantity:number;isWholesale?:boolean}[];customerName:string;customerPhone:string;shippingAddress:string;city:string;state:string;pincode:string;gstin?:string;currency:'INR';paymentMethod:'upi'|'cod'|'payu';expectedTotal:number};
 export function orderClient({origin,identity,fetcher=fetch}:{origin:string;identity:()=>Promise<{uid:string;token:string}>;fetcher?:typeof fetch}){
  if(!/^https:\/\/[^/?#]+$/.test(origin))throw Error('Explicit HTTPS order service origin required');
