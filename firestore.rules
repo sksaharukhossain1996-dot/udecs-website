@@ -221,6 +221,13 @@ match /hrAttendance/{id} { function valid() { let d=request.resource.data; let e
       allow create,update: if crmOwner() && validCrm();
       allow delete: if false;
     }
+    match /erpExpenses/{id} {
+      function expenseOwner() {return request.auth!=null && request.auth.token.email_verified==true && request.auth.token.email in ['sksaharukhossain1996@gmail.com','ecommerceunickdigital@gmail.com'];}
+      function validExpense() {let d=request.resource.data;return id.size()>=20 && id.size()<=80 && d.keys().hasOnly(['date','amountPaise','category','reference','note','currency','state','createdBy','createdAt']) && d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') && d.amountPaise is int && d.amountPaise>0 && d.amountPaise<=1000000000 && d.category in ['stock_purchase','shipping','salary','rent','utilities','marketing','tax','fees','other'] && d.reference is string && d.reference.size()<=120 && d.note is string && d.note.size()<=1000 && d.currency=='INR' && d.state=='recorded' && d.createdBy==request.auth.uid && d.createdAt==request.time;}
+      allow get,list: if expenseOwner();
+      allow create: if expenseOwner() && validExpense();
+      allow update,delete: if false;
+    }
 
   }
 }
