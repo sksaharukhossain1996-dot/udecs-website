@@ -4,7 +4,7 @@ export const wholesaleMinimumQty = (product: {supplier?:string; minimumOrderQty?
  return Math.ceil(minimum / step) * step;
 };
 export const normalizeWholesaleQty = (product: {supplier?:string; minimumOrderQty?:number; quantityStep?:number}, quantity:number) => Math.max(wholesaleMinimumQty(product), Math.ceil(quantity/(product.quantityStep || 1))*(product.quantityStep || 1));
-export const wholesaleAvailability = (product: {stockManaged?:boolean;supplierInStock?:boolean;stock:number}) => product.stockManaged === false ? product.supplierInStock === true : product.stock > 0;
+export const wholesaleAvailability = (product: {stockManaged?:boolean;supplierInStock?:boolean;stock:number}) => product.supplierInStock !== false && (product.stockManaged === false ? product.supplierInStock === true : product.stock > 0);
 export const quoteTotals = (items:{price:number;qty:number;rate:number}[]) => {
  const money=(n:number)=>Math.round((n+Number.EPSILON)*100)/100;
  const net=money(items.reduce((n,p)=>n+p.price*p.qty,0));
