@@ -79,6 +79,8 @@ export interface Order {
   igst: number;
   totalGst: number;
   shippingFee: number;
+  smallOrderDeliveryFee?: number;
+  shoppingCharge?: number;
   totalAmount: number;
   currency: Currency;
   paymentMethod: PaymentMethod;
