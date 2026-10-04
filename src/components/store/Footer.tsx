@@ -31,7 +31,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
             <div className="flex items-center gap-3">
               <div className="shrink-0 rounded-3xl overflow-hidden shadow-lg">
                 <img
-                  src="/udecs-footer-glossy-icon.jpg"
+                  src="/1-udecs-footer-glossy-icon.jpg"
                   alt="UDECS Commerce Solutions"
                   width={1024}
                   height={1024}
