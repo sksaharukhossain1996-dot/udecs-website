@@ -1,5 +1,7 @@
 import {CUSTOMER_SUPPORT_ENABLED} from '../../customer-stage/featureFlags';
 import {CustomerPortalTab} from '../../customer-stage/CustomerPortalTab';
+import {AdminCRM} from '../../business/AdminCRM';
+import '../../business/business.css';
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { AdminSidebar, AdminTab } from './AdminSidebar';
@@ -239,6 +241,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           {currentTab === 'inventory' && <AdminInventory />}
           {currentTab === 'gst' && <AdminGstReports />}
           {currentTab === 'investors' && <AdminInvestors />}
+          {currentTab === 'crm' && <AdminCRM />}
           {currentTab === 'hr' && <AdminHR />}
           {currentTab === 'collaboration' && <AdminCollaboration />}
           {currentTab === 'gmail' && <AdminGmailHub />}
