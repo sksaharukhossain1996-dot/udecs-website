@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 
 export type AdminTab =
+  | 'crm'
   | 'overview'
   | 'website_control'
   | 'whatsapp_automation'
@@ -62,6 +63,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   } = useStore();
 
   const navItems: { id: AdminTab; labelBn: string; labelEn: string; icon: any; roleMin?: string }[] = [
+    { id: 'crm', labelBn: 'CRM - গ্রাহক সম্পর্ক', labelEn: 'CRM - Customer Relationships', icon: Users },
     { id: 'overview', labelBn: 'ড্যাশবোর্ড ওভারভিউ', labelEn: 'Executive Dashboard', icon: LayoutDashboard },
     { id: 'website_control', labelBn: 'ওয়েবসাইট সেটিংস ও কন্ট্রোল', labelEn: 'Website Settings & Control', icon: Globe },
     { id: 'whatsapp_automation', labelBn: 'হোয়াটসঅ্যাপ অটোমেশন 🟢', labelEn: 'WhatsApp Automation Hub', icon: MessageSquare },
