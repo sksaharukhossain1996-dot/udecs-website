@@ -31,7 +31,6 @@ import { getApiUrl } from '../../services/api';
 export const AdminWhatsAppAutomation: React.FC = () => {
   const {
     company,
-    language,
     whatsappConfig,
     updateWhatsAppConfig,
     notifications,
@@ -61,8 +60,16 @@ export const AdminWhatsAppAutomation: React.FC = () => {
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState<{ success: boolean; msg: string } | null>(null);
 
+  const englishLowStockTemplate = `⚠️ Urgent Low Stock Alert (UDECS Admin Alert)
+Product: {productName} ({sku})
+Current stock: only {stock} units remaining.
+Minimum stock threshold: {minStockAlert} units.
+Order a new batch from the factory promptly.`;
+
+  // Keep existing saved templates untouched until the user saves an edit.
+  // Present the legacy low-stock field in English when it contains Bengali.
   // Template Editing State
-  const [templatesForm, setTemplatesForm] = useState(whatsappConfig.templates);
+  const [templatesForm, setTemplatesForm] = useState({ ...whatsappConfig.templates, lowStockAlertBn: /[\u0980-\u09FF]/.test(whatsappConfig.templates.lowStockAlertBn) ? englishLowStockTemplate : whatsappConfig.templates.lowStockAlertBn });
 
   useEffect(() => {
     getWhatsAppStatus()
@@ -115,7 +122,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
       });
     }
     if (selectedTemplate === 'lowStock') {
-      return renderWhatsAppTemplate(whatsappConfig.templates.lowStockAlertBn, {
+      return renderWhatsAppTemplate(templatesForm.lowStockAlertBn, {
         productName: 'Non-Stick Cookware Frypan Set (3 Pcs)',
         sku: 'KT-104',
         stock: '3',
@@ -209,7 +216,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-black font-heading text-[#0F1913] flex items-center gap-3">
-                {language === 'bn' ? 'হোয়াটসঅ্যাপ অটোমেশন হাব' : 'WhatsApp Automation Hub'}
+                WhatsApp Automation Hub
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase ${
                     gatewayConfigured
@@ -372,7 +379,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                   </label>
                 </div>
                 <h4 className="font-heading font-bold text-sm text-[#0F1913]">
-                  অর্ডার নিশ্চিতকরণ অটো-সেন্ড (Order Placement)
+                  Automatic Order Confirmation (Order Placement)
                 </h4>
                 <p className="text-xs text-[#565F52]">
                   Not implemented: an order-created event could send the order summary and payment details after server-side order integration is added.
@@ -405,7 +412,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                   </label>
                 </div>
                 <h4 className="font-heading font-bold text-sm text-[#0F1913]">
-                  শিপমেন্ট ও AWB ট্র্যাকিং অটো-সেন্ড (Order Shipped)
+                  Shipment and AWB Tracking (Order Shipped)
                 </h4>
                 <p className="text-xs text-[#565F52]">
                   Not implemented: shipment details and a tracking URL could be sent after courier-status events are securely integrated.
@@ -438,7 +445,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                   </label>
                 </div>
                 <h4 className="font-heading font-bold text-sm text-[#0F1913]">
-                  ডেলিভারি কনফার্মেশন ও রিভিউ (Order Delivered)
+                  Delivery Confirmation and Review (Order Delivered)
                 </h4>
                 <p className="text-xs text-[#565F52]">
                   Not implemented: delivery confirmation and review requests require a server-side courier event integration.
@@ -471,7 +478,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                   </label>
                 </div>
                 <h4 className="font-heading font-bold text-sm text-[#0F1913]">
-                  জরুরি লো-স্টক সতর্কতা (Admin Low Stock)
+                  Urgent Low Stock Alert (Admin Low Stock)
                 </h4>
                 <p className="text-xs text-[#565F52]">
                   Not implemented: inventory changes are not connected to server-side WhatsApp alerts.
@@ -505,7 +512,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                   </label>
                 </div>
                 <h4 className="font-heading font-bold text-sm text-[#0F1913]">
-                  স্মার্ট এআই অটো-রিপ্লাই (Gemini 2.5 Flash)
+                  Smart AI Auto-Reply (Gemini 2.5 Flash)
                 </h4>
                 <p className="text-xs text-[#565F52]">
                   Not implemented: verified webhook callbacks are acknowledged, but customer messages are not processed or answered.
@@ -529,7 +536,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                   </span>
                 </div>
                 <h4 className="font-heading font-bold text-sm text-[#0F1913]">
-                  হোয়াটসঅ্যাপ কুইক বাই বোতাম (Quick Order)
+                  WhatsApp Quick Buy Button (Quick Order)
                 </h4>
                 <p className="text-xs text-[#565F52]">
                   Enables "Order on WhatsApp" 1-click button on product pages and cart, allowing buyers to complete checkout directly in WhatsApp chat.
@@ -632,7 +639,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                     }`}
                   >
                     <span className="block text-[11px]">📦 Order Placed</span>
-                    <span className="text-[9px] opacity-75 font-normal">অর্ডার নিশ্চিতকরণ</span>
+                    <span className="text-[9px] opacity-75 font-normal">Order confirmation</span>
                   </button>
 
                   <button
@@ -645,7 +652,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                     }`}
                   >
                     <span className="block text-[11px]">🚚 Order Shipped</span>
-                    <span className="text-[9px] opacity-75 font-normal">AWB ট্র্যাকিং</span>
+                    <span className="text-[9px] opacity-75 font-normal">AWB tracking</span>
                   </button>
 
                   <button
@@ -658,7 +665,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                     }`}
                   >
                     <span className="block text-[11px]">🎉 Delivered</span>
-                    <span className="text-[9px] opacity-75 font-normal">ডেলিভারি সম্পন্ন</span>
+                    <span className="text-[9px] opacity-75 font-normal">Delivery completed</span>
                   </button>
 
                   <button
@@ -671,7 +678,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
                     }`}
                   >
                     <span className="block text-[11px]">⚠️ Low Stock Alert</span>
-                    <span className="text-[9px] opacity-75 font-normal">জরুরি স্টক অ্যালার্ট</span>
+                    <span className="text-[9px] opacity-75 font-normal">Urgent stock alert</span>
                   </button>
                 </div>
               </div>
@@ -871,7 +878,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 3: BILINGUAL TEMPLATES EDITOR */}
+      {/* TAB 3: ENGLISH TEMPLATES EDITOR */}
       {activeTab === 'templates' && (
         <form onSubmit={handleSaveTemplates} className="space-y-6">
           <div className="bg-white p-5 rounded-lg border border-[#CBCFB9] shadow-xs space-y-4">
@@ -895,46 +902,16 @@ export const AdminWhatsAppAutomation: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
-              {/* Order Placed Bengali */}
-              <div>
-                <label className="block font-bold text-[#0F1913] mb-1">
-                  1. Order Placed Confirmation (বাংলা)
-                </label>
-                <textarea
-                  rows={8}
-                  value={templatesForm.orderPlacedEn}
-                  onChange={(e) =>
-                    setTemplatesForm({ ...templatesForm, orderPlacedEn: e.target.value })
-                  }
-                  className="w-full bg-[#FBFAF5] border border-[#CBCFB9] rounded p-2.5 text-[#0F1913] font-mono text-[11px] focus:outline-none focus:border-[#25D366]"
-                />
-              </div>
-
               {/* Order Placed English */}
               <div>
                 <label className="block font-bold text-[#0F1913] mb-1">
-                  2. Order Placed Confirmation (English)
+                  1. Order Placed Confirmation (English)
                 </label>
                 <textarea
                   rows={8}
                   value={templatesForm.orderPlacedEn}
                   onChange={(e) =>
                     setTemplatesForm({ ...templatesForm, orderPlacedEn: e.target.value })
-                  }
-                  className="w-full bg-[#FBFAF5] border border-[#CBCFB9] rounded p-2.5 text-[#0F1913] font-mono text-[11px] focus:outline-none focus:border-[#25D366]"
-                />
-              </div>
-
-              {/* Order Shipped Bengali */}
-              <div>
-                <label className="block font-bold text-[#0F1913] mb-1">
-                  3. Order Shipped & AWB Tracking (বাংলা)
-                </label>
-                <textarea
-                  rows={7}
-                  value={templatesForm.orderShippedEn}
-                  onChange={(e) =>
-                    setTemplatesForm({ ...templatesForm, orderShippedEn: e.target.value })
                   }
                   className="w-full bg-[#FBFAF5] border border-[#CBCFB9] rounded p-2.5 text-[#0F1913] font-mono text-[11px] focus:outline-none focus:border-[#25D366]"
                 />
@@ -943,7 +920,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
               {/* Order Shipped English */}
               <div>
                 <label className="block font-bold text-[#0F1913] mb-1">
-                  4. Order Shipped & AWB Tracking (English)
+                  2. Order Shipped & AWB Tracking (English)
                 </label>
                 <textarea
                   rows={7}
@@ -958,7 +935,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
               {/* Low Stock Alert */}
               <div className="md:col-span-2">
                 <label className="block font-bold text-[#0F1913] mb-1">
-                  5. Admin Low Stock Alert (Owner WhatsApp Alert)
+                  3. Admin Low Stock Alert (Owner WhatsApp Alert)
                 </label>
                 <textarea
                   rows={5}
