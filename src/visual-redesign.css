@@ -97,3 +97,16 @@
 .visual-store footer>div>div:first-child>div:not(:first-child){border-left:2px solid #d18146;padding:8px 0 8px 24px}
 .visual-store footer h4:after{content:"";display:block;width:44px;height:3px;border-radius:3px;background:linear-gradient(90deg,#e5a249,#d18146);margin-top:12px;box-shadow:0 1px 0 #ffffff75}
 @media(max-width:767px){.visual-store footer>div>div:first-child{grid-template-columns:1fr!important;gap:26px!important}.visual-store footer>div>div:first-child>div:first-child{grid-template-columns:1fr!important;padding:22px!important}.visual-store footer>div>div:first-child>div:not(:first-child){padding-left:18px!important}}
+
+/* Shared storefront brand on customer checkout and account pages. */
+.udecs-checkout {font-family:Arial,sans-serif;color:#233f66!important;background:rgba(6,26,49,.72)!important;}
+.udecs-checkout > div,.udecs-checkout > section {background:linear-gradient(155deg,#fff,#eef4fc)!important;border:1px solid #d18146!important;border-top:3px solid #e5a249!important;box-shadow:0 24px 60px #061a3160;}
+.udecs-checkout :is(h2,h3,h4,label,span,p){color:#233f66!important;}
+.udecs-checkout input,.udecs-checkout select,.udecs-checkout textarea{background:#fff!important;color:#233f66!important;border-color:#b9cde5!important;accent-color:#d18146;}
+.udecs-checkout [class*="bg-[#EEF0E7]"]{background:#eaf2fc!important;border-color:#b9cde5!important;}
+.udecs-checkout button:not([aria-label]){background:linear-gradient(140deg,#e5a249,#d18146)!important;color:#233f66!important;border:1px solid #e5a249!important;border-radius:8px;}
+.udecs-checkout button:not([aria-label]) *{color:#233f66!important;}
+.udecs-checkout button:disabled{opacity:.55;}
+.udecs-customer-portal .customer-stage{border-top:3px solid #e5a249!important;box-shadow:0 10px 24px #233f6610;}
+.udecs-customer-portal .customer-stage button{background:linear-gradient(140deg,#e5a249,#d18146)!important;color:#233f66!important;font-weight:600;}
+.udecs-customer-portal a{color:#233f66;}.udecs-customer-portal footer a{color:#fff!important;}
