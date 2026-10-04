@@ -25,6 +25,11 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
   return (
     <footer className="bg-[#0F1913] text-[#B9BFAE] border-t border-[#CBCFB9]/30 pt-16 pb-12 text-xs">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+        <style>{`.visual-store .udecs-invest-entry h3 { color: #fff !important; } .visual-store .udecs-invest-entry a, .visual-store .udecs-invest-entry a svg { color: #17385b !important; }`}</style>
+        <section aria-labelledby="invest-in-udecs" className="udecs-invest-entry mb-10 rounded-xl border border-white/30 bg-white/10 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div><h3 id="invest-in-udecs" className="text-xl font-bold text-white">Invest in UDECS</h3><p className="mt-2 text-sm text-white/90">Interested in investing or partnering with UDECS? Send an investment inquiry. Open to all visitors, no login needed.</p></div>
+          <a href="/invest.html" className="shrink-0 inline-flex items-center justify-center rounded-lg bg-[#F7941D] px-5 py-3 text-sm font-bold text-[#17385B] hover:bg-[#FFAD49]">Apply as an investor <ExternalLink className="ml-2 h-4 w-4" /></a>
+        </section>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-white/10">
           {/* Brand Col */}
           <div className="md:col-span-4 space-y-4">
