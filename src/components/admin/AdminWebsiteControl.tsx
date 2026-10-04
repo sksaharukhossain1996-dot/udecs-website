@@ -669,9 +669,9 @@ export const AdminWebsiteControl: React.FC = () => {
                     <span className="text-[10px] text-[#565F52] block font-mono">Privileges:</span>
                     <ul className="text-[11px] text-[#0F1913] list-disc list-inside mt-0.5 space-y-0.5">
                       <li>Full ERP Ownership & Domain Master Control</li>
-                      <li>PayU Merchant Keys, Salt & Bank Settlement</li>
-                      <li>GST Legal Invoicing & GSTR-1 Excel Exports</li>
-                      <li>Staff Payroll, Attendance & HR Slips</li>
+                      <li>Payment configuration; settlement reconciliation not connected</li>
+                      <li>Draft order tax summary; validated GST export pending</li>
+                      <li>Cloud employee directory/attendance; legacy payroll unverified</li>
                     </ul>
                   </div>
 
@@ -777,9 +777,9 @@ export const AdminWebsiteControl: React.FC = () => {
                   <div className="pt-1">
                     <span className="text-[10px] text-[#565F52] block font-mono">Privileges:</span>
                     <ul className="text-[11px] text-[#0F1913] list-disc list-inside mt-0.5 space-y-0.5">
-                      <li>Order Processing, Delhivery Logistics & AWB</li>
-                      <li>Automated Inventory Stock Tracking & Re-order</li>
-                      <li>WhatsApp Customer AI Chatbot & Auto-Confirmations</li>
+                      <li>Order review and manually recorded courier details</li>
+                      <li>Catalog stock view; reorder/purchase workflow pending</li>
+                      <li>WhatsApp templates; inbound AI not implemented</li>
                       <li>Storefront Hero Texts, Banner & CMS Products</li>
                     </ul>
                   </div>
