@@ -79,6 +79,17 @@ service cloud.firestore {
     }
 
     // Product catalog
+    // Search-only16 chunks. Live deployment is a separate reviewed migration.
+    match /catalogSearchChunks/{chunkId} {
+      allow read: if chunkId.matches('^(0[0-9]|1[0-5])$');
+      allow create, update: if isAdmin() && chunkId.matches('^(0[0-9]|1[0-5])$')
+        && request.resource.data.keys().hasOnly(['version','entries'])
+        && request.resource.data.version == 1
+        && request.resource.data.entries is list
+        && request.resource.data.entries.size() <= 2000;
+      allow delete: if false;
+    }
+
     match /products/{productId} {
       allow read: if true;
       allow create: if isValidId(productId) && isAdmin() && isValidProduct(incoming());
@@ -116,7 +127,8 @@ service cloud.firestore {
     // B2B Wholesale Inquiries
     match /inquiries/{inquiryId} {
       allow create: if isValidId(inquiryId) && isValidInquiry(incoming());
-      allow read, update, delete: if isValidId(inquiryId) && isAdmin();
+      allow get, update, delete: if isValidId(inquiryId) && isAdmin();
+      allow list: if isHROwner();
     }
 
     // Audit Trail
@@ -191,16 +203,5 @@ match /customers/{uid} {
   allow delete: if customerListOwner();
 }
 
-match /hrAttendance/{id} {
-function valid() {
-let d=request.resource.data;
-let e=get(/databases/$(database)/documents/hrEmployees/$(d.employeeId)).data;
-return isHROwner() && d.keys().hasOnly(['id','employeeId','employeeName','date','month','status','note','updatedBy','createdAt','updatedAt']) && d.id==id && id==d.employeeId+'_'+d.date && d.month==d.date[0:7] && d.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$') && d.status in ['present','half-day','absent','leave'] && d.note is string && d.note.size()<=500 && d.updatedBy==request.auth.uid && d.updatedAt==request.time && e.name==d.employeeName && e.status=='active';
-}
-allow read: if isHROwner();
-allow create: if valid() && request.resource.data.createdAt==request.time;
-allow update: if valid() && request.resource.data.createdAt==resource.data.createdAt;
-allow delete: if false;
-}
-  }
+match /hrAttendance/{id} { function valid() { let d=request.resource.data; let e=get(/databases/$(database)/documents/hrEmployees/$(d.employeeId)).data; return isHROwner() && d.keys().hasOnly(['id','employeeId','employeeName','date','month','status','note','updatedBy','createdAt','updatedAt']) && d.id==id && id==d.employeeId+'_'+d.date && d.month==d.date[0:7] && d.date.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$') && d.status in ['present','half-day','absent','leave'] && d.note is string && d.note.size()<=500 && d.updatedBy==request.auth.uid && d.updatedAt==request.time && e.name==d.employeeName && e.status=='active'; } allow read: if isHROwner(); allow create: if valid() && request.resource.data.createdAt==request.time; allow update: if valid() && request.resource.data.createdAt==resource.data.createdAt; allow delete: if false; }  }
 }
