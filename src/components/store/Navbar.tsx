@@ -257,7 +257,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div id="store-mobile-menu" role="navigation" aria-label="Mobile navigation" className="max-h-[calc(100dvh-170px)] overflow-y-auto overscroll-contain !flex-nowrap lg:hidden fixed inset-x-0 top-full bg-[#FBFAF5] border-b border-[#CBCFB9] shadow-lg p-5 flex flex-col gap-3 animate-fadeIn">
+          <div id="store-mobile-menu" role="navigation" aria-label="Mobile navigation" className="max-h-[calc(100dvh-170px)] overflow-y-auto overscroll-contain !flex-nowrap lg:hidden fixed inset-x-0 top-full bg-[#FBFAF5] border-b border-[#CBCFB9] shadow-lg p-5 pb-28 flex flex-col gap-3 animate-fadeIn">
             <a
               href="#products?category=kitchen"
               onClick={() => setMobileMenuOpen(false)}
