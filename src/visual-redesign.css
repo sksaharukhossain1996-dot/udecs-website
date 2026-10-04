@@ -26,3 +26,28 @@
 .visual-store #products .grid>div[class*="cursor-pointer"][class*="group"] h4{color:#183758!important;line-height:1.5}
 .visual-store #products .grid>div[class*="cursor-pointer"][class*="group"] [class*="border-t"]{border-color:#d5dfeb!important}
 @media(max-width:650px){.visual-store #products .grid>div[class*="cursor-pointer"][class*="group"]{border-top-width:3px!important;box-shadow:0 3px 12px #18375812}}
+
+/* Owner-reviewed glossy navy presentation. Original logo and commerce behavior preserved. */
+.visual-store{background:radial-gradient(ellipse at 12% 20%,#dce9f8 0,transparent 36%),linear-gradient(145deg,#f5f8fc,#e8eff8 55%,#f5f8fc)!important;color:#173452!important}
+.visual-store>header{background:linear-gradient(125deg,rgba(255,255,255,.98),rgba(236,244,253,.94))!important;backdrop-filter:blur(20px);box-shadow:0 8px 28px #12345816;border-bottom:1px solid #c8d9ed!important}
+.visual-store>main>section:first-child{background:radial-gradient(ellipse at 78% 5%,#6387ac90 0,transparent 45%),linear-gradient(125deg,#09233f 0,#173f66 48%,#2c567e 100%)!important;box-shadow:inset 0 1px 0 #ffffff45,inset 0 -1px 0 #07192d90;position:relative}
+.visual-store>main>section:first-child h1{letter-spacing:-.025em;text-shadow:0 3px 14px #06172f38}
+.visual-store>main>section:first-child :is(a,button){box-shadow:inset 0 1px 0 #ffffff65,0 7px 16px #03142924;border-radius:10px}
+.visual-store>main>section:first-child a[href="#products"]{background:linear-gradient(145deg,#ffa333,#e47605)!important;border:1px solid #ffc075!important;color:#112d49!important}
+.visual-store #categories [class*="corner-brackets"]{border-radius:18px!important;background:linear-gradient(145deg,#ffffffed,#eaf1fbeb)!important;border:1px solid #c6d5e8!important;box-shadow:inset 0 1px 0 white,0 12px 28px #12345812;backdrop-filter:blur(10px)}
+.visual-store #categories h3{color:#183e68!important}
+.visual-store #categories p{color:#47627e!important}
+.visual-store #products .grid>div[class*="cursor-pointer"][class*="group"]{background:linear-gradient(145deg,#fffffffa,#f0f5fcf5)!important;box-shadow:inset 0 1px 0 #fff,0 8px 22px #163d631c!important;border-radius:16px!important;border-color:#183758!important}
+.visual-store #products .grid>div[class*="cursor-pointer"][class*="group"]>div:first-child{background:linear-gradient(150deg,#f8fbff,#e8eff8)!important;border-radius:11px}
+.visual-store #products .grid h4{color:#163858!important}
+.visual-store #products [aria-label="Add to cart"]{background:linear-gradient(145deg,#305c86,#102d4b)!important;box-shadow:inset 0 1px 0 #ffffff55,0 4px 10px #11325125;border-color:#163858!important}
+.visual-store #products button[aria-pressed="true"]{background:linear-gradient(135deg,#315c84,#112f50)!important;color:#fff!important;box-shadow:inset 0 1px 0 #ffffff40,0 5px 13px #12345820}
+.visual-store footer{background:linear-gradient(140deg,#071c33,#173957)!important;box-shadow:inset 0 1px 0 #ffffff25}
+.visual-store #store-mobile-menu{flex-wrap:nowrap!important}
+.visual-store>main>section:first-child{background:linear-gradient(155deg,transparent 48%,#ffffff0d 49%,#ffffff05 70%,transparent 71%),radial-gradient(ellipse at 80% 0%,#8eb8df65 0,transparent 45%),linear-gradient(120deg,#061a31 0,#123c62 48%,#315f87 100%)!important}
+.visual-store #categories [class*="corner-brackets"]{background:linear-gradient(155deg,#ffffff 0,#ffffffcc 40%,#dce9f8b5 100%)!important}
+.visual-store #products .grid>div[class*="cursor-pointer"][class*="group"]{background:linear-gradient(155deg,#ffffff 0,#ffffff 25%,#e8f1fc 100%)!important}
+.visual-store .glossy-hero-layout{display:grid!important;grid-template-columns:minmax(0,1.35fr) minmax(240px,.65fr)!important;gap:44px!important;align-items:center!important}
+.visual-store .glossy-brand-feature{display:flex;justify-content:center;align-items:center;position:relative}
+.visual-store .glossy-brand-feature img{width:min(100%,320px);height:auto;border-radius:26%;box-shadow:0 28px 55px #00000045,0 0 45px #6aa8df25;border:1px solid #8bb6e450;transform:rotate(-5deg)}
+@media(max-width:760px){.visual-store .glossy-hero-layout{grid-template-columns:1fr!important;gap:26px!important}.visual-store .glossy-brand-feature{grid-row:1}.visual-store .glossy-brand-feature img{width:136px;border-radius:26%}.visual-store>main>section:first-child h1{font-size:30px}.visual-store>main>section:first-child{padding-top:25px!important}}
