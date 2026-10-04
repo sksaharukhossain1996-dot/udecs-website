@@ -1,3 +1,4 @@
+import {readSearchIndex,readCatalogCount,type SearchEntry} from '../firebase/catalogIndex';
 import { normalizeWholesaleQty } from '../lib/wholesale';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
@@ -88,6 +89,9 @@ interface StoreContextType {
   login: (email: string, pass: string) => boolean;
   logout: () => void;
   catalogStatus: "loading" | "ready" | "error";
+  catalogIndex: SearchEntry[];
+  catalogError: string;
+  catalogTotal: number;
   products: Product[];
   cart: CartItem[];
   orders: Order[];
@@ -267,6 +271,9 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     });
   };
 
+  const [catalogIndex,setCatalogIndex]=useState<SearchEntry[]>([]);
+  const [catalogError,setCatalogError]=useState('');
+  const [catalogTotal,setCatalogTotal]=useState(0);
   const [catalogStatus, setCatalogStatus] = useState<"loading" | "ready" | "error">("loading");
   // Persistent States
   const [products, setProducts] = useState<Product[]>(() => {
@@ -570,15 +577,13 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     // Server catalog is canonical, including an intentionally empty catalog.
     // Never resurrect deleted products by seeding demo records on a read.
-    const unsubscribeProducts = subscribeToProducts((items) => { setProducts(items); setCatalogStatus("ready"); }, (err) => {
-      setCatalogStatus("error");
-      console.warn('Firestore product subscription failed:', err);
-    });
-
-    return () => {
-      unsubscribeAuth();
-      unsubscribeProducts();
-    };
+    let active=true;let unsubscribeProducts=()=>{};
+    if ((window as any).__UDECS_STAFF_ENTRY__) {
+      unsubscribeProducts=subscribeToProducts(items=>{setProducts(items);setCatalogStatus('ready');},err=>{setCatalogStatus('error');console.warn('Firestore product subscription failed:',err);});
+    } else {
+      Promise.all([readSearchIndex(),readCatalogCount()]).then(([entries,total])=>{if(active){setCatalogIndex(entries);setCatalogTotal(total);setCatalogStatus('ready');}}).catch(()=>{if(active){setCatalogError('Catalog could not be loaded. Please try again later.');setCatalogStatus('error');}});
+    }
+    return()=>{active=false;unsubscribeAuth();unsubscribeProducts();};
   }, []);
 
   // Translation helper
@@ -1093,6 +1098,9 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         login,
         logout,
         catalogStatus,
+        catalogIndex,
+        catalogError,
+        catalogTotal,
         products,
         cart,
         orders: userRole === 'customer' ? orders : serverOrders,
