@@ -165,8 +165,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const sgst = isWestBengal ? roundMoney(totalGst - cgst) : 0;
   const igst = !isWestBengal ? totalGst : 0;
   const delivery = quoteShipping ? { zone: zoneForPincode(formData.pincode), weightKg: 0, fee: 0 } : deliveryCharge(formData.pincode, checkoutItems, paymentMethod === 'cod', subtotal);
-  const shippingFee = gatewayVerification?0:delivery.fee;
-  const smallOrderDeliveryFee = gatewayVerification||quoteShipping?0:roundMoney(subtotal)<1000?45:0;
+  const shippingFee = gatewayVerification||roundMoney(subtotal)>=1000?0:delivery.fee;
+  const smallOrderDeliveryFee = 0;
   const shoppingCharge = gatewayVerification||quoteShipping||paymentMethod!=='payu'?0:roundMoney(roundMoney(subtotal)*0.023);
   const totalAmount = gatewayVerification?50:roundMoney(taxableAmount + totalGst + shippingFee + smallOrderDeliveryFee + shoppingCharge);
 
@@ -545,14 +545,13 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                     ))}
 
                     <div className="flex justify-between">
-                      <span>{gatewayVerification?'No delivery:':quoteShipping ? 'Shipping:' : `Shipping (${delivery.weightKg} kg, ${ZONE_LABELS[delivery.zone]}):`}</span>
-                      <span className="text-[#3C6656] font-semibold">
+                      <span>{gatewayVerification?'No delivery:':quoteShipping ? 'Shipping:' : roundMoney(subtotal)>=1000?'Shipping (free on products INR 1,000+):':`Shipping (${delivery.weightKg} kg, ${ZONE_LABELS[delivery.zone]}):`}</span>
+                      <span className="text-[#3C6656] font-semibold whitespace-nowrap pl-2">
                         {quoteShipping ? 'Quoted separately, not included' : formatPrice(shippingFee)}
                       </span>
                     </div>
 
                     {!gatewayVerification&&!quoteShipping&&<>
-                      <div className="flex justify-between"><span>Delivery charge (products under INR 1,000):</span><span className="whitespace-nowrap pl-2">{formatPrice(smallOrderDeliveryFee)}</span></div>
                       <div className="flex justify-between"><span>Shopping charge ({paymentMethod==='payu'?'PayU 2.30% of products':'UPI QR: none'}):</span><span className="whitespace-nowrap pl-2">{formatPrice(shoppingCharge)}</span></div>
                     </>}
 
@@ -788,7 +787,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   )}
                   {completedOrder.smallOrderDeliveryFee!==undefined&&<>
                     <div className="flex justify-between"><span>Weight shipping:</span><span>{formatPrice(completedOrder.shippingFee||0)}</span></div>
-                    <div className="flex justify-between"><span>Delivery charge:</span><span>{formatPrice(completedOrder.smallOrderDeliveryFee)}</span></div>
+                    {completedOrder.smallOrderDeliveryFee>0&&<div className="flex justify-between"><span>Delivery charge:</span><span>{formatPrice(completedOrder.smallOrderDeliveryFee)}</span></div>}
                     <div className="flex justify-between"><span>Shopping charge:</span><span>{formatPrice(completedOrder.shoppingCharge||0)}</span></div>
                   </>}
                   <div className="flex justify-between font-bold text-sm text-[#0F1913] pt-1 border-t border-[#CBCFB9]">
