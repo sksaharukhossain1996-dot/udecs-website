@@ -160,7 +160,7 @@ export const AdminGstReports: React.FC = () => {
 
         <div className="bg-white p-4 rounded-lg border border-[#CBCFB9] shadow-xs">
           <span className="text-[11px] text-[#565F52] uppercase font-bold block">
-            CGST (Central Tax - 9%)
+            Recorded CGST
           </span>
           <div className="text-xl font-black text-[#3C6656] mt-1 font-sans">
             {formatPrice(totalCgst)}
@@ -170,7 +170,7 @@ export const AdminGstReports: React.FC = () => {
 
         <div className="bg-white p-4 rounded-lg border border-[#CBCFB9] shadow-xs">
           <span className="text-[11px] text-[#565F52] uppercase font-bold block">
-            SGST (State Tax - 9%)
+            Recorded SGST
           </span>
           <div className="text-xl font-black text-[#3C6656] mt-1 font-sans">
             {formatPrice(totalSgst)}
@@ -180,7 +180,7 @@ export const AdminGstReports: React.FC = () => {
 
         <div className="bg-white p-4 rounded-lg border border-[#CBCFB9] shadow-xs">
           <span className="text-[11px] text-[#565F52] uppercase font-bold block">
-            Total GST Liability
+            Recorded Output Tax
           </span>
           <div className="text-xl font-black text-[#CC9A2E] mt-1 font-sans">
             {formatPrice(totalTaxCollected)}
@@ -213,7 +213,7 @@ export const AdminGstReports: React.FC = () => {
             <p className="text-[#565F52]">Tax Return Period: <span className="font-bold text-[#0F1913]">{selectedMonth}</span></p>
             <p className="text-[#565F52]">Filing Frequency: <span className="font-bold text-[#0F1913]">Not verified</span></p>
             <p className="text-[#3C6656] font-semibold flex items-center justify-end gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Review required:</span>
               Not reconciled with PayU or bank ledger
             </p>
           </div>
@@ -236,9 +236,9 @@ export const AdminGstReports: React.FC = () => {
                     <th className="p-2.5">Place of Supply (POS)</th>
                     <th className="p-2.5 text-right">Invoice Value</th>
                     <th className="p-2.5 text-right">Taxable Value</th>
-                    <th className="p-2.5 text-right">CGST (9%)</th>
-                    <th className="p-2.5 text-right">SGST (9%)</th>
-                    <th className="p-2.5 text-right">IGST (18%)</th>
+                    <th className="p-2.5 text-right">Recorded CGST</th>
+                    <th className="p-2.5 text-right">Recorded SGST</th>
+                    <th className="p-2.5 text-right">Recorded IGST</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#CBCFB9]/40 font-mono">
