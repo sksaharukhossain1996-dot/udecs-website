@@ -1,7 +1,6 @@
 import {COMPANY_DETAILS} from '../../data/mockData';
 import React from 'react';
 import { useStore } from '../../context/StoreContext';
-import { BrandLogo } from '../common/BrandLogo';
 import {
   Phone,
   Mail,
@@ -30,7 +29,17 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
           {/* Brand Col */}
           <div className="md:col-span-4 space-y-4">
             <div className="flex items-center gap-3">
-              <BrandLogo size="lg" textColor="text-white" subtextColor="text-[#CC9A2E]" />
+              <div className="shrink-0 rounded-2xl border border-white/80 bg-white p-3 shadow-lg">
+                <img
+                  src="/UDECS_Logo_Premium_Transparent.png"
+                  alt="UDECS Commerce Solutions"
+                  width={997}
+                  height={958}
+                  className="block h-auto w-[148px] sm:w-[168px] max-w-full object-contain"
+                  loading="eager"
+                  decoding="async"
+                />
+              </div>
               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-[#CC9A2E] border border-white/15">
                 {company.domain}
               </span>
