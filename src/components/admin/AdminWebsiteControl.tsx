@@ -1,3 +1,4 @@
+import{checkStoreHealth}from'../../services/domainHealth';
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { getApiUrl } from '../../services/api';
@@ -115,48 +116,9 @@ export const AdminWebsiteControl: React.FC = () => {
   };
 
   const handleRunDomainCheck = async () => {
-    setIsCheckingDomain(true);
-    setDomainCheckResult(null);
-    try {
-      const res = await fetch(getApiUrl('/api/domain/live-status'));
-      if (!res.ok) throw new Error(`Diagnostics API responded with status ${res.status}`);
-      const data = await res.json();
-      setDomainCheckResult({
-        status: `${data.httpStatus || 'Unavailable'} (${data.isLive ? 'Domain live' : 'Domain check failed'})`,
-        isLive: Boolean(data.isLive),
-        latency: typeof data.latencyMs === 'number' ? `${data.latencyMs} ms` : 'Unavailable',
-        ssl: data.sslStatus || 'Unavailable',
-        edge: data.currentRouting || 'Unavailable',
-        registrar: data.registrar || 'Unavailable',
-        aRecords: data.aRecords || [],
-        cnameRecords: data.cnameRecords || [],
-        nameservers: data.nameservers || [],
-        timestamp: new Date().toLocaleTimeString(),
-      });
-      if (!data.isLive) throw new Error(data.errorMessage || 'Domain check failed.');
-      showToast('Real-time DNS & Edge check completed.');
-      addAuditLog({
-        action: 'DOMAIN_HEALTH_CHECK',
-        module: 'Website Settings',
-        details: `Live DNS checked: ${data.registrar || 'unknown'}, A: ${data.aRecords?.join(', ') || 'none'}`,
-      });
-    } catch (err) {
-      setDomainCheckResult({
-        status: 'Unavailable',
-        isLive: false,
-        latency: 'Unavailable',
-        ssl: 'Unavailable',
-        edge: 'Unavailable',
-        registrar: 'Unavailable',
-        aRecords: [],
-        cnameRecords: [],
-        nameservers: [],
-        timestamp: new Date().toLocaleTimeString(),
-      });
-      showToast(err instanceof Error ? err.message : 'Domain diagnostics are unavailable.');
-    } finally {
-      setIsCheckingDomain(false);
-    }
+    setIsCheckingDomain(true);setDomainCheckResult(null);
+    try {const result=await checkStoreHealth(getApiUrl('/api/domain/live-status'));setDomainCheckResult(result);showToast(result.isLive?'Storefront HTTPS response received. See probe limitations below.':'Probe unavailable or unsuccessful. This does not establish a certificate outage.');}
+    finally {setIsCheckingDomain(false);}
   };
 
   const handleTestAuth = (e: React.FormEvent) => {
@@ -510,7 +472,7 @@ export const AdminWebsiteControl: React.FC = () => {
                   Production Domain & Dual-Admin Control Center
                 </h3>
                 <p className="text-xs text-[#B9BFAE] leading-relaxed">
-                  Your store is 100% integrated with domain <strong className="text-white">udecs.store</strong>. Both <strong className="text-white">Admin 1</strong> (SK Saharuk Hossain) and <strong className="text-white">Admin 2</strong> (UNICK DIGITAL Executive) are provisioned with master credentials, 1-click session switching, and active SSL/TLS security.
+                  Configured storefront domain: <strong className="text-white">udecs.store</strong>. Both <strong className="text-white">Admin 1</strong> (SK Saharuk Hossain) and <strong className="text-white">Admin 2</strong> (UNICK DIGITAL Executive) are configured for authorized sign-in, and client-side diagnostics. Availability is checked on request.
                 </p>
               </div>
 
@@ -522,7 +484,7 @@ export const AdminWebsiteControl: React.FC = () => {
                   className="bg-[#CC9A2E] hover:bg-[#A87C1F] text-[#0F1913] font-bold px-4 py-2.5 rounded text-xs flex items-center gap-1.5 transition-all shadow-xs disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isCheckingDomain ? 'animate-spin' : ''}`} />
-                  <span>{isCheckingDomain ? 'Verifying Edge...' : 'Diagnostic Check'}</span>
+                  <span>{isCheckingDomain ? 'Checking HTTPS...' : 'Diagnostic Check'}</span>
                 </button>
 
                 <a
@@ -548,11 +510,11 @@ export const AdminWebsiteControl: React.FC = () => {
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-[#8C9385] uppercase block font-mono">Edge Latency</span>
+                  <span className="text-[10px] text-[#8C9385] uppercase block font-mono">Probe Duration</span>
                   <span className="font-bold text-white mt-0.5 block">{domainCheckResult.latency}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-[#8C9385] uppercase block font-mono">SSL Encryption</span>
+                  <span className="text-[10px] text-[#8C9385] uppercase block font-mono">HTTPS Probe</span>
                   <span className="font-bold text-[#CC9A2E] mt-0.5 block">{domainCheckResult.ssl}</span>
                 </div>
                 <div>
@@ -896,189 +858,7 @@ export const AdminWebsiteControl: React.FC = () => {
               </form>
             </div>
 
-            {/* Right: Domain DNS & Live Activation Control */}
-            <div className="lg:col-span-6 bg-white p-5 rounded-lg border border-[#CBCFB9] shadow-xs space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#CBCFB9]">
-                <div className="flex items-center gap-2">
-                  <Server className="w-5 h-5 text-[#3C6656]" />
-                  <div>
-                    <h4 className="font-heading font-bold text-sm text-[#0F1913] uppercase tracking-wider">
-                      Live Domain Activation (udecs.store)
-                    </h4>
-                    <p className="text-[11px] text-[#565F52]">
-                      GoDaddy DNS bindings & edge routing for production
-                    </p>
-                  </div>
-                </div>
-
-                <span className="text-[10px] font-mono font-bold bg-[#25D366]/20 text-[#0F1913] px-2 py-0.5 rounded border border-[#25D366]/40 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse" />
-                  GoDaddy DNS Detected
-                </span>
-              </div>
-
-              {/* Live Detected Info Strip */}
-              <div className="p-3 bg-[#FBFAF5] rounded border border-[#CBCFB9] text-xs space-y-2">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-[#565F52]">Domain Registrar:</span>
-                  <span className="font-mono font-bold text-[#0F1913]">GoDaddy (domaincontrol.com)</span>
-                </div>
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-[#565F52]">Primary Nameservers:</span>
-                  <span className="font-mono text-[#3C6656] font-semibold">ns71 / ns72.domaincontrol.com</span>
-                </div>
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-[#565F52]">Active Edge Destination:</span>
-                  <span className="font-mono text-emerald-800 font-bold bg-emerald-100 px-1.5 py-0.5 rounded">
-                    {domainCheckResult?.edge || 'sksaharukhossain1996-dot.github.io'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Method Switcher Tabs */}
-              <div>
-                <div className="flex items-center gap-2 border-b border-[#CBCFB9] pb-2">
-                  <button
-                    type="button"
-                    onClick={() => setActiveDnsMethod('cloud')}
-                    className={`text-xs px-3 py-1.5 rounded font-bold transition-all ${
-                      activeDnsMethod === 'cloud'
-                        ? 'bg-[#182620] text-white shadow-xs'
-                        : 'bg-[#FBFAF5] text-[#565F52] hover:text-[#0F1913] border border-[#CBCFB9]'
-                    }`}
-                  >
-                    পদ্ধতি ১: GoDaddy DNS → Google Cloud / Firebase (সুপারিশকৃত)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveDnsMethod('github')}
-                    className={`text-xs px-3 py-1.5 rounded font-bold transition-all ${
-                      activeDnsMethod === 'github'
-                        ? 'bg-[#182620] text-white shadow-xs'
-                        : 'bg-[#FBFAF5] text-[#565F52] hover:text-[#0F1913] border border-[#CBCFB9]'
-                    }`}
-                  >
-                    পদ্ধতি ২: GitHub Pages (তাত্ক্ষণিক লাইভ)
-                  </button>
-                </div>
-
-                {activeDnsMethod === 'cloud' ? (
-                  <div className="mt-3 space-y-3">
-                    <p className="text-xs text-[#565F52] leading-relaxed">
-                      GoDaddy অ্যাকাউন্টে লগইন করে <strong>udecs.store</strong> ডোমেইনের <strong>DNS Management</strong> সেকশনে গিয়ে নিচের রেকর্ডগুলি যোগ বা আপডেট করুন:
-                    </p>
-
-                    <div className="overflow-x-auto text-xs">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="border-b border-[#CBCFB9] text-[10px] text-[#565F52] uppercase font-mono bg-[#FBFAF5]">
-                            <th className="py-1.5 px-2">Type</th>
-                            <th className="py-1.5 px-2">Name / Host</th>
-                            <th className="py-1.5 px-2">Target Value</th>
-                            <th className="py-1.5 px-2">TTL</th>
-                            <th className="py-1.5 px-2 text-right">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#CBCFB9]/40 font-mono text-[11px]">
-                          <tr>
-                            <td className="py-2 px-2 text-[#A87C1F] font-bold">A</td>
-                            <td className="py-2 px-2 font-bold">@</td>
-                            <td className="py-2 px-2 font-bold">199.36.158.100</td>
-                            <td className="py-2 px-2 text-[#565F52]">1/2 Hour</td>
-                            <td className="py-2 px-2 text-right">
-                              <button
-                                type="button"
-                                onClick={() => copyToClipboard('199.36.158.100', 'A Record')}
-                                className="text-[#3C6656] hover:text-[#0F1913] font-sans font-bold text-[10px] bg-[#EEF0E7] px-2 py-0.5 rounded"
-                              >
-                                Copy IP
-                              </button>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="py-2 px-2 text-[#A87C1F] font-bold">CNAME</td>
-                            <td className="py-2 px-2 font-bold">www</td>
-                            <td className="py-2 px-2">udecs-store.web.app</td>
-                            <td className="py-2 px-2 text-[#565F52]">1 Hour</td>
-                            <td className="py-2 px-2 text-right">
-                              <button
-                                type="button"
-                                onClick={() => copyToClipboard('udecs-store.web.app', 'CNAME Record')}
-                                className="text-[#3C6656] hover:text-[#0F1913] font-sans font-bold text-[10px] bg-[#EEF0E7] px-2 py-0.5 rounded"
-                              >
-                                Copy Host
-                              </button>
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="py-2 px-2 text-[#A87C1F] font-bold">TXT</td>
-                            <td className="py-2 px-2 font-bold">@</td>
-                            <td className="py-2 px-2 truncate max-w-[120px]">v=spf1 include:_spf.google.com ~all</td>
-                            <td className="py-2 px-2 text-[#565F52]">1 Hour</td>
-                            <td className="py-2 px-2 text-right">
-                              <button
-                                type="button"
-                                onClick={() => copyToClipboard('v=spf1 include:_spf.google.com ~all', 'TXT SPF Record')}
-                                className="text-[#3C6656] hover:text-[#0F1913] font-sans font-bold text-[10px] bg-[#EEF0E7] px-2 py-0.5 rounded"
-                              >
-                                Copy TXT
-                              </button>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mt-3 space-y-3">
-                    <div className="p-3 bg-emerald-50 rounded border border-emerald-200 text-xs text-emerald-900">
-                      <strong>✅ তাত্ক্ষণিক লাইভ সুবিধা:</strong> আপনার GoDaddy ডোমেইন ইতিমধ্যে <code className="font-mono bg-white px-1 py-0.5 rounded">sksaharukhossain1996-dot.github.io</code>-এর দিকে পয়েন্ট করা আছে। কোনো DNS পরিবর্তন ছাড়াই আপনার GitHub রিপোজিটরিতে বিল্ড ফাইল পুশ করলে <strong>udecs.store</strong> সরাসরি লাইভ হয়ে যাবে!
-                    </div>
-
-                    <div className="bg-[#182620] text-[#EEF0E7] p-3 rounded font-mono text-[11px] space-y-1">
-                      <div className="text-[#8C9385] text-[10px]"># এক-ক্লিকে ডিপ্লয়মেন্ট কমান্ড:</div>
-                      <div className="text-[#25D366] select-all">npm run build</div>
-                      <div className="text-white select-all">git add .</div>
-                      <div className="text-white select-all">git commit -m "Deploy latest UDECS live storefront to udecs.store"</div>
-                      <div className="text-[#CC9A2E] select-all">git push origin main</div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard('npm run build && git add . && git commit -m "Deploy latest UDECS live storefront" && git push origin main', 'Deploy Commands')}
-                      className="w-full bg-[#FBFAF5] hover:bg-[#EEF0E7] text-[#0F1913] py-2 px-3 rounded border border-[#CBCFB9] font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
-                    >
-                      <Copy className="w-3.5 h-3.5 text-[#3C6656]" />
-                      <span>কমান্ডগুলো কপি করুন (Copy Deployment Commands)</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Live Links Strip */}
-              <div className="pt-2 border-t border-[#CBCFB9] space-y-1.5 text-xs text-[#565F52]">
-                <div className="flex justify-between py-1 items-center">
-                  <span>Production Storefront:</span>
-                  <a
-                    href="https://udecs.store"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-mono text-[#3C6656] font-bold hover:underline flex items-center gap-1 bg-[#EEF0E7] px-2 py-0.5 rounded"
-                  >
-                    https://udecs.store
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span>PayU Settlement Webhook:</span>
-                  <span className="font-mono text-[#0F1913]">https://udecs.store/api/payu/webhook</span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span>WhatsApp Automation Webhook:</span>
-                  <span className="font-mono text-[#0F1913]">Configure the Cloudflare Worker webhook URL in Meta</span>
-                </div>
-              </div>
-            </div>
+            <div className="lg:col-span-6 bg-white p-5 rounded-lg border border-[#CBCFB9] space-y-4"><h4 className="font-bold">Domain diagnostics - no DNS changes</h4><p className="text-sm">HTTPS reachability is measured separately from DNS routing, registrar ownership and certificate details. Static setup examples are not detected live settings. Do not change DNS based on this page.</p><dl className="text-sm space-y-3"><div><dt>DNS operator / registrar hint</dt><dd>{domainCheckResult?.registrar || 'Not verified'}</dd></div><div><dt>Nameservers returned by checker</dt><dd>{domainCheckResult?.nameservers.length?domainCheckResult.nameservers.join(', '):'Not verified'}</dd></div><div><dt>Routing hint from checker</dt><dd>{domainCheckResult?.edge || 'Not verified'}</dd></div></dl><a href="https://udecs.store" target="_blank" rel="noopener noreferrer" className="underline">Open storefront</a><p className="text-xs">Payment and WhatsApp webhooks belong to their configured services; this page does not verify settlement, delivery, account ownership or permission.</p></div>
           </div>
         </div>
       )}
