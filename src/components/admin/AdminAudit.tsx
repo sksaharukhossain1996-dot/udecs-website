@@ -1,3 +1,4 @@
+import {csvText,auditIp} from '../../lib/csvExport';
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import {
@@ -31,20 +32,18 @@ export const AdminAudit: React.FC = () => {
       l.userName,
       l.userRole,
       l.module,
-      `"${l.action.replace(/"/g, '""')}"`,
-      `"${l.details.replace(/"/g, '""')}"`,
-      l.ipAddress || '127.0.0.1',
+      l.action,
+      l.details,
+      auditIp(l.ipAddress),
     ]);
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
+    const encodedUri=URL.createObjectURL(new Blob([csvText([headers,...rows])],{type:'text/csv;charset=utf-8'}));
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
     link.setAttribute('download', `udecs_audit_logs_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(encodedUri);
   };
 
   return (
@@ -55,10 +54,10 @@ export const AdminAudit: React.FC = () => {
           <h1 className="text-2xl sm:text-3xl font-black font-heading text-[#0F1913]">
             {language === 'bn'
               ? 'নিরাপত্তা ও অপরিবর্তনীয় সিস্টেম অডিট ট্রেইল'
-              : 'Security & Immutable System Audit Trail Logs'}
+              : 'Recorded Activity Logs'}
           </h1>
           <p className="text-xs text-[#565F52] mt-0.5">
-            Every user action, inventory change, financial transaction, and role activity is permanently logged.
+            Loaded recorded activity only. Coverage is incomplete; client-originated entries are not independent proof of who performed an action.
           </p>
         </div>
 
@@ -141,7 +140,7 @@ export const AdminAudit: React.FC = () => {
                 </td>
 
                 <td className="p-3 text-right font-mono text-[10px] text-[#565F52]">
-                  {log.ipAddress || '127.0.0.1'}
+                  {auditIp(log.ipAddress)}
                 </td>
               </tr>
             ))}
