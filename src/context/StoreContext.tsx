@@ -1,5 +1,5 @@
-import {readSearchIndex,readCatalogCount,type SearchEntry} from '../firebase/catalogIndex';
-import { normalizeWholesaleQty } from '../lib/wholesale';
+import {readSearchIndex,readProductsByIds,readCatalogCount,type SearchEntry} from '../firebase/catalogIndex';
+import { normalizeWholesaleQty, wholesaleAvailability } from '../lib/wholesale';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import {
@@ -110,6 +110,8 @@ interface StoreContextType {
   isOffline: boolean;
   t: (key: keyof typeof TRANSLATIONS['bn']) => string;
 
+  cartValidation: "checking" | "ready" | "error";
+  refreshCart: () => Promise<boolean>;
   // Cart actions
   addToCart: (product: Product, quantity?: number, isWholesale?: boolean) => void;
   removeFromCart: (productId: string) => void;
@@ -286,6 +288,23 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const saved = localStorage.getItem('udecs_cart');
     return saved ? JSON.parse(saved) : [];
   });
+
+  const [cartValidation,setCartValidation]=useState<"checking"|"ready"|"error">('checking');
+  const cartRef=React.useRef(cart);cartRef.current=cart;
+  const cartRefresh=React.useRef<Promise<boolean>|null>(null);
+  const refreshCart=():Promise<boolean>=>{
+    if(cartRefresh.current)return cartRefresh.current;
+    setCartValidation('checking');
+    const pending=(async()=>{try{
+      const ids=[...new Set(cartRef.current.map(i=>i.product.id))];
+      const fresh=new Map<string,Product>();
+      for(let n=0;n<ids.length;n+=24)(await readProductsByIds(ids.slice(n,n+24))).forEach(p=>fresh.set(p.id,p));
+      setCart(old=>old.flatMap(item=>{if(!ids.includes(item.product.id))return [item];const p=fresh.get(item.product.id);return p&&wholesaleAvailability(p)?[{...item,product:p,quantity:normalizeWholesaleQty(p,item.quantity)}]:[]}));
+      setCartValidation('ready');return true;
+    }catch{setCartValidation('error');return false;}})();
+    cartRefresh.current=pending;void pending.finally(()=>{cartRefresh.current=null});return pending;
+  };
+  useEffect(()=>{void refreshCart();},[]);
 
   const [serverOrders, setServerOrders] = useState<Order[]>([]);
   useEffect(() => {
@@ -618,7 +637,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // Cart actions
   const addToCart = (product: Product, quantity = 1, isWholesale = false) => {
-    if (product.supplier === 'rajkot' && !product.supplierInStock) return;
+    if (!wholesaleAvailability(product)) return;
     quantity = normalizeWholesaleQty(product, quantity);
     setCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
@@ -1103,6 +1122,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         catalogTotal,
         products,
         cart,
+        refreshCart,
+        cartValidation,
         orders: userRole === 'customer' ? orders : serverOrders,
         employees,
         attendance,
