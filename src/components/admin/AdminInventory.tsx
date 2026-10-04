@@ -60,12 +60,14 @@ export const AdminInventory: React.FC = () => {
   });
 
   const handleStockAdjust = (product: Product, delta: number) => {
+    alert('Legacy stock writes are paused until transactional stock-ledger validation is ready. No change saved.');return;
     const newQty = Math.max(0, product.stock + delta);
     updateProductStock(product.id, newQty);
   };
 
   const handleCreateProduct = (e: React.FormEvent) => {
     e.preventDefault();
+    alert('Use Product listing for reviewed owner additions. Legacy inventory creation is paused.');return;
     if (!newProduct.name || !newProduct.nameBn) {
       alert('Please provide product name in English and Bengali.');
       return;
@@ -120,19 +122,19 @@ export const AdminInventory: React.FC = () => {
 
   return (
     <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
+      <p role="status" className="p-4 rounded border bg-amber-50 text-sm">Legacy inventory writes are temporarily paused: these controls did not reliably confirm cloud saves and could overwrite concurrent stock. Read-only catalog remains available. Use Product listing for reviewed new listings/deletion. Transactional stock/cost ledger is pending.</p>{/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#CBCFB9]">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black font-heading text-[#0F1913]">
-            {language === 'bn' ? 'অটোমেটেড ইনভেন্টরি ম্যানেজমেন্ট সিস্টেম' : 'Automated Inventory & Warehouse Management'}
+            {language === 'bn' ? 'অটোমেটেড ইনভেন্টরি ম্যানেজমেন্ট সিস্টেম' : 'Inventory - read-only legacy view'}
           </h1>
           <p className="text-xs text-[#565F52] mt-0.5">
-            Real-time stock alerts, auto-deduction on sales, and HSN batch pricing.
+            Loaded catalog stock view. Legacy edits paused; transactional movements pending.
           </p>
         </div>
 
         <button
-          onClick={() => setShowAddModal(true)}
+          disabled title="Legacy writes paused; use Product listing for reviewed additions" onClick={() => setShowAddModal(true)}
           className="inline-flex items-center gap-2 bg-[#0F1913] hover:bg-[#182620] text-white px-4 py-2 rounded text-xs font-semibold shadow-xs"
         >
           <Plus className="w-4 h-4 text-[#CC9A2E]" />
@@ -252,20 +254,20 @@ export const AdminInventory: React.FC = () => {
                       <div className="flex items-center gap-1">
                         <span>₹</span>
                         <input
-                          type="number"
+                          readOnly type="number"
                           min={0}
                           key={prod.id + '-' + prod.price}
                           defaultValue={prod.price}
                           onBlur={(e) => {
                             const v = Math.max(0, Number(e.target.value) || 0);
                             if (v !== prod.price) {
-                              updateProduct(prod.id, { price: v });
-                              addAuditLog({ action: 'PRICE_UPDATE', module: 'inventory', details: `${prod.name}: Rs.${prod.price} -> Rs.${v}` });
+                              alert('Legacy price edits are paused. No change saved.');
+                              
                             }
                           }}
                           onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                           className="w-24 border border-[#CBCFB9] rounded px-1.5 py-0.5 bg-white font-bold text-[#0F1913]"
-                          title="Edit price, press Enter to save"
+                          title="Read-only price; legacy edit paused"
                         />
                       </div>
                     </td>
@@ -306,7 +308,7 @@ export const AdminInventory: React.FC = () => {
                       <div className="inline-flex items-center gap-1 border border-[#CBCFB9] rounded bg-[#FBFAF5] p-0.5">
                         <button
                           onClick={() => handleStockAdjust(prod, -1)}
-                          disabled={prod.stock <= 0}
+                          disabled
                           className="p-1 hover:bg-[#E4E8D9] rounded text-[#0F1913] disabled:opacity-40"
                           title="Deduct 1 unit"
                         >
@@ -314,7 +316,7 @@ export const AdminInventory: React.FC = () => {
                         </button>
 
                         <button
-                          onClick={() => handleStockAdjust(prod, 10)}
+                          disabled onClick={() => handleStockAdjust(prod, 10)}
                           className="px-2 py-0.5 text-[10px] font-bold bg-[#182620] text-white hover:bg-[#0F1913] rounded"
                           title="Restock +10 units"
                         >
@@ -322,7 +324,7 @@ export const AdminInventory: React.FC = () => {
                         </button>
 
                         <button
-                          onClick={() => handleStockAdjust(prod, 50)}
+                          disabled onClick={() => handleStockAdjust(prod, 50)}
                           className="px-2 py-0.5 text-[10px] font-bold bg-[#CC9A2E] text-[#0F1913] hover:bg-[#A87C1F] hover:text-white rounded"
                           title="Bulk Pallet Restock +50 units"
                         >
@@ -330,10 +332,10 @@ export const AdminInventory: React.FC = () => {
                         </button>
 
                         <button
-                          onClick={() => {
+                          disabled onClick={() => {
                             if (window.confirm(`Delete "${prod.name}" from the store? This cannot be undone.`)) {
-                              deleteProduct(prod.id);
-                              addAuditLog({ action: 'PRODUCT_DELETE', module: 'inventory', details: `Deleted product: ${prod.name} (${prod.sku})` });
+                              alert('Legacy deletion is paused. Use reviewed Product listing controls.');
+                              
                             }
                           }}
                           className="p-1 hover:bg-red-100 rounded text-red-700"
