@@ -1,3 +1,4 @@
+import {matchCatalog,readProductsByIds} from '../../firebase/catalogIndex';
 import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Product } from '../../types';
@@ -15,7 +16,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   onClose,
   onSelectProduct,
 }) => {
-  const { products, formatPrice, language } = useStore();
+  const { products, catalogIndex, catalogError, formatPrice, language } = useStore();
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -25,16 +26,26 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     }
   }, [isOpen]);
 
+  const paged=!(window as any).__UDECS_STAFF_ENTRY__;
+  const [resultProducts,setResultProducts]=useState<Product[]>([]);
+  const [visibleCount,setVisibleCount]=useState(24);
+  const [busy,setBusy]=useState(false);
+  const [error,setError]=useState('');
+  useEffect(()=>setVisibleCount(24),[query,isOpen]);
+  const matches=matchCatalog(catalogIndex,query,'all',true);
+  const key=matches.map(e=>e.id).join('|');
+  useEffect(()=>{
+    if(!isOpen||!paged)return;let active=true;
+    const ids=matches.slice(0,visibleCount).map(e=>e.id);
+    const existing=new Map([...products,...resultProducts].map(p=>[p.id,p]));
+    const missing=ids.filter(id=>!existing.has(id));setBusy(true);setError('');setResultProducts(prev=>prev.filter(p=>ids.includes(p.id)));
+    const timer=setTimeout(()=>{(async()=>{for(let i=0;i<missing.length;i+=24){const batch=await readProductsByIds(missing.slice(i,i+24));batch.forEach(p=>existing.set(p.id,p));}if(active)setResultProducts(ids.flatMap(id=>existing.has(id)?[existing.get(id)!]:[]));})().catch(()=>{if(active)setError('Search products could not be loaded. Please try later.');}).finally(()=>{if(active)setBusy(false);});},300);
+    return()=>{active=false;clearTimeout(timer);};
+  },[key,visibleCount,isOpen,products,paged]);
   if (!isOpen) return null;
-
-  const results = products.filter(p => p.supplier !== 'rajkot' && !(p as any).hidden && !(p as any).gatewayVerification).filter(
-    (p) =>
-      p.name.toLowerCase().includes(query.toLowerCase()) ||
-      p.nameBn.includes(query) ||
-      p.sku.toLowerCase().includes(query.toLowerCase()) ||
-      p.category.toLowerCase().includes(query.toLowerCase()) ||
-      p.hsn.includes(query)
-  );
+  const results = paged?resultProducts:products.filter(p=>p.supplier!=='rajkot'&&!(p as any).hidden&&!(p as any).gatewayVerification).filter(p=>
+    p.name.toLowerCase().includes(query.toLowerCase())||p.nameBn.includes(query)||p.sku.toLowerCase().includes(query.toLowerCase())||p.category.toLowerCase().includes(query.toLowerCase())||p.hsn.includes(query));
+  const total=paged?matches.length:results.length;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 sm:pt-20 bg-[#0F1913]/60 backdrop-blur-xs animate-fadeIn">
@@ -62,9 +73,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           </button>
         </div>
 
+        {(error||catalogError)&&<p role="alert" className="p-4 text-red-700">{error||catalogError}</p>}
+        {busy&&<p role="status" className="p-4 text-sm">Loading products...</p>}
         {/* Results List */}
         <div className="max-h-96 overflow-y-auto p-2 divide-y divide-[#CBCFB9]/40">
-          {results.length === 0 ? (
+          {results.length === 0 && !busy && !error && !catalogError ? (
             <div className="p-8 text-center text-xs text-[#565F52]">
               No products found matching &quot;{query}&quot;
             </div>
@@ -119,9 +132,10 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           )}
         </div>
 
+        {paged&&visibleCount<total&&<button disabled={busy||!!error} onClick={()=>setVisibleCount(c=>c+24)} className="p-3 w-full text-sm">Show more products</button>}
         {/* Footer */}
         <div className="p-2.5 bg-[#EEF0E7] border-t border-[#CBCFB9] text-[10px] text-[#565F52] flex justify-between">
-          <span>{results.length} products found</span>
+          <span>{total} products found</span>
           <span>Press ESC or click outside to dismiss</span>
         </div>
       </div>
