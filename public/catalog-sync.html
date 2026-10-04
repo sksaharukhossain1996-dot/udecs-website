@@ -25,7 +25,7 @@ function f(i) {
     if (n.has(t.sku)) throw Error(`Duplicate SKU: ${t.sku}`);
     if (n.add(t.sku), e.mode === "update" && e.expected?.sku !== t.sku) throw Error(`Cannot change SKU: ${e.id}`);
     if (!C.includes(t.category) || ![5, 12, 18, 28].includes(t.gstRate)) throw Error(`Invalid category or GST: ${e.id}`);
-    if (typeof t.price != "number" || !Number.isFinite(t.price) || t.price < 0 || typeof t.stock != "number" || !Number.isSafeInteger(t.stock) || (rajkot ? t.stock !== 0 : t.stock <= 0)) throw Error(`Invalid price or positive stock: ${e.id}`);
+    if (typeof t.price != "number" || !Number.isFinite(t.price) || t.price < 0 || typeof t.stock != "number" || !Number.isSafeInteger(t.stock) || (rajkot ? t.stock !== 0 : (e.mode === "update" && Object.keys(e.fields).length === 1 && Object.keys(e.fields)[0] === "stock" ? t.stock < 0 : t.stock <= 0))) throw Error(`Invalid price or positive stock: ${e.id}`);
     if (e.mode === "create") {
       if (typeof t.imageUrl != "string" || !t.imageUrl.startsWith("https://")) throw Error(`Missing supplier photo: ${e.id}`);
       if (rajkot) {
