@@ -65,7 +65,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-start">
           {/* Media preview */}
           <div className="sm:col-span-5 min-w-0 bg-[#E4E8D9] rounded-md p-6 flex flex-col items-center justify-center border border-[#CBCFB9] text-[#3C6656] min-h-[220px]">
-            {product.imageUrl ? (
+            {product.imageUrl && product.id!=='23065_plastic_toothbrush_holder_1pc' ? (
               <img
                 src={product.photos?.[photoIndex] || product.imageUrl}
                 alt={customerProductTitle(product, language)}
@@ -124,8 +124,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         ? 'পাইকারি ইউনিট রেট প্রয়োগ করা হয়েছে'
                         : 'Wholesale Tier Applied'
                       : language === 'bn'
-                      ? 'মূল্য (GST অতিরিক্ত)'
-                      : 'Price (GST extra)'}
+                      ? product.supplier==='rajkot'&&product.gstExtra?'মূল্য (GST অতিরিক্ত)':'মূল্য (GST অন্তর্ভুক্ত)'
+                      : product.supplier==='rajkot'&&product.gstExtra?'Price (GST extra)':'Price (GST included)'}
                   </span>
                   <span className="text-2xl font-black text-[#0F1913]">
                     {formatPrice(activeUnitPrice)}
