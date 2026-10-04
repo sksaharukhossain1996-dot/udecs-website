@@ -1,3 +1,4 @@
+import {AdminERP} from '../../business/AdminERP';
 import {CUSTOMER_SUPPORT_ENABLED} from '../../customer-stage/featureFlags';
 import {CustomerPortalTab} from '../../customer-stage/CustomerPortalTab';
 import {AdminCRM} from '../../business/AdminCRM';
@@ -241,7 +242,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           {currentTab === 'inventory' && <AdminInventory />}
           {currentTab === 'gst' && <AdminGstReports />}
           {currentTab === 'investors' && <AdminInvestors />}
-          {currentTab === 'crm' && <AdminCRM />}
+          {currentTab==='erp' && <AdminERP/>}
+            {currentTab === 'crm' && <AdminCRM />}
           {currentTab === 'hr' && <AdminHR />}
           {currentTab === 'collaboration' && <AdminCollaboration />}
           {currentTab === 'gmail' && <AdminGmailHub />}
