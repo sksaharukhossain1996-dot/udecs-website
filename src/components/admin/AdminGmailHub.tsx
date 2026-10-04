@@ -47,6 +47,8 @@ export const AdminGmailHub: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
+  const localMailboxUnsupported = location.protocol !== 'https:' || location.hostname === 'appassets.androidplatform.net';
+
   // Compose State
   const [isComposeOpen, setIsComposeOpen] = useState<boolean>(false);
   const [composeTo, setComposeTo] = useState<string>('');
@@ -296,6 +298,11 @@ export const AdminGmailHub: React.FC = () => {
 
   return (
     <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto">
+      <section className="rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-2">
+        <h3 className="font-bold">Gmail and Outlook access</h3>
+        {localMailboxUnsupported ? <><p className="text-sm">This local management app cannot run Google or Microsoft mailbox authorization. Open the secure live portal in your normal browser and sign in there. Management email/password login does not grant mailbox access.</p><p className="font-mono text-sm break-all select-text">https://udecs.store/staff.html</p></> : <p className="text-sm">Gmail requires your separate Google consent. Mailbox tokens stay in memory for this session.</p>}
+        <p className="text-sm">Outlook / Microsoft 365: not connected. In-portal access needs a registered Microsoft app and delegated permission approval. No Outlook messages are loaded or sent.</p>
+      </section>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#CBCFB9]">
         <div>
@@ -304,7 +311,7 @@ export const AdminGmailHub: React.FC = () => {
               <Mail className="w-5 h-5" />
             </span>
             <h1 className="text-2xl sm:text-3xl font-black font-heading text-[#0F1913]">
-              Gmail Workspace &amp; Client Communications Hub
+              Email Workspace &amp; Client Communications Hub
             </h1>
           </div>
           <p className="text-xs text-[#565F52] mt-1">
@@ -347,8 +354,8 @@ export const AdminGmailHub: React.FC = () => {
             </>
           ) : (
             <button
-              onClick={handleConnectGmail}
-              disabled={isLoading}
+              onClick={handleConnectGmail} disabled={localMailboxUnsupported || isLoading}
+              
               className="bg-white hover:bg-slate-50 text-[#0F1913] border border-[#CBCFB9] px-4 py-2 rounded font-bold text-xs flex items-center gap-2.5 transition-all shadow-sm"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -391,8 +398,8 @@ export const AdminGmailHub: React.FC = () => {
           </div>
 
           <button
-            onClick={handleConnectGmail}
-            disabled={isLoading}
+            onClick={handleConnectGmail} disabled={localMailboxUnsupported || isLoading}
+            
             className="w-full md:w-auto bg-[#0F1913] hover:bg-[#182620] text-white px-6 py-3.5 rounded-lg font-bold text-xs flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] shadow-md shrink-0"
           >
             <Mail className="w-4 h-4 text-[#CC9A2E]" />
