@@ -27,6 +27,7 @@ export type AdminTab =
   | 'website_control'
   | 'whatsapp_automation'
   | 'orders'
+  | 'rfq'
   | 'customers'
   | 'product_listing'
   | 'inventory'
@@ -64,6 +65,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'overview', labelBn: 'ড্যাশবোর্ড ওভারভিউ', labelEn: 'Executive Dashboard', icon: LayoutDashboard },
     { id: 'website_control', labelBn: 'ওয়েবসাইট সেটিংস ও কন্ট্রোল', labelEn: 'Website Settings & Control', icon: Globe },
     { id: 'whatsapp_automation', labelBn: 'হোয়াটসঅ্যাপ অটোমেশন 🟢', labelEn: 'WhatsApp Automation Hub', icon: MessageSquare },
+    { id: 'rfq', labelBn: 'B2B Wholesale Inquiry', labelEn: 'B2B Wholesale Inquiry', icon: MessageSquare },
     { id: 'orders', labelBn: 'অর্ডার ও লজিস্টিকস শিপিং', labelEn: 'Orders & Logistics', icon: ShoppingBag },
     { id: 'product_listing', labelBn: 'প্রোডাক্ট যোগ / ডিলিট', labelEn: 'Product listing', icon: ShoppingBag },
     { id: 'inventory', labelBn: 'অটোমেটেড ইনভেন্টরি', labelEn: 'Automated Inventory', icon: Boxes },
