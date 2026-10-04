@@ -82,3 +82,23 @@
   }
 }
 
+
+/* Small usability improvements, without changing layout or brand colors. */
+@layer base {
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 3px solid var(--gold-deep);
+    outline-offset: 3px;
+  }
+  #products, #wholesale {
+    scroll-margin-top: 11rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
