@@ -43,7 +43,7 @@
       <label for="message">Message (optional)</label>
       <textarea id="message" name="message" maxlength="1000" placeholder="Anything you want us to know"></textarea>
       <button type="submit" id="submitBtn">Submit Request</button>
-      <div class="err" id="errBox">Something went wrong. Please try again or WhatsApp us at +91 9845485437.</div>
+      <div class="err" id="errBox" role="alert" tabindex="-1">Something went wrong. Please try again or WhatsApp us at +91 9845485437.</div>
       <p class="note">Your details are saved for UDECS to review in its Investor Leads dashboard. This is an inquiry, not a payment or investment commitment.</p>
     </form>
     <div class="card ok" id="okBox">
@@ -53,7 +53,7 @@
   </div>
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-    import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+    import { getFirestore, collection, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
     const firebaseConfig = {
       apiKey: 'AIzaSyANRNCASxjGE-IZSLdCws_6W4VpjemO1aI',
@@ -62,38 +62,25 @@
       appId: '1:859203239571:web:e541cc2e68f880efa41766',
     };
     const db = getFirestore(initializeApp(firebaseConfig));
-    const WORKER_URL = ''; // set after the Cloudflare Worker is deployed, e.g. https://api.udecs.store
-
-    document.getElementById('leadForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('submitBtn');
-      btn.disabled = true;
-      const f = e.target;
-      const lead = {
-        name: f.name.value.trim(),
-        company: f.company.value.trim(),
-        email: f.email.value.trim(),
-        phone: f.phone.value.trim(),
-        city: f.city.value.trim(),
-        amount: f.amount.value,
-        message: f.message.value.trim(),
-        approved: false,
-        createdAt: serverTimestamp(),
-        source: 'invest.html',
-      };
-      try {
-        await addDoc(collection(db, 'investorLeads'), lead);
-        if (WORKER_URL) {
-          fetch(WORKER_URL + '/api/investor-lead', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(lead),
-          }).catch(() => {});
-        }
-        document.getElementById('leadForm').style.display = 'none';
-        document.getElementById('okBox').style.display = 'block';
-      } catch (err) {
-        document.getElementById('errBox').style.display = 'block';
-        btn.disabled = false;
-      }
+    const form=document.getElementById('leadForm'),btn=document.getElementById('submitBtn'),errorBox=document.getElementById('errBox');
+    let busy=false,pendingId=null,pendingPayload=null;
+    function showError(message){errorBox.textContent=message;errorBox.style.display='block';errorBox.focus();}
+    form.addEventListener('invalid',e=>{const field=e.target;showError((document.querySelector(`label[for="${field.id}"]`)?.textContent||'Field').replace(' *','')+': '+field.validationMessage);},true);
+    form.addEventListener('submit',async e=>{
+      e.preventDefault();if(busy)return;busy=true;btn.disabled=true;btn.textContent='Submitting...';errorBox.style.display='none';
+      try{
+        const value=id=>String(form.elements.namedItem(id)?.value||'').trim();
+        const fields={name:value('name'),company:value('company'),email:value('email'),phone:value('phone'),city:value('city'),amount:value('amount'),message:value('message')};
+        for(const [k,max]of [['name',120],['company',160],['email',120],['phone',20],['city',120],['amount',60],['message',1000]]){if(fields[k].length>max||k!=='message'&&!fields[k])throw Error('Please complete '+k+' with a valid value.');}
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email))throw Error('Enter a valid email address.');
+        if(!/^[+()\d\s-]{6,20}$/.test(fields.phone)||fields.phone.replace(/\D/g,'').length<6)throw Error('Enter a valid phone / WhatsApp number with country code if needed.');
+        if(!pendingId){pendingId=doc(collection(db,'investorLeads')).id;pendingPayload=JSON.stringify(fields);}
+        else if(pendingPayload!==JSON.stringify(fields))throw Error('A previous submission may still be pending. Keep those details unchanged and retry before starting a different inquiry.');
+        await setDoc(doc(db,'investorLeads',pendingId),{...fields,approved:false,createdAt:serverTimestamp(),source:'invest.html'});
+        form.style.display='none';document.getElementById('okBox').style.display='block';
+      }catch(err){
+        const code=String(err?.code||'');showError(code.includes('permission-denied')?'Your request could not be saved because access was denied. Please contact UDECS.':code.includes('unavailable')||code.includes('deadline-exceeded')?'We could not confirm your save. Check your connection, then retry the same details; a retry will not create a second request.':err instanceof Error&& !code?err.message:'Your request was not confirmed. Please retry the same details or contact UDECS.');
+      }finally{busy=false;btn.disabled=false;btn.textContent='Submit Request';}
     });
   </script>
 </body>
