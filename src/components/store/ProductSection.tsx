@@ -294,7 +294,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                 : `Showing ${visibleProducts.length} of ${filteredTotal} products`}
             </p>
             <button
-              disabled={pageBusy||!!pageError||!!catalogError} onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              disabled={pageBusy||!!pageError} onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
               className="px-6 py-2.5 rounded-full border border-[#0F1913] text-sm font-semibold text-[#0F1913] hover:bg-[#0F1913] hover:text-white transition-all"
             >
               {language === 'bn' ? 'আরও পণ্য দেখুন' : 'Show more products'}
