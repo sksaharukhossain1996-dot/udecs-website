@@ -15,22 +15,25 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onClose,
   onProceedCheckout,
 }) => {
-  const { cart, removeFromCart, updateCartQty, cartSubtotal, formatPrice, t, language } =
+  const { cart, removeFromCart, updateCartQty, cartSubtotal, formatPrice, t, language, refreshCart, cartValidation } =
     useStore();
 
+  React.useEffect(()=>{if(isOpen)void refreshCart();},[isOpen]);
   if (!isOpen) return null;
 
-  // Approximate GST (inclusive in display, shown clearly for transparency)
   const quoteShipping = cart.some(item => item.product.shippingMode === 'quote');
   const money = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
-  const estimatedTaxable = quoteShipping ? money(cart.reduce((sum, item) => {
-    const unit = item.isWholesale || item.quantity >= item.product.minWholesaleQty ? item.product.wholesalePrice : item.product.price;
-    return sum + (item.product.gstExtra ? unit * item.quantity : unit * item.quantity / 1.18);
-  }, 0)) : Math.round(cartSubtotal / 1.18);
-  const estimatedGst = quoteShipping ? money(cart.reduce((sum, item) => {
-    const unit = item.isWholesale || item.quantity >= item.product.minWholesaleQty ? item.product.wholesalePrice : item.product.price;
-    return sum + (item.product.gstExtra ? money(unit * item.quantity * item.product.gstRate / 100) : unit * item.quantity - unit * item.quantity / 1.18);
-  }, 0)) : cartSubtotal - estimatedTaxable;
+  const taxPrice=(n:number)=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+  const estimatedTaxable = money(cart.reduce((sum,item)=>{
+    const unit=item.isWholesale||item.quantity>=item.product.minWholesaleQty?item.product.wholesalePrice:item.product.price;
+    const total=money(unit*item.quantity);
+    return sum+(item.product.supplier==='rajkot'&&item.product.gstExtra?total:money(total/(1+item.product.gstRate/100)));
+  },0));
+  const estimatedGst = money(cart.reduce((sum,item)=>{
+    const unit=item.isWholesale||item.quantity>=item.product.minWholesaleQty?item.product.wholesalePrice:item.product.price;
+    const total=money(unit*item.quantity);
+    return sum+(item.product.supplier==='rajkot'&&item.product.gstExtra?money(total*item.product.gstRate/100):money(total-money(total/(1+item.product.gstRate/100))));
+  },0));
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden animate-fadeIn">
@@ -62,6 +65,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
           {/* Cart Items */}
           <div className="flex-1 overflow-y-auto p-5 divide-y divide-[#CBCFB9]/70">
+            {cartValidation!=='ready'&&<p role="status" className="mb-3 text-sm">{cartValidation==='error'?'Current prices could not be checked. Reopen cart to retry.':'Checking current prices and stock...'}</p>}
             {cart.length === 0 ? (
               <div className="py-16 text-center text-[#565F52]">
                 <ShoppingBag className="w-12 h-12 mx-auto text-[#CBCFB9] mb-3" />
@@ -86,7 +90,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 return (
                   <div key={product.id} className="py-4 flex gap-3.5 items-center">
                     <div className="w-16 h-16 rounded bg-[#E4E8D9] flex items-center justify-center text-[#3C6656] shrink-0 border border-[#CBCFB9] overflow-hidden">
-                      {product.imageUrl ? (
+                      {product.imageUrl && product.id!=='23065_plastic_toothbrush_holder_1pc' ? (
                         <img
                           src={product.imageUrl}
                           alt={customerProductTitle(product, language)}
@@ -113,7 +117,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                       <div className="text-[11px] text-[#565F52] mt-0.5">
                         SKU: {product.sku}
-                        {isWholesaleApplied && (
+                        {(product.supplier==='rajkot'||(isWholesaleApplied&&product.minWholesaleQty>1)) && (
                           <span className="ml-2 text-[10px] text-[#A87C1F] font-bold bg-[#A87C1F]/10 px-1 py-0.5 rounded">
                             B2B Wholesale Rate
                           </span>
@@ -158,11 +162,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               <div className="text-xs text-[#565F52] space-y-1">
                 <div className="flex justify-between">
                   <span>{language === 'bn' ? 'ট্যাক্সেবল মূল্য (অনুমান):' : 'Taxable Subtotal (approx):'}</span>
-                  <span>{formatPrice(estimatedTaxable)}</span>
+                  <span>{taxPrice(estimatedTaxable)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>{quoteShipping ? 'GST by product rate:' : language === 'bn' ? 'জিএসটি (১৮% অন্তর্বর্তী বিলিং):' : 'Estimated GST (18% included):'}</span>
-                  <span>{formatPrice(estimatedGst)}</span>
+                  <span>{quoteShipping ? 'GST by product rate:' : language === 'bn' ? 'অন্তর্ভুক্ত GST (পণ্যের হার অনুযায়ী):' : 'Included GST (by product rate):'}</span>
+                  <span>{taxPrice(estimatedGst)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>{language === 'bn' ? 'ডেলিভারি চার্জ:' : 'Shipping:'}</span>
@@ -180,6 +184,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
 
               <button
+                disabled={cartValidation!=='ready'}
                 onClick={() => {
                   onClose();
                   onProceedCheckout();
