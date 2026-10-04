@@ -1,9 +1,0 @@
-export const CHUNK_COUNT:number;
-export const INDEX_COLLECTION:string;
-export const INDEX_VERSION:number;
-export function chunkId(id:string):string;
-export function searchEntry(id:string,product:any):any;
-export function sameEntry(a:any,b:any):boolean;
-export function updatedChunk(before:any,id:string,product:any):any;
-export function matchesEntry(p:any,query?:string,category?:string,extra?:boolean):boolean;
-export function prepareIndexMutation(tx:any,db:any,doc:any,id:string,before:any,after:any):Promise<()=>void>;
