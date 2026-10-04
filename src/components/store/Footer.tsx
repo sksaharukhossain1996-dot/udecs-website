@@ -29,12 +29,12 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
           {/* Brand Col */}
           <div className="md:col-span-4 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="shrink-0 rounded-3xl overflow-hidden shadow-lg">
+              <div className="shrink-0 rounded-2xl border border-white/80 bg-white p-3 shadow-lg">
                 <img
-                  src="/1-udecs-footer-glossy-icon.jpg"
+                  src="/UDECS_Logo_Premium_Transparent.png"
                   alt="UDECS Commerce Solutions"
-                  width={1024}
-                  height={1024}
+                  width={997}
+                  height={958}
                   className="block h-auto w-[148px] sm:w-[168px] max-w-full object-contain"
                   loading="eager"
                   decoding="async"
