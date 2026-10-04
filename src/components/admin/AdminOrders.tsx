@@ -65,7 +65,7 @@ export const AdminOrders: React.FC = () => {
       `Here is an update on your order ${order.id} placed with UDECS.\n\n` +
       `Order Status: ${order.orderStatus.toUpperCase()}\n` +
       `Total Value: ₹${order.totalAmount.toLocaleString('en-IN')}\n` +
-      `Courier Partner: ${order.courierName || 'Delhivery Express'}\n` +
+      `Courier Partner: ${order.courierName || 'Not assigned'}\n` +
       `Air Waybill / Tracking ID: ${order.trackingNumber || 'Processing'}\n` +
       `Delivery Address: ${order.shippingAddress}, ${order.city}, ${order.state} - ${order.pincode}\n\n` +
       `For any questions, reply directly to this email or contact us at ${company.whatsapp}.\n\n` +
@@ -253,7 +253,7 @@ export const AdminOrders: React.FC = () => {
 
                     <td className="p-3 font-mono">
                       <span className="text-[#3C6656] font-semibold block text-[11px]">
-                        {order.courierName || 'Delhivery'}
+                        {order.courierName || 'Not assigned'}
                       </span>
                       <span className="text-[10px] text-[#A87C1F] font-bold">
                         {order.trackingNumber || 'Unassigned'}
@@ -304,7 +304,7 @@ export const AdminOrders: React.FC = () => {
                       <button
                         onClick={() => setShowShippingLabel(order)}
                         className="p-1.5 bg-[#EEF0E7] hover:bg-[#CBCFB9] text-[#0F1913] rounded transition-colors inline-block"
-                        title="Print Courier Shipping Label & AWB Barcode"
+                        title="View Internal Packing Slip (not a carrier label)"
                       >
                         <Truck className="w-3.5 h-3.5 text-[#3C6656]" />
                       </button>
@@ -341,12 +341,12 @@ export const AdminOrders: React.FC = () => {
             <div className="border-b-2 border-black pb-3 flex justify-between items-start">
               <div>
                 <h3 className="font-mono font-black text-base uppercase tracking-tight">
-                  LOGISTICS DISPATCH MANIFEST
+                  INTERNAL PACKING SLIP
                 </h3>
-                <p className="text-[10px] font-mono">{showShippingLabel.courierName} Surface Express</p>
+                <p className="text-[10px] font-mono">{showShippingLabel.courierName || 'Carrier not assigned'} · Not a carrier-issued label</p>
               </div>
               <div className="text-right font-mono">
-                <span className="bg-black text-white px-2 py-0.5 text-xs font-bold">PREPAID</span>
+                <span className="bg-black text-white px-2 py-0.5 text-xs font-bold">{showShippingLabel.paymentMethod.toUpperCase()} · {showShippingLabel.paymentStatus.toUpperCase()}</span>
                 <p className="text-[10px] mt-1">{showShippingLabel.id}</p>
               </div>
             </div>
@@ -354,10 +354,10 @@ export const AdminOrders: React.FC = () => {
             {/* AWB Barcode Simulation */}
             <div className="text-center py-2 bg-gray-50 border border-gray-300 rounded font-mono">
               <div className="text-2xl tracking-[6px] font-barcode font-black">
-                ||| | |||| | ||| |||| | | |||
+                No carrier barcode generated
               </div>
               <p className="text-xs font-bold tracking-widest mt-1">
-                AWB: {showShippingLabel.trackingNumber}
+                Manually recorded AWB: {showShippingLabel.trackingNumber || 'Not assigned'}
               </p>
             </div>
 
@@ -366,7 +366,7 @@ export const AdminOrders: React.FC = () => {
               <div>
                 <span className="font-bold block text-[10px] text-gray-500">FROM (ORIGIN):</span>
                 <p className="font-bold text-[11px]">{company.legalName}</p>
-                <p className="text-[10px] text-gray-600">Sector V, Kolkata, WB 700091</p>
+                <p className="text-[10px] text-gray-600">Dispatch address not verified. Set and review ship-from details before shipping.</p>
                 <p className="text-[10px]">GST: {company.gstin}</p>
               </div>
 
@@ -382,8 +382,8 @@ export const AdminOrders: React.FC = () => {
             </div>
 
             <div className="flex justify-between items-center text-xs font-mono">
-              <span>Items: {showShippingLabel.items.length} units</span>
-              <span>Weight: ~2.40 KG</span>
+              <span>Units: {showShippingLabel.items.reduce((n,item)=>n+item.quantity,0)}</span>
+              <span>Package weight/dimensions: not verified</span>
               <span className="font-bold">Total: {formatPrice(showShippingLabel.totalAmount)}</span>
             </div>
 
@@ -393,7 +393,7 @@ export const AdminOrders: React.FC = () => {
                 className="flex-1 bg-black text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-1.5"
               >
                 <Printer className="w-3.5 h-3.5" />
-                <span>Print Shipping Label</span>
+                <span>Print Internal Packing Slip</span>
               </button>
               <button
                 onClick={() => setShowShippingLabel(null)}
