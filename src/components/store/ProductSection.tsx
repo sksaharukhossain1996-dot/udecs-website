@@ -1,3 +1,4 @@
+import {matchCatalog,readProductsByIds} from '../../firebase/catalogIndex';
 import { customerProductText, customerProductTitle } from '../../lib/wholesale';
 import { wholesaleMinimumQty } from '../../lib/wholesale';
 import React, { useEffect, useState } from 'react';
@@ -19,7 +20,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   onQuickBuy,
   onOpenProductModal,
 }) => {
-  const { products, addToCart, formatPrice, t, language } = useStore();
+  const { products, catalogIndex, catalogError, addToCart, formatPrice, t, language } = useStore();
   const [addedProductId, setAddedProductId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterLowStockOnly, setFilterLowStockOnly] = useState(false);
@@ -31,7 +32,24 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
     setVisibleCount(PAGE_SIZE);
   }, [selectedCategory, searchQuery, filterLowStockOnly]);
 
-  const filteredProducts = products.filter((prod) => {
+  const paged=!(window as any).__UDECS_STAFF_ENTRY__;
+  const [pageProducts,setPageProducts]=useState<Product[]>([]);
+  const [pageBusy,setPageBusy]=useState(false);
+  const [pageError,setPageError]=useState('');
+  const matchingIndex=matchCatalog(catalogIndex,searchQuery,selectedCategory);
+  const matchingKey=matchingIndex.map(e=>e.id).join('|');
+  useEffect(()=>{
+    if(!paged)return;
+    let active=true;
+    const ids=matchingIndex.slice(0,visibleCount).map(e=>e.id);
+    setPageBusy(true);setPageError('');
+    setPageProducts(prev=>prev.filter(p=>ids.includes(p.id)));
+    const existing=new Map([...products,...pageProducts].map(p=>[p.id,p]));
+    const missing=ids.filter(id=>!existing.has(id));
+    (async()=>{for(let i=0;i<missing.length;i+=PAGE_SIZE){const batch=await readProductsByIds(missing.slice(i,i+PAGE_SIZE));batch.forEach(p=>existing.set(p.id,p));}if(active)setPageProducts(ids.flatMap(id=>existing.has(id)?[existing.get(id)!]:[]));})().catch(()=>{if(active)setPageError('Products could not be loaded. Please try again later.');}).finally(()=>{if(active)setPageBusy(false);});
+    return()=>{active=false;};
+  },[matchingKey,visibleCount,products,paged]);
+  const localFiltered = products.filter((prod) => {
     if((prod as any).hidden===true)return false;if((prod as any).gatewayVerification===true&&selectedCategory!=='verification')return false;
     const matchesCategory =
       selectedCategory === 'rajkot' ? prod.supplier === 'rajkot' : selectedCategory === 'all' ? prod.supplier !== 'rajkot' : prod.category === selectedCategory && prod.supplier !== 'rajkot';
@@ -43,7 +61,10 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
     return matchesCategory && matchesSearch && matchesStock;
   });
 
-  const visibleProducts = filteredProducts.slice(0, visibleCount);
+  const filteredProducts=paged?pageProducts:localFiltered;
+  const visibleProducts=filteredProducts.slice(0,visibleCount);
+  const filteredTotal=paged?matchingIndex.length:filteredProducts.length;
+  const retailTotal=paged?catalogIndex.filter(p=>p.supplier!=='rajkot').length:products.filter(p=>p.supplier!=='rajkot'&&!(p as any).hidden&&!(p as any).gatewayVerification).length;
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
@@ -92,7 +113,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                 : 'bg-[#FBFAF5] text-[#565F52] border border-[#CBCFB9] hover:border-[#0F1913] hover:text-[#0F1913]'
             }`}
           >
-            {t('allProducts')} ({products.filter(p => p.supplier !== 'rajkot' && !(p as any).hidden && !(p as any).gatewayVerification).length})
+            {t('allProducts')} ({retailTotal})
           </button>
           <button
             onClick={() => onSelectCategory('kitchen')}
@@ -137,7 +158,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
         </div>
 
         {/* Product Cards Grid */}
-        {filteredProducts.length === 0 ? (
+        {filteredTotal === 0 && !pageBusy && !catalogError && !pageError ? (
           <div className="text-center py-16 bg-[#FBFAF5] border border-dashed border-[#CBCFB9] rounded p-8">
             <p className="text-[#565F52] text-sm">
               {language === 'bn' ? 'কোনো পণ্য পাওয়া যায়নি।' : 'No products found matching your search criteria.'}
@@ -153,7 +174,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 min-[560px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-3">
+          <>{(catalogError||pageError)&&<p role="alert" className="p-4 text-red-700">{catalogError||pageError}</p>}<div className="grid grid-cols-2 min-[560px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 sm:gap-3">
             {visibleProducts.map((product) => {
               const isLowStock = product.stockManaged !== false && product.stock <= product.minStockAlert;
               const isAdded = addedProductId === product.id;
@@ -262,17 +283,17 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                 </div>
               );
             })}
-          </div>
+          </div></>
         )}
-        {visibleCount < filteredProducts.length && (
+        {visibleCount < filteredTotal && (
           <div className="mt-8 flex flex-col items-center gap-2">
             <p className="text-xs text-[#565F52]">
               {language === 'bn'
-                ? `দেখানো হচ্ছে ${visibleProducts.length} / ${filteredProducts.length}টি পণ্য`
-                : `Showing ${visibleProducts.length} of ${filteredProducts.length} products`}
+                ? `দেখানো হচ্ছে ${visibleProducts.length} / ${filteredTotal}টি পণ্য`
+                : `Showing ${visibleProducts.length} of ${filteredTotal} products`}
             </p>
             <button
-              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              disabled={pageBusy||!!pageError||!!catalogError} onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
               className="px-6 py-2.5 rounded-full border border-[#0F1913] text-sm font-semibold text-[#0F1913] hover:bg-[#0F1913] hover:text-white transition-all"
             >
               {language === 'bn' ? 'আরও পণ্য দেখুন' : 'Show more products'}
