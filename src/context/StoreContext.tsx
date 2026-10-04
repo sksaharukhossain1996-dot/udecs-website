@@ -403,8 +403,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       action: log.action,
       module: log.module || 'SYSTEM',
       details: log.details,
-      ip: '192.168.1.104',
-      ipAddress: '192.168.1.104',
+      ip: '',
+      ipAddress: '',
     };
     setAuditLogs((prev) => [newLog, ...prev]);
     saveAuditLogInFirestore(newLog).catch((err) => console.warn('Firestore auditLog save error:', err));
