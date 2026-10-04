@@ -12,17 +12,19 @@ import {
 
 export const AdminGstReports: React.FC = () => {
   const { orders:allOrders, formatPrice, company, language } = useStore();
-  const orders=allOrders.filter(o=>(o as any).taxReportingExcluded!==true);
-  const [selectedMonth, setSelectedMonth] = useState('2026-09');
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const orders=allOrders.filter(o=>(o as any).taxReportingExcluded!==true && !!selectedMonth && typeof o.createdAt==='string' && o.createdAt.slice(0,7)===selectedMonth);
+  const invalidTaxRecords=orders.filter(o=>![o.taxableAmount,o.cgst,o.sgst,o.igst].every(v=>typeof v==='number'&&Number.isFinite(v))).length;
+  const recorded=(v:unknown)=>typeof v==='number'&&Number.isFinite(v)?v:0;
   const [reportType, setReportType] = useState<'gstr1' | 'gstr3b' | 'hsn'>('gstr1');
 
   // Aggregations
   const totalInvoices = orders.length;
-  const grossTurnover = orders.reduce((sum, o) => sum + o.totalAmount, 0);
-  const totalTaxable = orders.reduce((sum, o) => sum + o.taxableAmount, 0);
-  const totalCgst = orders.reduce((sum, o) => sum + o.cgst, 0);
-  const totalSgst = orders.reduce((sum, o) => sum + o.sgst, 0);
-  const totalIgst = orders.reduce((sum, o) => sum + o.igst, 0);
+  const grossTurnover = orders.reduce((sum, o) => sum + recorded(o.totalAmount), 0);
+  const totalTaxable = orders.reduce((sum, o) => sum + recorded(o.taxableAmount), 0);
+  const totalCgst = orders.reduce((sum, o) => sum + recorded(o.cgst), 0);
+  const totalSgst = orders.reduce((sum, o) => sum + recorded(o.sgst), 0);
+  const totalIgst = orders.reduce((sum, o) => sum + recorded(o.igst), 0);
   const totalTaxCollected = totalCgst + totalSgst + totalIgst;
 
   // HSN-wise summary aggregator
@@ -39,8 +41,9 @@ export const AdminGstReports: React.FC = () => {
 
   orders.forEach((ord) => {
     ord.items.forEach((item) => {
-      if (!hsnMap[item.hsn]) {
-        hsnMap[item.hsn] = {
+      const key=item.hsn+'_'+item.gstRate;
+      if (!hsnMap[key]) {
+        hsnMap[key] = {
           hsn: item.hsn,
           desc: item.name,
           qty: 0,
@@ -49,9 +52,9 @@ export const AdminGstReports: React.FC = () => {
           tax: 0,
         };
       }
-      hsnMap[item.hsn].qty += item.quantity;
-      hsnMap[item.hsn].taxable += Math.round(item.totalPrice / 1.18);
-      hsnMap[item.hsn].tax += Math.round(item.totalPrice - item.totalPrice / 1.18);
+      hsnMap[key].qty += item.quantity;
+      hsnMap[key].taxable += recorded((item as any).taxableAmount);
+      hsnMap[key].tax += recorded((item as any).taxAmount);
     });
   });
 
@@ -59,6 +62,7 @@ export const AdminGstReports: React.FC = () => {
 
   return (
     <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto">
+      <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-5 text-sm space-y-2"><h2 className="font-bold">Draft bookkeeping summary, not filing-ready</h2><p>Only loaded orders created in your selected month are included. Order creation date is not a verified invoice date. Credits, cancellations, marketplace reports, amendments, input tax credit and reverse-charge tax are not reconciled here.</p><p>HSN quantity/rate is shown, but item taxable value and tax are not inferred from gross prices. Missing recorded item tax values appear as zero and must be reviewed against invoices. Do not file from this screen.</p>{invalidTaxRecords>0&&<p>{invalidTaxRecords} loaded orders lack complete recorded tax fields. Totals are incomplete.</p>}<p>Free preparation roadmap: upload sales reports, review mapped invoices/credit notes, validate against GST schemas, generate a reviewed JSON file. Final GST portal submission stays separate and needs explicit owner approval.</p></div>
       {/* GST portal quick access (owner request) */}
       <div className="p-4 bg-[#FBFAF5] border border-[#CBCFB9] rounded-lg flex flex-wrap items-center gap-4">
         <div>
@@ -74,10 +78,10 @@ export const AdminGstReports: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-black font-heading text-[#0F1913]">
-              {language === 'bn' ? 'জিএসটি ট্যাক্স ও রিটার্ন অডিট রিপোর্ট' : 'GST Compliance & Tax Return Filing Hub'}
+              {language === 'bn' ? 'জিএসটি ট্যাক্স ও রিটার্ন অডিট রিপোর্ট' : 'GST Preparation - Recorded Order Summary'}
             </h1>
             <span className="bg-[#182620] text-[#CC9A2E] text-[10px] font-mono px-2 py-0.5 rounded font-bold">
-              PORTAL READY
+              DRAFT - NOT FILED
             </span>
           </div>
           <p className="text-xs text-[#565F52] mt-0.5">
@@ -91,7 +95,7 @@ export const AdminGstReports: React.FC = () => {
             className="inline-flex items-center gap-2 bg-[#182620] hover:bg-[#0F1913] text-white px-3.5 py-2 rounded text-xs font-semibold shadow-xs"
           >
             <Printer className="w-3.5 h-3.5 text-[#CC9A2E]" />
-            <span>Print Tax Schedule</span>
+            <span>Print Draft Summary</span>
           </button>
         </div>
       </div>
@@ -135,16 +139,8 @@ export const AdminGstReports: React.FC = () => {
 
         <div className="flex items-center gap-2 text-xs">
           <Calendar className="w-4 h-4 text-[#565F52]" />
-          <span className="font-semibold text-[#0F1913]">Tax Period:</span>
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="bg-[#FBFAF5] border border-[#CBCFB9] rounded px-2.5 py-1 text-xs font-mono"
-          >
-            <option value="2026-09">September 2026 (Active)</option>
-            <option value="2026-08">August 2026</option>
-            <option value="2026-07">July 2026</option>
-          </select>
+          <span className="font-semibold text-[#0F1913]">Order creation month:</span>
+          <input type="month" aria-label="Order creation month" value={selectedMonth} onChange={e=>setSelectedMonth(e.target.value)} className="border rounded p-2"/>
         </div>
       </div>
 
@@ -201,24 +197,24 @@ export const AdminGstReports: React.FC = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start border-b border-[#CBCFB9] pb-4 gap-3">
           <div>
             <span className="text-[10px] font-mono uppercase bg-[#182620] text-[#CC9A2E] px-2 py-0.5 rounded font-bold">
-              FORM GSTR-1 / GSTR-3B RETURN SUMMARY
+              DRAFT ORDER TAX SUMMARY - NOT A GST RETURN
             </span>
             <h3 className="font-heading font-black text-xl text-[#0F1913] mt-2">
               {company.legalName}
             </h3>
             <p className="text-xs text-[#565F52]">{company.address}</p>
             <p className="text-xs font-bold text-[#0F1913] mt-1">
-              GSTIN: <span className="font-mono">{company.gstin}</span> · Legal Status: Active
+              GSTIN: <span className="font-mono">{company.gstin}</span> · Registration status not checked
             </p>
           </div>
 
           <div className="text-right text-xs space-y-1">
-            <p className="text-[#565F52]">Financial Year: <span className="font-bold text-[#0F1913]">2026-2027</span></p>
+            <p className="text-[#565F52]">Financial Year: <span className="font-bold text-[#0F1913]">{selectedMonth ? (Number(selectedMonth.slice(5))>=4?Number(selectedMonth.slice(0,4)):Number(selectedMonth.slice(0,4))-1)+'-'+(Number(selectedMonth.slice(5))>=4?Number(selectedMonth.slice(0,4))+1:Number(selectedMonth.slice(0,4))):'Choose period'}</span></p>
             <p className="text-[#565F52]">Tax Return Period: <span className="font-bold text-[#0F1913]">{selectedMonth}</span></p>
-            <p className="text-[#565F52]">Filing Frequency: <span className="font-bold text-[#0F1913]">Monthly</span></p>
+            <p className="text-[#565F52]">Filing Frequency: <span className="font-bold text-[#0F1913]">Not verified</span></p>
             <p className="text-[#3C6656] font-semibold flex items-center justify-end gap-1">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              Reconciled with PayU & Bank Ledger
+              Not reconciled with PayU or bank ledger
             </p>
           </div>
         </div>
@@ -322,7 +318,7 @@ export const AdminGstReports: React.FC = () => {
         {reportType === 'gstr3b' && (
           <div className="space-y-4">
             <h4 className="font-heading font-bold text-sm text-[#0F1913] uppercase tracking-wider">
-              GSTR-3B: Monthly Tax Liability on Outward Supplies
+              Draft recorded output tax - incomplete for GSTR-3B
             </h4>
 
             <div className="bg-[#FBFAF5] border border-[#CBCFB9] rounded p-4 text-xs space-y-3">
@@ -343,7 +339,7 @@ export const AdminGstReports: React.FC = () => {
                 <span className="font-mono text-[#A87C1F] font-bold">{formatPrice(totalIgst)}</span>
               </div>
               <div className="flex justify-between py-2 pt-3 font-bold text-sm text-[#0F1913] border-t-2 border-[#CBCFB9]">
-                <span>Total Net Tax Cash / Electronic Credit Ledger Payment:</span>
+                <span>Recorded output tax only (not net tax payable):</span>
                 <span className="text-[#0F1913] text-base">{formatPrice(totalTaxCollected)}</span>
               </div>
             </div>
@@ -353,12 +349,12 @@ export const AdminGstReports: React.FC = () => {
         {/* Official Statutory Declaration */}
         <div className="pt-4 border-t border-[#CBCFB9] flex flex-col sm:flex-row justify-between items-end text-[10px] text-[#565F52] gap-4">
           <div>
-            <p>I hereby solemnly affirm and declare that the information given herein above is true and correct</p>
-            <p>to the best of my knowledge and belief and nothing has been concealed therefrom.</p>
+            <p>Draft for owner/accountant review only. No statutory declaration is made.</p>
+            <p>No GST JSON, government upload, liability offset or filing is performed.</p>
           </div>
           <div className="text-right">
             <span className="font-bold text-[#0F1913] block">For UNICK DIGITAL E-COMMERCE SOLUTIONS</span>
-            <span className="text-[9px] text-[#565F52]">Authorised Signatory / Managing Partner</span>
+            <span className="text-[9px] text-[#565F52]">Not signed or filed</span>
           </div>
         </div>
       </div>
