@@ -42,13 +42,14 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     const timer=setTimeout(()=>{(async()=>{for(let i=0;i<missing.length;i+=24){const batch=await readProductsByIds(missing.slice(i,i+24));batch.forEach(p=>existing.set(p.id,p));}if(active)setResultProducts(ids.flatMap(id=>existing.has(id)?[existing.get(id)!]:[]));})().catch(()=>{if(active)setError('Search products could not be loaded. Please try later.');}).finally(()=>{if(active)setBusy(false);});},300);
     return()=>{active=false;clearTimeout(timer);};
   },[key,visibleCount,isOpen,products,paged]);
+  useEffect(()=>{if(!isOpen)return;const close=(e:KeyboardEvent)=>{if(e.key==='Escape')onClose()};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close)},[isOpen,onClose]);
   if (!isOpen) return null;
   const results = paged?resultProducts:products.filter(p=>p.supplier!=='rajkot'&&!(p as any).hidden&&!(p as any).gatewayVerification).filter(p=>
     p.name.toLowerCase().includes(query.toLowerCase())||p.nameBn.includes(query)||p.sku.toLowerCase().includes(query.toLowerCase())||p.category.toLowerCase().includes(query.toLowerCase())||p.hsn.includes(query));
   const total=paged?matches.length:results.length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 sm:pt-20 bg-[#0F1913]/60 backdrop-blur-xs animate-fadeIn">
+    <div onClick={e=>{if(e.target===e.currentTarget)onClose()}} className="fixed inset-0 z-50 flex items-start justify-center p-4 sm:pt-20 bg-[#0F1913]/60 backdrop-blur-xs animate-fadeIn">
       <div className="bg-[#FBFAF5] border border-[#CBCFB9] rounded-xl max-w-xl w-full shadow-2xl overflow-hidden">
         {/* Search Input Bar */}
         <div className="p-4 border-b border-[#CBCFB9] flex items-center gap-3 bg-white">
