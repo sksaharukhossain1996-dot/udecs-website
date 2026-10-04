@@ -1,6 +1,6 @@
 import {matchCatalog,readProductsByIds} from '../../firebase/catalogIndex';
 import { customerProductText, customerProductTitle } from '../../lib/wholesale';
-import { wholesaleMinimumQty } from '../../lib/wholesale';
+import { wholesaleMinimumQty, wholesaleAvailability } from '../../lib/wholesale';
 import React, { useEffect, useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Product } from '../../types';
@@ -136,9 +136,9 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
             {t('sportsNav')}
           </button>
           <button
-            onClick={() => onSelectCategory('wholesale')}
+            onClick={() => onSelectCategory('rajkot')}
             className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
-              selectedCategory === 'wholesale'
+              selectedCategory === 'rajkot'
                 ? 'bg-[#0F1913] text-white shadow-xs'
                 : 'bg-[#FBFAF5] text-[#565F52] border border-[#CBCFB9] hover:border-[#0F1913] hover:text-[#0F1913]'
             }`}
@@ -188,7 +188,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                   <div>
                     {/* Media container with custom SVG or custom Image URL */}
                     <div className="aspect-square bg-[#F4F5EF] rounded-lg flex items-center justify-center text-[#3C6656] mb-2.5 relative overflow-hidden group-hover:bg-[#E4E8D9] transition-colors">
-                      {product.imageUrl ? (
+                      {product.imageUrl && product.id!=='23065_plastic_toothbrush_holder_1pc' ? (
                         <img
                           src={product.imageUrl}
                           alt={customerProductTitle(product, language)}
@@ -244,7 +244,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                   <div className="pt-2 border-t border-[#CBCFB9]/50 flex flex-wrap items-end justify-between gap-1.5 mt-1">
                     <div className="min-w-0 flex-1">
                       <div className="text-[10px] text-[#565F52] leading-none mb-1">
-                        {product.gstExtra ? 'Per piece (GST extra):' : language === 'bn' ? 'মূল্য:' : 'Price:'}
+                        {product.supplier==='rajkot'&&product.gstExtra ? 'Per piece (GST extra):' : language === 'bn' ? 'মূল্য:' : 'Price:'}
                       </div>
                       {product.originalPrice && product.originalPrice > product.price && (
                         <span className="text-[11.5px] text-[#8A9184] line-through leading-none block mb-0.5">
@@ -268,6 +268,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
 
                     {/* Quick Add Button */}
                     <button
+                      disabled={!wholesaleAvailability(product)}
                       onClick={(e) => handleAddToCart(e, product)}
                       aria-label="Add to cart"
                       title="Add to shopping cart"
