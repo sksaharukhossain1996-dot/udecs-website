@@ -14,6 +14,14 @@ function f(i) {
   for (let e of s.records) {
     if (!S.test(e.id) || r.has(e.id)) throw Error(`Invalid or duplicate ID: ${e.id}`);
     if (r.add(e.id), !["create", "update"].includes(e.mode) || (e.mode === "create" ? e.expected !== null : !e.expected)) throw Error(`Invalid baseline: ${e.id}`);
+    if (e.mode === 'update' && e.statusOnly === true) {
+      const keys=Object.keys(e.fields || {}).sort().join(',');
+      if(keys !== 'supplierInStock,supplierStatusCheckedAt,supplierStatusSource' || typeof e.fields.supplierInStock !== 'boolean' || e.expected.sku !== e.id || e.expected.supplier === 'rajkot' || !/^https:\/\/wukusy\.app\/merchant\/product-details\/\d+$/.test(e.fields.supplierStatusSource)) throw Error(`Invalid status-only update: ${e.id}`);
+      const checked=Date.parse(e.fields.supplierStatusCheckedAt);
+      if(!Number.isFinite(checked)||checked>Date.now()+60000||Date.now()-checked>3600000)throw Error(`Stale supplier status: ${e.id}`);
+      if(n.has(e.expected.sku))throw Error(`Duplicate SKU: ${e.id}`);n.add(e.expected.sku);
+      continue;
+    }
     if (e.supplierStatus !== "positive" && !(e.mode === "update" && e.supplierStatus === "verified-zero" && e.fields?.stock === 0 && Object.keys(e.fields).length === 1)) throw Error(`Held product must stay out of this import: ${e.id}`);
     const rajkot = /^https:\/\/rajkotwholesale\.in\/product\/[^/?#]+\/$/.test(e.supplierSource);
     if (!rajkot && !/^https:\/\/wukusy\.app\/merchant\/product-details\/\d+$/.test(e.supplierSource)) throw Error(`Missing exact supplier source: ${e.id}`);
@@ -37,7 +45,7 @@ function f(i) {
   return s;
 }
 var k = $(y), m = A(k), h = N(k), L = ["ecommerceunickdigital@gmail.com", "sksaharukhossain1996@gmail.com"], H = document.getElementById("catalog-sync-root");
-H.innerHTML = '<style>body{font:16px system-ui;background:#f7f7f2;color:#14291d;max-width:980px;margin:30px auto;padding:20px}textarea{width:100%;min-height:170px}button{padding:12px;margin:8px 8px 8px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:20px}img{height:80px;width:80px;object-fit:contain}table{width:100%;background:white}td,th{padding:8px;text-align:left;border-bottom:1px solid #ddd}</style><h1>UDECS catalog review</h1><p>Rajkot Wholesale: per-piece price +50%, GST extra, verified minimum pieces; shipping quoted before payment. No numeric stock or weight invented.</p><p>Admin-only. Existing products are preserved. Held products cannot be imported. Review photos, prices and quantities before applying.</p><p id="identity">Checking sign-in...</p><button id="signin">Sign in with Google</button><label>Reviewed product manifest<textarea id="manifest" spellcheck="false"></textarea></label><button id="review" disabled>Check and preview</button><button id="apply" disabled>Apply reviewed records</button><div id="preview"></div><pre id="status">No changes made.</pre>';
+H.innerHTML = '<style>body{font:16px system-ui;background:#f7f7f2;color:#14291d;max-width:980px;margin:30px auto;padding:20px}textarea{width:100%;min-height:170px}button{padding:12px;margin:8px 8px 8px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:20px}img{height:80px;width:80px;object-fit:contain}table{width:100%;background:white}td,th{padding:8px;text-align:left;border-bottom:1px solid #ddd}</style><h1>UDECS catalog review</h1><p>Rajkot Wholesale: per-piece price +50%, GST extra, verified minimum pieces; shipping quoted before payment. No numeric stock or weight invented.</p><p>Admin-only. Status-only sync changes availability only, never stock quantities or reservations. Existing products are preserved. Held products cannot be imported. Review photos, prices and quantities before applying.</p><p id="identity">Checking sign-in...</p><button id="signin">Sign in with Google</button><label>Reviewed product manifest<textarea id="manifest" spellcheck="false"></textarea></label><button id="review" disabled>Check and preview</button><button id="apply" disabled>Apply reviewed records</button><div id="preview"></div><pre id="status">No changes made.</pre>';
 var a = (i) => document.getElementById(i), l = (i) => {
   a("status").textContent = i;
 }, g = () => !!m.currentUser?.emailVerified && L.includes(m.currentUser.email.toLowerCase()), p = null, w = "", u = false;
@@ -72,7 +80,7 @@ a("review").onclick = async () => {
     for (let n of i.records) {
       let e = { ...n.expected, ...n.fields }, c = s.insertRow(), t = document.createElement("img");
       t.src = String(e.imageUrl || ""), t.alt = String(e.name), c.insertCell().append(t);
-      for (let o of [e.sku, e.name, e.price, e.stockManaged === false ? `Supplier in stock; min ${e.minimumOrderQty} pcs; shipping quote` : e.stock, n.mode]) c.insertCell().textContent = String(o);
+      for (let o of [e.sku, e.name, e.price, n.statusOnly ? (e.supplierInStock ? 'Supplier in stock (quantity preserved)' : 'Supplier out of stock (quantity preserved)') : e.stockManaged === false ? `Supplier in stock; min ${e.minimumOrderQty} pcs; shipping quote` : e.stock, n.mode]) c.insertCell().textContent = String(o);
     }
     a("preview").replaceChildren(s), p = i, a("apply").disabled = false, l(`Checked ${i.records.length} records against live data. Nothing written. Inspect every photo, price and stock before applying.`);
   } catch (i) {
