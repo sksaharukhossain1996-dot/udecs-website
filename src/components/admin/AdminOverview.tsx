@@ -1,4 +1,5 @@
-import React from 'react';
+import React,{useState} from 'react';
+import {dashboardSummary,orderCreationMonth} from '../../lib/dashboardSummary';
 import { useStore } from '../../context/StoreContext';
 import { AdminTab } from './AdminSidebar';
 import {
@@ -20,11 +21,11 @@ interface AdminOverviewProps {
 export const AdminOverview: React.FC<AdminOverviewProps> = ({ onNavigate }) => {
   const { orders, products, employees, auditLogs, formatPrice, company, language } = useStore();
 
-  const totalSales = orders.reduce((sum, o) => sum + o.totalAmount, 0);
-  const totalGstCollected = orders.reduce((sum, o) => sum + o.totalGst, 0);
-  const pendingOrders = orders.filter((o) => o.orderStatus === 'processing' || o.orderStatus === 'pending');
-  const lowStockProducts = products.filter((p) => p.stock <= p.minStockAlert);
-  const totalInventoryValue = products.reduce((sum, p) => sum + p.price * p.stock, 0);
+  const [month,setMonth]=useState(()=>orderCreationMonth(new Date().toISOString()));
+  const summary=dashboardSummary(orders,month);
+  const totalSales=summary.recordedValue,totalGstCollected=summary.paidValue,pendingOrders=summary.pending;
+  const lowStockProducts=products.filter(p=>Number.isFinite(p.stock)&&p.stock<=p.minStockAlert);
+  const totalInventoryValue=products.filter(p=>Number.isFinite(p.price)&&Number.isFinite(p.stock)&&p.stock>=0).reduce((n,p)=>n+p.price*p.stock,0);
 
   return (
     <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto">
@@ -50,12 +51,13 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ onNavigate }) => {
         </div>
       </div>
 
+      <div className="rounded border bg-amber-50 p-4 text-sm space-y-2"><label>Order creation month (India time): <input type="month" className="border rounded p-2" value={month} onChange={e=>setMonth(e.target.value)}/></label><p>Loaded-view bookkeeping only. Not a full-period report, bank settlement, profit or final tax liability. Demo/test and cancelled orders excluded from the amounts below. Paid status is recorded in the order, not proof of bank credit. Refunds are not netted.</p>{summary.invalid>0&&<p role="alert">{summary.invalid} loaded records have invalid dates or amounts and are excluded.</p>}</div>
       {/* KPI Stat Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Sales */}
         <div className="bg-white p-5 rounded-lg border border-[#CBCFB9] shadow-xs">
           <div className="flex items-center justify-between text-[#565F52] mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Gross Sales (Total)</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Recorded order value</span>
             <div className="p-2 bg-[#3C6656]/10 text-[#3C6656] rounded-md">
               <TrendingUp className="w-4 h-4" />
             </div>
@@ -65,14 +67,14 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ onNavigate }) => {
           </div>
           <div className="mt-2 text-[11px] text-[#3C6656] flex items-center gap-1 font-semibold">
             <ArrowUpRight className="w-3.5 h-3.5" />
-            <span>{orders.length} recorded orders · growth not calculated</span>
+            <span>{summary.active.length} active recorded orders · growth not calculated</span>
           </div>
         </div>
 
         {/* GST Tax Collected */}
         <div className="bg-white p-5 rounded-lg border border-[#CBCFB9] shadow-xs">
           <div className="flex items-center justify-between text-[#565F52] mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">GST Collected</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Recorded paid order value</span>
             <div className="p-2 bg-[#CC9A2E]/10 text-[#A87C1F] rounded-md">
               <FileSpreadsheet className="w-4 h-4" />
             </div>
@@ -81,12 +83,12 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ onNavigate }) => {
             {formatPrice(totalGstCollected)}
           </div>
           <div className="mt-2 text-[11px] text-[#565F52] flex items-center justify-between">
-            <span>CGST + SGST (WB 19)</span>
+            <span>Not settlement or GST liability</span>
             <button
               onClick={() => onNavigate('gst')}
               className="text-[#A87C1F] font-bold underline hover:text-[#0F1913]"
             >
-              GSTR-1 Report
+              Draft tax summary
             </button>
           </div>
         </div>
@@ -103,26 +105,26 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ onNavigate }) => {
             {pendingOrders.length}
           </div>
           <div className="mt-2 text-[11px] text-[#565F52] flex items-center justify-between">
-            <span>Ready for Delhivery/Blue Dart</span>
+            <span>Manual fulfillment status, carrier not verified</span>
             <button
               onClick={() => onNavigate('orders')}
               className="text-[#3C6656] font-bold underline hover:text-[#0F1913]"
             >
-              Dispatch Now
+              Review orders
             </button>
           </div>
         </div>
 
-        {/* Inventory Stock Valuation & Low Stock Alert */}
+        {/* Inventory Retail-price stock estimate & Low Stock Alert */}
         <div className="bg-white p-5 rounded-lg border border-[#CBCFB9] shadow-xs">
           <div className="flex items-center justify-between text-[#565F52] mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Stock Valuation</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Retail-price stock estimate</span>
             <div className="p-2 bg-amber-100 text-amber-800 rounded-md">
               <Boxes className="w-4 h-4" />
             </div>
           </div>
           <div className="text-2xl font-black text-[#0F1913]">
-            {formatPrice(totalInventoryValue)}
+            {formatPrice(totalInventoryValue)}<span className="block text-xs font-normal mt-1">Retail list price, not purchase cost or audited asset value</span>
           </div>
           <div className="mt-2 text-[11px] flex items-center justify-between">
             {lowStockProducts.length > 0 ? (
@@ -131,7 +133,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ onNavigate }) => {
                 {lowStockProducts.length} low stock SKUs
               </span>
             ) : (
-              <span className="text-[#3C6656] font-semibold">Stock healthy</span>
+              <span className="text-[#3C6656] font-semibold">No low-stock flag in loaded view</span>
             )}
             <button
               onClick={() => onNavigate('inventory')}
@@ -159,7 +161,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ onNavigate }) => {
             onClick={() => onNavigate('orders')}
             className="bg-[#182620] hover:bg-[#0F1913] text-white px-3 py-1.5 rounded font-semibold transition-colors"
           >
-            Process Orders & Print AWB
+            Review orders & packing slip
           </button>
           <button
             onClick={() => onNavigate('gmail')}
@@ -177,13 +179,13 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ onNavigate }) => {
             onClick={() => onNavigate('gst')}
             className="bg-white hover:bg-[#E4E8D9] text-[#0F1913] border border-[#CBCFB9] px-3 py-1.5 rounded font-semibold transition-colors"
           >
-            Generate Monthly GSTR-1
+            Review draft tax summary
           </button>
           <button
             onClick={() => onNavigate('hr')}
             className="bg-white hover:bg-[#E4E8D9] text-[#0F1913] border border-[#CBCFB9] px-3 py-1.5 rounded font-semibold transition-colors"
           >
-            Generate Salary Slips ({employees.length} Staff)
+            Cloud HR ({employees.length} Staff)
           </button>
         </div>
       </div>
@@ -194,7 +196,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ onNavigate }) => {
         <div className="lg:col-span-7 bg-white p-5 rounded-lg border border-[#CBCFB9] shadow-xs">
           <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#CBCFB9]">
             <h3 className="font-heading font-bold text-sm text-[#0F1913] uppercase tracking-wider">
-              Recent Sales Orders
+              Selected month orders
             </h3>
             <button
               onClick={() => onNavigate('orders')}
@@ -205,7 +207,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ onNavigate }) => {
           </div>
 
           <div className="divide-y divide-[#CBCFB9]/40 text-xs">
-            {orders.slice(0, 5).map((ord) => (
+            {summary.selected.slice(0, 5).map((ord) => (
               <div key={ord.id} className="py-3 flex items-center justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
@@ -252,7 +254,7 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ onNavigate }) => {
               onClick={() => onNavigate('audit')}
               className="text-xs font-semibold text-[#A87C1F] hover:underline"
             >
-              Full Log ({auditLogs.length}) →
+              Loaded log ({auditLogs.length}) →
             </button>
           </div>
 
