@@ -299,7 +299,7 @@ Order a new batch from the factory promptly.`;
           }`}
         >
           <Settings className="w-3.5 h-3.5 text-[#3C6656]" />
-          <span>Bilingual Message Templates</span>
+          <span>English Message Templates</span>
         </button>
 
         <button
