@@ -1,3 +1,4 @@
+import{B2bRegistration}from'./B2bRegistration';
 import React,{useState,useEffect}from'react';
 import{CustomerIntake}from'./CustomerIntake';
 import{watchCustomerIdentity}from'./customerIdentity';
@@ -27,6 +28,7 @@ export function PublicCustomerPortal(){
         <h1 className="text-2xl font-bold mt-2">UDECS Customer portal</h1>
         <p className="text-sm text-[#565F52] mt-1 mb-2">Sign in, save your delivery details and see your orders.</p>
         {saved?<section className="customer-stage"><h2>Your customer details are saved</h2><p>You are signed in with your verified email. Your phone number is not verified.</p><a href="/">Back to UDECS store</a><button onClick={()=>{setReviewExisting(true);setSaved(false)}}>Review my details</button></section>:<CustomerIntake enabled reviewExisting={reviewExisting} onSaved={()=>{setReviewExisting(false);setSaved(true)}}/>}
+        <B2bRegistration uid={uid}/>
         {ORDER_SERVICE_ORIGIN&&<MyOrders uid={uid} load={cursor=>customerOrderClient().mine(cursor)}/>}
       </main>
       <footer className="w-full max-w-xl mx-auto p-4 text-center">
