@@ -13,7 +13,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenTracking, onOpenVoice }) => {
   return (
     <section className="relative overflow-hidden pt-8 sm:pt-14 pb-12 sm:pb-16 border-b border-[#CBCFB9]/70">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 gap-10 items-center">
+        <div className="glossy-hero-layout grid grid-cols-1 gap-10 items-center">
           {/* Text Content */}
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-[#E4E8D9] border border-[#CBCFB9] text-xs font-semibold text-[#3C6656] mb-4">
@@ -71,7 +71,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenTracking, onOpenVoice }) => {
 
 
           </div>
-
+          <div className="glossy-brand-feature"><img src="/6-udecs-app-logo.jpg" alt="UDECS glossy cart and globe icon" width="320" height="320" /></div>
         </div>
       </div>
     </section>
