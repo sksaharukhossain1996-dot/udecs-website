@@ -16,7 +16,7 @@ function f(i) {
     if (r.add(e.id), !["create", "update"].includes(e.mode) || (e.mode === "create" ? e.expected !== null : !e.expected)) throw Error(`Invalid baseline: ${e.id}`);
     if (e.mode === 'update' && e.statusOnly === true) {
       const keys=Object.keys(e.fields || {}).sort().join(',');
-      if(keys !== 'supplierInStock,supplierStatusCheckedAt,supplierStatusSource' || typeof e.fields.supplierInStock !== 'boolean' || e.expected.sku !== e.id || e.expected.supplier === 'rajkot' || !/^https:\/\/wukusy\.app\/merchant\/product-details\/\d+$/.test(e.fields.supplierStatusSource)) throw Error(`Invalid status-only update: ${e.id}`);
+      if(keys !== 'supplierInStock,supplierStatusCheckedAt,supplierStatusSource' || typeof e.fields.supplierInStock !== 'boolean' || !S.test(e.expected.sku) || ![e.expected.sku, 'amazon-'+e.expected.sku].includes(e.id) || e.expected.supplier === 'rajkot' || !/^https:\/\/wukusy\.app\/merchant\/product-details\/\d+$/.test(e.fields.supplierStatusSource)) throw Error(`Invalid status-only update: ${e.id}`);
       const checked=Date.parse(e.fields.supplierStatusCheckedAt);
       if(!Number.isFinite(checked)||checked>Date.now()+60000||Date.now()-checked>3600000)throw Error(`Stale supplier status: ${e.id}`);
       if(n.has(e.expected.sku))throw Error(`Duplicate SKU: ${e.id}`);n.add(e.expected.sku);
