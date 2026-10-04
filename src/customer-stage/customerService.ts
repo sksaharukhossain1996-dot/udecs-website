@@ -5,7 +5,7 @@ import {doc,setDoc,getDocFromServer,serverTimestamp} from 'firebase/firestore';
 export type CustomerContact={name:string;phone:string;email:string;source:'mysa';phoneVerified:false;noticeVersion:'customer-profile-v2';gender:string;address:string};
 export async function saveCustomerContact(name:string,phone:string,gender:string,address:string){
  const user=auth.currentUser;
- if(!user?.emailVerified||!user.email)throw new Error('Sign in with your verified Google email first.');
+ if(!user?.emailVerified||!user.email)throw new Error('Sign in with your verified email first.');
  const contact=validateCustomerContact(name,phone,user.email,gender,address);
  const ref=doc(db,'customers',user.uid);
  await setDoc(ref,{...contact,updatedAt:serverTimestamp()});
@@ -18,7 +18,7 @@ export async function saveCustomerContact(name:string,phone:string,gender:string
 
 export async function getCustomerContact(uid:string):Promise<CustomerContact|null>{
  const user=auth.currentUser;
- if(!user?.emailVerified||user.uid!==uid||!user.email)throw new Error('Sign in with your verified Google email first.');
+ if(!user?.emailVerified||user.uid!==uid||!user.email)throw new Error('Sign in with your verified email first.');
  const snapshot=await getDocFromServer(doc(db,'customers',uid));
  if(auth.currentUser?.uid!==uid)throw new Error('Account changed. Sign in again before continuing.');
  if(!snapshot.exists())return null;
