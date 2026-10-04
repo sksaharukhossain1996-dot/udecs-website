@@ -173,7 +173,8 @@ export const WholesaleSection: React.FC = () => {
                   </p>
                 </div>
 
-                <fieldset className="rounded-lg border border-[#CBCFB9] p-3">
+                <fieldset className="rfq-products rounded-lg border border-[#CBCFB9] p-3">
+                  <style>{`.visual-store #wholesale .rfq-products { color: #fff; } .visual-store #wholesale .rfq-products label, .visual-store #wholesale .rfq-products label > span { color: #233f66 !important; } .visual-store #wholesale .rfq-products button, .visual-store #wholesale .rfq-products legend { color: #fff !important; }`}</style>
                   <legend className="px-1 text-xs font-bold">Choose B2B products (optional)</legend>
                   <p className="mb-2 text-[11px]">Select one or more products for your inquiry. This is not an order or payment.</p>
                   <input aria-label="Search B2B products" type="search" value={productSearch} onChange={e => {setProductSearch(e.target.value);setChoiceCount(24);}} placeholder="Search product or SKU" className="mb-2 w-full rounded border p-2 text-xs" />
