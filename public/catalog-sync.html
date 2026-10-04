@@ -14,7 +14,7 @@ function f(i) {
   for (let e of s.records) {
     if (!S.test(e.id) || r.has(e.id)) throw Error(`Invalid or duplicate ID: ${e.id}`);
     if (r.add(e.id), !["create", "update"].includes(e.mode) || (e.mode === "create" ? e.expected !== null : !e.expected)) throw Error(`Invalid baseline: ${e.id}`);
-    if (e.supplierStatus !== "positive") throw Error(`Held product must stay out of this import: ${e.id}`);
+    if (e.supplierStatus !== "positive" && !(e.mode === "update" && e.supplierStatus === "verified-zero" && e.fields?.stock === 0 && Object.keys(e.fields).length === 1)) throw Error(`Held product must stay out of this import: ${e.id}`);
     const rajkot = /^https:\/\/rajkotwholesale\.in\/product\/[^/?#]+\/$/.test(e.supplierSource);
     if (!rajkot && !/^https:\/\/wukusy\.app\/merchant\/product-details\/\d+$/.test(e.supplierSource)) throw Error(`Missing exact supplier source: ${e.id}`);
     let c = Date.parse(e.supplierCheckedAt);
