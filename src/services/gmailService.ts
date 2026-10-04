@@ -48,6 +48,9 @@ export function clearGmailToken(): void {
  * Initiates Google OAuth popup with Gmail scopes and caches access token in memory
  */
 export async function connectGmailWithPopup(): Promise<{ email: string; token: string }> {
+  if (location.protocol !== 'https:' || location.hostname === 'appassets.androidplatform.net') {
+    throw new Error('Gmail authorization is available in your normal browser at https://udecs.store/staff.html . This local app uses email/password login for management records; it cannot authorize Google mailbox access.');
+  }
   try {
     clearGmailToken();
     const result = await signInWithPopup(auth, gmailProvider);
