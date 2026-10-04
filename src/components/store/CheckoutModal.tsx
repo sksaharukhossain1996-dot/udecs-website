@@ -1,3 +1,5 @@
+import {readProductsByIds} from '../../firebase/catalogIndex';
+import {wholesaleAvailability} from '../../lib/wholesale';
 import { customerProductText, customerProductTitle } from '../../lib/wholesale';
 import { wholesaleMinimumQty, normalizeWholesaleQty } from '../../lib/wholesale';
 import React, { useState, useEffect, useRef } from 'react';
@@ -85,6 +87,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 }) => {
   const {
     cart,
+    refreshCart,
+    cartValidation,
     company,
     clearCart,
     currency,
@@ -93,12 +97,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     whatsappConfig,
   } = useStore();
 
-  const checkoutItems = directItem
+  const [checkedDirect,setCheckedDirect]=useState<typeof directItem>(null);
+  const [catalogReady,setCatalogReady]=useState(false);
+  useEffect(()=>{let active=true;setCheckedDirect(null);setCatalogReady(false);if(!isOpen)return; (async()=>{if(directItem){const p=(await readProductsByIds([directItem.product.id]))[0];if(!p||!wholesaleAvailability(p))throw Error("Item unavailable");if(active)setCheckedDirect({...directItem,product:p});}else if(!await refreshCart())throw Error("Catalog unavailable");if(active)setCatalogReady(true);})().catch(()=>{if(active)setCatalogReady(false)});return()=>{active=false}},[isOpen,directItem]);
+  const currentDirect=checkedDirect||directItem;
+  const checkoutItems = currentDirect
     ? [
         {
-          product: directItem.product,
-          quantity: directItem.quantity,
-          isWholesale: directItem.isWholesale,
+          product: currentDirect.product,
+          quantity: currentDirect.quantity,
+          isWholesale: currentDirect.isWholesale,
         },
       ]
     : cart;
@@ -155,11 +163,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const isWestBengal = formData.state.toLowerCase().includes('bengal');
   const taxableAmount = gatewayVerification?0:roundMoney(checkoutItems.reduce((sum, item) => {
     const price = item.isWholesale || item.quantity >= item.product.minWholesaleQty ? item.product.wholesalePrice : item.product.price;
-    return sum + (item.product.gstExtra ? price * item.quantity : price * item.quantity / 1.18);
+    return sum + (item.product.supplier==='rajkot'&&item.product.gstExtra ? price * item.quantity : roundMoney(price * item.quantity / (1 + item.product.gstRate / 100)));
   }, 0));
   const totalGst = gatewayVerification?0:roundMoney(checkoutItems.reduce((sum, item) => {
     const price = item.isWholesale || item.quantity >= item.product.minWholesaleQty ? item.product.wholesalePrice : item.product.price;
-    return sum + (item.product.gstExtra ? roundMoney(price * item.quantity * item.product.gstRate / 100) : price * item.quantity - price * item.quantity / 1.18);
+    return sum + (item.product.supplier==='rajkot'&&item.product.gstExtra ? roundMoney(price * item.quantity * item.product.gstRate / 100) : price * item.quantity - roundMoney(price * item.quantity / (1 + item.product.gstRate / 100)));
   }, 0));
   const cgst = isWestBengal ? roundMoney(totalGst / 2) : 0;
   const sgst = isWestBengal ? roundMoney(totalGst - cgst) : 0;
@@ -193,6 +201,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const invalidBulkItem = checkoutItems.find(i => i.product.supplier === 'rajkot' && i.quantity !== normalizeWholesaleQty(i.product, i.quantity));
+    if(!checkoutItems.length){setLoginError('No available products remain in this cart. Return to the catalog.');return;}
+    if (!catalogReady || (!directItem&&cartValidation!=='ready')) {setLoginError('Current product prices and availability must be checked before ordering. Close and reopen checkout to retry.');return;}
     if (invalidBulkItem) { setLoginError(`Review ${invalidBulkItem.product.sku}: minimum ${wholesaleMinimumQty(invalidBulkItem.product)} pieces per product in full carton multiples. Update your cart before requesting a quote. No request was sent.`); return; }
     if(!quoteShipping&&checkoutItems.length>10){setLoginError("Each order can contain up to 10 different products. Remove extra products before continuing.");return;}
     if(!quoteShipping&&(!identityReady||!isVerifiedGoogleCustomer(customerAuth.currentUser))){setLoginError('Sign in with your verified email before placing an order. No order was placed.');return;}
@@ -207,7 +217,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     if (quoteShipping) {
       const lines = checkoutItems.map(item => {
         const price = item.isWholesale || item.quantity >= item.product.minWholesaleQty ? item.product.wholesalePrice : item.product.price;
-        return `${item.product.sku}: ${customerProductTitle(item.product, language)}, ${item.quantity} pcs, INR ${price}/piece, GST ${item.product.gstRate}% ${item.product.gstExtra ? 'extra' : 'included'}`;
+        return `${item.product.sku}: ${customerProductTitle(item.product, language)}, ${item.quantity} pcs, INR ${price}/piece, GST ${item.product.gstRate}% ${item.product.supplier==='rajkot'&&item.product.gstExtra ? 'extra' : 'included'}`;
       });
       const message = `Wholesale order request (not paid or confirmed)
 ${lines.join('\n')}
@@ -285,6 +295,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
           </button>
         </div>
 
+        {!catalogReady&&<p role="status" className="rounded border p-3">Checking current prices and stock. If this does not finish, close checkout and retry. No order can be submitted yet.</p>}
         {wasRecovered&&<p className="rounded border p-3">Your earlier saved order was recovered. No second order was placed. Your current cart was kept.</p>}
         {/* STEP 1: Details & Billing Form */}
         {checkoutStep === 'details'&&!quoteShipping&&(!identityReady||!isVerifiedGoogleCustomer(customer))&&<section className="space-y-4 p-4"><h3 className="text-xl font-bold">Sign in before ordering</h3><p>Sign in with Google or use an email link from the customer portal. Your cart stays here while you sign in.</p><p className="text-sm">Google sign-in shares your basic profile and email, not your Gmail inbox. It does not verify your phone number.</p><button type="button" disabled={!identityReady||loginBusy} onClick={signInForOrder} className="w-full rounded bg-[#182620] p-3 text-white">{!identityReady?'Checking customer sign-in...':loginBusy?'Opening Google...':'Sign in with Google to continue'}</button><a href="/?customer-portal=1" className="block underline">Sign up / log in by email link</a>{loginError&&<p role="alert">{loginError}</p>}</section>}
@@ -781,7 +792,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   )}
                   {completedOrder.igst > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-[#565F52]">IGST (18%):</span>
+                      <span className="text-[#565F52]">IGST:</span>
                       <span>{formatPrice(completedOrder.igst)}</span>
                     </div>
                   )}
