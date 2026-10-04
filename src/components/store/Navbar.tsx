@@ -50,9 +50,19 @@ export const Navbar: React.FC<NavbarProps> = ({
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
-    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [mobileMenuOpen]);
 
   return (
     <>
@@ -160,6 +170,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="flex items-center text-xs bg-[#FBFAF5] border border-[#CBCFB9] rounded p-0.5">
               <button
                 onClick={() => setLanguage('bn')}
+                aria-label="বাংলা"
+                aria-pressed={language === 'bn'}
                 className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
                   language === 'bn'
                     ? 'bg-[#182620] text-white'
@@ -171,6 +183,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
               <button
                 onClick={() => setLanguage('en')}
+                aria-label="English"
+                aria-pressed={language === 'en'}
                 className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
                   language === 'en'
                     ? 'bg-[#182620] text-white'
@@ -182,6 +196,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
               <button
                 onClick={() => setLanguage('hi')}
+                aria-label="हिन्दी"
+                aria-pressed={language === 'hi'}
                 className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
                   language === 'hi'
                     ? 'bg-[#182620] text-white'
@@ -230,7 +246,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 text-[#182620] hover:bg-[#E4E8D9] rounded"
-              aria-label="Toggle navigation menu"
+              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="store-mobile-menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -239,7 +257,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="lg:hidden fixed inset-x-0 top-full bg-[#FBFAF5] border-b border-[#CBCFB9] shadow-lg p-5 flex flex-col gap-3 animate-fadeIn">
+          <div id="store-mobile-menu" role="navigation" aria-label="Mobile navigation" className="max-h-[calc(100dvh-170px)] overflow-y-auto overscroll-contain lg:hidden fixed inset-x-0 top-full bg-[#FBFAF5] border-b border-[#CBCFB9] shadow-lg p-5 flex flex-col gap-3 animate-fadeIn">
             <a
               href="#products?category=kitchen"
               onClick={() => setMobileMenuOpen(false)}
