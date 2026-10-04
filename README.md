@@ -50,3 +50,39 @@ For Worker development, copy `.dev.vars.example` to the ignored `.dev.vars` file
 ## Static-hosting limits
 
 GitHub Pages serves only the static built frontend; it does not run API endpoints. The separately deployed Cloudflare Worker provides AI chat, voice WebSocket, WhatsApp sending, and live domain diagnostics. Express endpoints in `server.ts` are for local development only. Firebase Auth and Firestore must have `udecs.store` configured as an authorized domain, and Firestore security rules must remain enabled. Admin sign-in uses authorized Google accounts; no password is embedded in the storefront.
+
+## Catalog read budget (enabled October 4, 2026)
+
+Storefront loads16 search-only chunk documents, then live products in pages of24.
+Index entries contain ID, name, Bengali name, SKU, category, supplier and HSN only. Prices,
+stock, photos and checkout values come from product documents, never from index.
+The admin/staff entry keeps the complete product subscription.
+
+The shared `public/catalog-index-core.mjs` uses deterministic16-way ID hashing.
+A search-field change must read its chunk and write product+chunk in the SAME
+Firestore transaction. Stock/price-only changes do not rewrite the index.
+Covered writers: firestoreService save/delete; productListingService create/delete;
+public/catalog-sync.html create/update import; public/catalog-cleanup.html delete;
+public/admin.html and root admin.html add/delete. Server order reservation/release
+changes only stock. Hidden/gateway-verification products are excluded from index.
+Do not use an old importer or direct console write for search fields.
+
+Offline rebuild from a reviewed, current product export (no network/write):
+
+```
+node scripts/build-catalog-index.mjs verified-products.json catalog-index.json
+```
+
+Publishing must separately verify owner/admin authorization, current live rules,
+all16 chunks, product-search-field baselines, and transaction readback. Freeze
+catalog search-field mutations during initial migration. Do not deploy paged
+storefront until live collection permissions and backfill are verified. Repository
+rules are NOT proof of published rules. Do not fall back to loading the entire
+catalog if the index is unavailable; show a retry-later error.
+
+Expected read budget:16 index documents + a product-count aggregation +24 live products initially, plus24 per
+Show more; searching reads only matching live product pages. Admin reads remain
+full-catalog. This reduces document reads, not merely card rendering.
+
+Total catalog count uses server aggregation, preserving the existing1093 count;
+the public searchable index excludes hidden/verification records (currently1092).
