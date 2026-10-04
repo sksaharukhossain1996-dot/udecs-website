@@ -37,7 +37,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
             </div>
 
             <p className="text-xs text-[#B9BFAE] leading-relaxed">
-              {COMPANY_DETAILS.legalName} (Proprietor, {COMPANY_DETAILS.name}) — {siteContent?.footerAbout || company.description}
+              {COMPANY_DETAILS.name} — {siteContent?.footerAbout || company.description}
             </p>
 
             <div className="pt-2 text-[11px] space-y-1.5">
@@ -200,7 +200,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-white/60">
           <p>
-            © {new Date().getFullYear()} {COMPANY_DETAILS.legalName} (Proprietor, {COMPANY_DETAILS.name}). All rights reserved. Registered under Indian GST Act.
+            © {new Date().getFullYear()} {COMPANY_DETAILS.name}. All rights reserved. Registered under Indian GST Act.
           </p>
           <div className="flex items-center gap-4">
             <span className="font-mono">udecs.store</span>
