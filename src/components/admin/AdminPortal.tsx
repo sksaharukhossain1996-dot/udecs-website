@@ -10,6 +10,7 @@ import { AdminOverview } from './AdminOverview';
 import { AdminRfqInbox } from './AdminRfqInbox';
 import { AdminOrders } from './AdminOrders';
 import {AdminProductListings} from './AdminProductListings';
+import { StockUpdate } from '../../stock-stage/StockUpdate';
 import { AdminInventory } from './AdminInventory';
 import { AdminGstReports } from './AdminGstReports';
 import { AdminInvestors } from './AdminInvestors';
@@ -41,6 +42,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
   const {
     currentUser,
     company,
+    products,
     language,
     isFirebaseConnected,
     firebaseUser,
@@ -239,6 +241,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           {currentTab === 'rfq' && <AdminRfqInbox />}
           {CUSTOMER_SUPPORT_ENABLED && currentTab === 'customers' && <CustomerPortalTab enabled/>}
           {currentTab === 'product_listing' && <AdminProductListings />}
+          {currentTab === 'stock_update' && <StockUpdate products={products} company={company}/> }
           {currentTab === 'inventory' && <AdminInventory />}
           {currentTab === 'gst' && <AdminGstReports />}
           {currentTab === 'investors' && <AdminInvestors />}
