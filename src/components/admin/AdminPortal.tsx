@@ -1,3 +1,4 @@
+import {AdminSoftwareHealth} from './AdminSoftwareHealth';
 import { googleSignInHelp, requiresExternalGoogleBrowser, STAFF_SIGN_IN_URL } from '../../firebase/googleSignInEnvironment';
 import {AdminERP} from '../../business/AdminERP';
 import {CUSTOMER_SUPPORT_ENABLED} from '../../customer-stage/featureFlags';
@@ -254,6 +255,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           {currentTab === 'collaboration' && <AdminCollaboration />}
           {currentTab === 'gmail' && <AdminGmailHub />}
           {currentTab === 'notifications' && <AdminNotifications />}
+          {currentTab === 'software_health' && <AdminSoftwareHealth />}
           {currentTab === 'audit' && <AdminAudit />}
           {currentTab === 'settings' && <AdminSettings />}
         </div></main>
