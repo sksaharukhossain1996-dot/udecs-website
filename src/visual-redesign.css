@@ -110,3 +110,13 @@
 .udecs-customer-portal .customer-stage{border-top:3px solid #e5a249!important;box-shadow:0 10px 24px #233f6610;}
 .udecs-customer-portal .customer-stage button{background:linear-gradient(140deg,#e5a249,#d18146)!important;color:#233f66!important;font-weight:600;}
 .udecs-customer-portal a{color:#233f66;}.udecs-customer-portal footer a{color:#fff!important;}
+
+/* Reviewed portal-wide translucent content cards. Controls, dialogs and print stay solid. */
+@media screen {
+ .premium-admin .admin-module :is(.biz-card,.customer-stage,
+ div.bg-white[class*="rounded"],section.bg-white[class*="rounded"],form.bg-white[class*="rounded"],article.bg-white[class*="rounded"],
+ div[class*="bg-[#FBFAF5]"][class*="rounded"],section[class*="bg-[#FBFAF5]"][class*="rounded"],form[class*="bg-[#FBFAF5]"][class*="rounded"],
+ section.bg-slate-50[class*="rounded"]):not([role="dialog"]):not([aria-modal="true"]):not([role="dialog"] *):not([aria-modal="true"] *) {
+  background:rgba(255,255,255,.42)!important;box-shadow:none!important;
+ }
+}
