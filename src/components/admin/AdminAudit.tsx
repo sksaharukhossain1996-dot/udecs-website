@@ -11,6 +11,13 @@ import {
   FileSpreadsheet,
 } from 'lucide-react';
 
+
+function auditTime(value:string){
+ if(!value)return 'Time not recorded';
+ if(!/(Z|[+-]\d{2}:\d{2})$/.test(value))return value+' (timezone not recorded)';
+ const d=new Date(value);return Number.isFinite(d.getTime())?d.toLocaleString('en-IN',{timeZone:'Asia/Kolkata',hour12:false})+' IST':value+' (invalid date)';
+}
+
 export const AdminAudit: React.FC = () => {
   const { auditLogs, language } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,7 +36,7 @@ export const AdminAudit: React.FC = () => {
   });
 
   const exportAuditCsv = () => {
-    const headers = ['Timestamp', 'User', 'Role', 'Module', 'Action', 'Details', 'IP Address', 'Evidence status'];
+    const headers = ['Timestamp (raw, original timezone)', 'User', 'Role', 'Module', 'Action', 'Details', 'IP Address', 'Evidence status'];
     const rows = filteredLogs.map((l) => [
       l.timestamp,
       l.userName || l.user,
@@ -122,7 +129,7 @@ export const AdminAudit: React.FC = () => {
             {filteredLogs.map((log) => (
               <tr key={log.id} className="hover:bg-[#FBFAF5] transition-colors">
                 <td className="p-3 font-mono text-[11px] text-[#565F52]">
-                  {log.timestamp.replace('T', ' ').slice(0, 19)}
+                  {auditTime(log.timestamp)}
                 </td>
 
                 <td className="p-3">
