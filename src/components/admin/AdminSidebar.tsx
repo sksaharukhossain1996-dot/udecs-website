@@ -33,6 +33,7 @@ export type AdminTab =
   | 'customers'
   | 'product_listing'
   | 'inventory'
+  | 'stock_update'
   | 'gst'
   | 'investors'
   | 'hr'
@@ -72,6 +73,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'rfq', labelBn: 'B2B Wholesale Inquiry', labelEn: 'B2B Wholesale Inquiry', icon: MessageSquare },
     { id: 'orders', labelBn: 'অর্ডার ও লজিস্টিকস শিপিং', labelEn: 'Orders & Logistics', icon: ShoppingBag },
     { id: 'product_listing', labelBn: 'প্রোডাক্ট যোগ / ডিলিট', labelEn: 'Product listing', icon: ShoppingBag },
+    { id: 'stock_update', labelBn: 'স্টক আপডেট', labelEn: 'Stock Update', icon: Boxes },
     { id: 'inventory', labelBn: 'অটোমেটেড ইনভেন্টরি', labelEn: 'Automated Inventory', icon: Boxes },
     { id: 'gst', labelBn: 'জিএসটি রিপোর্ট ও ট্যাক্স', labelEn: 'GST Reports & Filing', icon: FileSpreadsheet },
     { id: 'investors', labelBn: 'বিনিয়োগকারী লিড', labelEn: 'Investor Leads', icon: TrendingUp },
