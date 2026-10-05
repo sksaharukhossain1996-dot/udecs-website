@@ -625,13 +625,13 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Audit log helper
   const logAction = (action: string, details: string) => {
     const newLog: AuditLog = {
-      id: `LOG-${Date.now().toString().slice(-5)}`,
+      id: `LOG-${crypto.randomUUID()}`,
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
       user: userRole === 'customer' ? 'Customer' : `Staff (${userRole.toUpperCase()})`,
       role: userRole,
       action,
       details,
-      ip: '192.168.1.' + Math.floor(Math.random() * 80 + 10),
+      ip: '',
     };
     setAuditLogs((prev) => [newLog, ...prev.slice(0, 99)]);
   };
