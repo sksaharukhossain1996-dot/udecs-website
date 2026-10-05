@@ -318,7 +318,7 @@ async function liveVoice(request, env) {
   if (request.headers.get("upgrade")?.toLowerCase() !== "websocket") {
     return json({ error: "WebSocket upgrade required." }, 426, { Upgrade: "websocket" });
   }
-  const model = env.GEMINI_LIVE_MODEL || "gemini-3.5-flash-lite-native-audio-preview-12-2025";
+  const model = env.GEMINI_LIVE_MODEL || "gemini-2.5-flash-native-audio-preview-12-2025";
   const upstreamUrl = new URL(
     "https://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
   );
