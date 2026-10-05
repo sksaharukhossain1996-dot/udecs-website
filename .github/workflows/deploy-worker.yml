@@ -1,0 +1,32 @@
+name: Deploy preserved UDECS API
+on:
+  push:
+    branches: [main]
+    paths: [worker-production/**, .github/workflows/deploy-worker.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: udecs-api-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Check preserved baseline and syntax
+        run: |
+          node --check worker-production/worker-production/production.mjs
+          node -e "const fs=require('fs'),c=require('crypto'),s=fs.readFileSync('worker-production/worker-production/production.mjs');if(c.createHash('sha256').update(s.subarray(0,32907)).digest('hex')!=='9cd8ec4e68f83079d75da5510f0e0a3f119eb35a4f542b7332825fab69d1fc7b')throw Error('Production baseline changed; review required')"
+      - name: Dry run without upload
+        run: npx wrangler deploy --config worker-production/wrangler.json --no-bundle --keep-vars --dry-run
+      - name: Deploy additive listing route
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: bfa14054934d0f067511f26979c971d4
+        run: npx wrangler deploy --config worker-production/wrangler.json --no-bundle --keep-vars
