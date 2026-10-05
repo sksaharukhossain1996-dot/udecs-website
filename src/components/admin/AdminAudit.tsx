@@ -15,6 +15,9 @@ export const AdminAudit: React.FC = () => {
   const { auditLogs, language } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [moduleFilter, setModuleFilter] = useState('ALL');
+  const [showExamples,setShowExamples]=useState(false);
+  const isExample=(log:any)=>[['LOG-101','INVENTORY_SYNC','Automated stock reconciliation completed for 12 items. 2 items flagged below reorder threshold.'],['LOG-102','ORDER_DISPATCH','Order UDECS-ORD-9844 handed over to Blue Dart (AWB: BD77881923).'],['LOG-103','GST_INVOICE_GENERATED','Generated B2B Tax Invoice for Order UDECS-ORD-9842 with GSTIN 19AAECF1234K1Z5.']].some(([id,action,details])=>log.id===id&&log.action===action&&log.details===details);
+  const exampleCount=auditLogs.filter(isExample).length;
 
   const filteredLogs = auditLogs.filter((log) => {
     const matchesSearch =
@@ -22,19 +25,20 @@ export const AdminAudit: React.FC = () => {
       log.details.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (log.userName || log.user || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesModule = moduleFilter === 'ALL' || log.module === moduleFilter;
-    return matchesSearch && matchesModule;
+    return matchesSearch && matchesModule && (showExamples || !isExample(log));
   });
 
   const exportAuditCsv = () => {
-    const headers = ['Timestamp', 'User', 'Role', 'Module', 'Action', 'Details', 'IP Address'];
+    const headers = ['Timestamp', 'User', 'Role', 'Module', 'Action', 'Details', 'IP Address', 'Evidence status'];
     const rows = filteredLogs.map((l) => [
       l.timestamp,
-      l.userName,
-      l.userRole,
+      l.userName || l.user,
+      l.userRole || l.role,
       l.module,
       l.action,
       l.details,
       auditIp(l.ipAddress),
+      isExample(l)?'Example, not a business event':'Client record; not independently verified',
     ]);
     const encodedUri=URL.createObjectURL(new Blob([csvText([headers,...rows])],{type:'text/csv;charset=utf-8'}));
     const link = document.createElement('a');
@@ -70,6 +74,7 @@ export const AdminAudit: React.FC = () => {
         </button>
       </div>
 
+      <div role="status" className="border rounded p-4 bg-amber-50 text-sm">This is browser-recorded activity, not a complete immutable server audit. Exact bundled examples are hidden by default, retained rather than deleted. IP values are unknown unless independently recorded. <label className="block mt-2"><input type="checkbox" checked={showExamples} onChange={e=>setShowExamples(e.target.checked)}/> Show {exampleCount} retained example entries (not real business events)</label></div>
       {/* Search & Filter */}
       <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-white p-3.5 rounded-lg border border-[#CBCFB9]">
         <div className="relative w-full sm:w-80">
@@ -101,8 +106,8 @@ export const AdminAudit: React.FC = () => {
       </div>
 
       {/* Logs Table */}
-      <div className="bg-white rounded-lg border border-[#CBCFB9] overflow-hidden shadow-xs">
-        <table className="w-full text-left text-xs border-collapse">
+      <div className="bg-white rounded-lg border border-[#CBCFB9] overflow-x-auto shadow-xs">
+        <table className="w-full min-w-[760px] text-left text-xs border-collapse">
           <thead>
             <tr className="bg-[#EEF0E7] text-[#0F1913] font-bold text-[10px] uppercase border-b border-[#CBCFB9]">
               <th className="p-3">Timestamp</th>
@@ -121,8 +126,8 @@ export const AdminAudit: React.FC = () => {
                 </td>
 
                 <td className="p-3">
-                  <span className="font-bold text-[#0F1913] block">{log.userName}</span>
-                  <span className="text-[10px] text-[#A87C1F] font-mono uppercase">{log.userRole}</span>
+                  <span className="font-bold text-[#0F1913] block">{log.userName || log.user || 'Not recorded'}</span>
+                  <span className="text-[10px] text-[#A87C1F] font-mono uppercase">{log.userRole || log.role || 'Not recorded'}</span>
                 </td>
 
                 <td className="p-3 font-mono">
@@ -132,7 +137,7 @@ export const AdminAudit: React.FC = () => {
                 </td>
 
                 <td className="p-3 font-semibold text-[#0F1913]">
-                  {log.action}
+                  {log.action}{isExample(log)&&<span className="ml-2 text-amber-900">[Example]</span>}
                 </td>
 
                 <td className="p-3 text-[#565F52] max-w-md">
