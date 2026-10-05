@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';import{factualListingDraft,imageDraftSize,validateAssistantOutput}from '../src/lib/listingAssistant';
+const f={name:'Kitchen jar',listingType:'retail' as const,material:'',dimensions:'',included:'',use:'',care:''};
+test('requires facts and never fabricates claims',()=>{assert.throws(()=>factualListingDraft(f));const d=factualListingDraft({...f,material:'Glass'});assert.match(d,/Glass/);assert.doesNotMatch(d,/premium|unbreakable|food.safe|price|GST/i);});
+test('both listing types keep only supplied facts',()=>{assert.equal(factualListingDraft({...f,material:'Steel'}),factualListingDraft({...f,listingType:'b2b',material:'Steel'}));});
+test('enlargement is explicit and aspect ratio retained',()=>{assert.deepEqual(imageDraftSize(1000,500,4096),{width:4096,height:2048,enlarged:true});assert.deepEqual(imageDraftSize(2000,1000,800),{width:800,height:400,enlarged:false});assert.throws(()=>imageDraftSize(0,500,2048));});
+test('future provider output cannot skip fact review',()=>{assert.throws(()=>validateAssistantOutput({description:'x'}));assert.throws(()=>validateAssistantOutput({description:'x',claimsToCheck:[9]}));assert.deepEqual(validateAssistantOutput({description:'Draft',claimsToCheck:['material']}),{description:'Draft',claimsToCheck:['material']});});
