@@ -1,3 +1,4 @@
+import { requiresExternalGoogleBrowser } from './googleSignInEnvironment';
 import {prepareIndexMutation} from '../../public/catalog-index-core.mjs';
 import { validateFulfilment } from '../lib/orderEmailSafety';
 import {
@@ -48,6 +49,9 @@ export interface B2BInquiry {
 // Authentication Helpers
 // -------------------------------------------------------------
 export async function signInWithGoogle(): Promise<User | null> {
+  if (requiresExternalGoogleBrowser(navigator.userAgent, location.protocol, location.hostname)) {
+    throw Object.assign(new Error('Open staff Google sign-in in your normal browser.'), {code: 'auth/external-browser-required'});
+  }
   try {
     const result = await signInWithPopup(auth, googleProvider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
