@@ -1,3 +1,4 @@
+import { googleSignInHelp, requiresExternalGoogleBrowser, STAFF_SIGN_IN_URL } from '../../firebase/googleSignInEnvironment';
 import {AdminERP} from '../../business/AdminERP';
 import {CUSTOMER_SUPPORT_ENABLED} from '../../customer-stage/featureFlags';
 import {CustomerPortalTab} from '../../customer-stage/CustomerPortalTab';
@@ -53,6 +54,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
 
   const [loginError, setLoginError] = useState('');
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
+  const needsBrowser = requiresExternalGoogleBrowser(navigator.userAgent, location.protocol, location.hostname);
 
   if (!isOpen) return null;
 
@@ -62,7 +64,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
     try {
       await signInWithGoogleAuth();
     } catch (err: any) {
-      setLoginError(err?.message || 'Google Sign-in failed. Please try again or use email sign-in.');
+      setLoginError(googleSignInHelp(err));
     } finally {
       setIsGoogleSigningIn(false);
     }
@@ -94,6 +96,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           </div>
 
           <div className="space-y-3.5 text-xs">
+            {needsBrowser && <div role="status" className="p-3 rounded bg-amber-50 text-amber-900 text-sm">Google login ke liye Chrome ya apna normal browser kholo. WhatsApp mein menu se "Open in browser" chuno. <a className="underline block mt-2 break-all" href={STAFF_SIGN_IN_URL} target="_blank" rel="noopener noreferrer">{STAFF_SIGN_IN_URL}</a><p className="mt-2">Agar link yahin khule, address copy karke Chrome mein paste karo.</p></div>}
             {loginError && (
               <div className="p-2.5 rounded bg-red-100 text-red-800 text-xs font-semibold">
                 {loginError}
@@ -103,7 +106,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
             <button
               type="button"
               onClick={handleGoogleSignIn}
-              disabled={isGoogleSigningIn}
+              disabled={isGoogleSigningIn || needsBrowser}
               className="w-full bg-white hover:bg-slate-50 text-[#0F1913] border border-[#CBCFB9] py-2.5 rounded font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-sm disabled:opacity-60"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -124,7 +127,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                 />
               </svg>
-              <span>{isGoogleSigningIn ? 'Connecting to Google...' : 'Sign in with Google (Firebase)'}</span>
+              <span>{needsBrowser ? 'Open in your browser for Google sign-in' : isGoogleSigningIn ? 'Connecting to Google...' : 'Sign in with Google (Firebase)'}</span>
             </button>
           </div>
 
