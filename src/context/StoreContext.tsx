@@ -571,7 +571,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           role: isAdmin ? 'admin' : employee!.role,
         });
         setUserRole(isAdmin ? 'admin' : employee!.role);
-        logAction('FIREBASE_AUTH', `Authenticated as ${user.email} (${isAdmin ? 'Admin' : 'Staff'})`);
+        logAction('FIREBASE_AUTH', `Authenticated as ${user.email} (${isAdmin ? 'Admin' : 'Staff'})`, {name:user.email || 'Authenticated staff',role:isAdmin?'admin':employee!.role});
       } else {
         setCurrentUser(null);
         setUserRole('customer');
@@ -623,12 +623,12 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   // Audit log helper
-  const logAction = (action: string, details: string) => {
+  const logAction = (action: string, details: string, identity?: {name:string;role:UserRole}) => {
     const newLog: AuditLog = {
       id: `LOG-${crypto.randomUUID()}`,
-      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
-      user: userRole === 'customer' ? 'Customer' : `Staff (${userRole.toUpperCase()})`,
-      role: userRole,
+      timestamp: new Date().toISOString(),
+      user: identity?.name || (userRole === 'customer' ? 'Customer' : `Staff (${userRole.toUpperCase()})`),
+      role: identity?.role || userRole,
       action,
       details,
       ip: '',
@@ -1063,7 +1063,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         };
         setCurrentUser(staffUser);
         setUserRole(isAdmin ? 'admin' : employee!.role);
-        logAction('FIREBASE_GOOGLE_LOGIN', `Logged in with Google: ${user.email}`);
+        logAction('FIREBASE_GOOGLE_LOGIN', `Logged in with Google: ${user.email}`, {name:user.email || 'Authenticated staff',role:isAdmin?'admin':employee!.role});
       }
     } catch (err) {
       console.error('Google Sign-In Error:', err);
