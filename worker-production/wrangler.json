@@ -1,0 +1,23 @@
+{
+  "name": "udecs-api",
+  "account_id": "bfa14054934d0f067511f26979c971d4",
+  "main": "worker-production/production.mjs",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": [
+    "web_socket_auto_reply_to_close"
+  ],
+  "workers_dev": true,
+  "keep_vars": true,
+  "kv_namespaces": [
+    {
+      "binding": "WA_DEDUPE",
+      "id": "232e6995ffc346879ac2109abf21784e"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "LISTING_AI_FREE_TIER": "confirmed"
+  }
+}
