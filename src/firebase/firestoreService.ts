@@ -17,7 +17,7 @@ import { db, auth, googleProvider } from './config';
 import { signInWithPopup, signOut, GoogleAuthProvider, User } from 'firebase/auth';
 import { handleFirestoreError, OperationType } from './errors';
 import { Product, Order, SiteContent, CompanyInfo, AuditLog } from '../types';
-import { setCachedGmailToken, clearGmailToken } from '../services/gmailService';
+import { clearGmailToken } from '../services/gmailService';
 
 // Admin bootstrap emails
 export const ADMIN_EMAILS = [
@@ -54,10 +54,7 @@ export async function signInWithGoogle(): Promise<User | null> {
   }
   try {
     const result = await signInWithPopup(auth, googleProvider);
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    if (credential?.accessToken) {
-      setCachedGmailToken(credential.accessToken);
-    }
+    // Staff identity is not Gmail authorization. Mailbox consent stays separate.
     return result.user;
   } catch (error) {
     console.error('Google Sign-In Error:', error);
