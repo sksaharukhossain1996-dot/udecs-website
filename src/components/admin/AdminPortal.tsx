@@ -235,7 +235,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         </header>
 
         {/* Main Content Area */}
-        <main className="admin-content flex-1 overflow-y-auto"><div className="admin-module">
+        <main className="admin-content flex-1 overflow-y-auto relative"><style>{`.portal-watermark{position:sticky;top:0;height:0;width:100%;z-index:20;pointer-events:none;user-select:none}.portal-watermark img{position:absolute;top:18vh;right:8%;width:min(54vw,520px);height:auto;opacity:.055;pointer-events:none}@media(max-width:640px){.portal-watermark img{top:24vh;right:5%;width:90%;opacity:.045}}@media print{.portal-watermark{display:none}}`}</style><div aria-hidden="true" className="portal-watermark"><img src="/UDECS_Logo_Premium_Transparent.png" alt="" draggable={false}/></div><div className="admin-module">
           {currentTab === 'overview' && (
             <AdminOverview onNavigate={(tab) => setCurrentTab(tab)} />
           )}
