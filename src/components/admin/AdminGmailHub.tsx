@@ -63,7 +63,7 @@ export const AdminGmailHub: React.FC = () => {
 
   // Initialize or check connection
   useEffect(() => {
-    if (getCachedGmailToken()) {
+    if (getVerifiedGmailMailbox()) {
       loadGmailData();
     }
   }, []);
