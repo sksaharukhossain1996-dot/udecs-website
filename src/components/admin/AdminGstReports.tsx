@@ -1,3 +1,4 @@
+import {GstDraftRegister} from '../../gst-stage/GstDraftRegister';
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import {
@@ -63,6 +64,7 @@ export const AdminGstReports: React.FC = () => {
   return (
     <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto">
       <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-5 text-sm space-y-2"><h2 className="font-bold">Draft bookkeeping summary, not filing-ready</h2><p>Only loaded orders created in your selected month are included. Order creation date is not a verified invoice date. Credits, cancellations, marketplace reports, amendments, input tax credit and reverse-charge tax are not reconciled here.</p><p>HSN quantity/rate is shown, but item taxable value and tax are not inferred from gross prices. Missing recorded item tax values appear as zero and must be reviewed against invoices. Do not file from this screen.</p>{invalidTaxRecords>0&&<p>{invalidTaxRecords} loaded orders lack complete recorded tax fields. Totals are incomplete.</p>}<p>Free preparation roadmap: upload sales reports, review mapped invoices/credit notes, validate against GST schemas, generate a reviewed JSON file. Final GST portal submission stays separate and needs explicit owner approval.</p></div>
+      <GstDraftRegister company={company}/>
       {/* GST portal quick access (owner request) */}
       <div className="p-4 bg-[#FBFAF5] border border-[#CBCFB9] rounded-lg flex flex-wrap items-center gap-4">
         <div>
@@ -223,14 +225,14 @@ export const AdminGstReports: React.FC = () => {
         {reportType === 'gstr1' && (
           <div className="space-y-4">
             <h4 className="font-heading font-bold text-sm text-[#0F1913] uppercase tracking-wider">
-              Table 4 & 5: B2B & B2C Invoices (Outward Supplies)
+              Loaded order tax references - not verified invoices
             </h4>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-[#EEF0E7] text-[#0F1913] font-bold text-[10px] uppercase border-b border-[#CBCFB9]">
-                    <th className="p-2.5">Invoice No</th>
+                    <th className="p-2.5">Order reference</th>
                     <th className="p-2.5">Date</th>
                     <th className="p-2.5">Customer & Recipient GSTIN</th>
                     <th className="p-2.5">Place of Supply (POS)</th>
@@ -253,7 +255,7 @@ export const AdminGstReports: React.FC = () => {
                         </span>
                       </td>
                       <td className="p-2.5 font-sans text-[#565F52]">
-                        {ord.state.includes('Bengal') ? '19 - West Bengal' : `99 - ${ord.state}`}
+                        {ord.state || 'Unknown'} (POS code not verified)
                       </td>
                       <td className="p-2.5 text-right font-sans font-bold">{formatPrice(ord.totalAmount)}</td>
                       <td className="p-2.5 text-right font-sans">{formatPrice(ord.taxableAmount)}</td>
