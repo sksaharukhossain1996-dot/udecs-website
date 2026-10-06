@@ -70,7 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {siteContent?.announcement && (
         <div className="bg-[#182620] text-[#FBFAF5] text-[11px] sm:text-xs py-1.5 px-4 text-center border-b border-black/20 flex items-center justify-center gap-2 font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse"></span>
-          <span>{siteContent.announcement.replace(/PayU Secured Checkout/g, "PayU & UPI available · New COD temporarily paused")}</span>
+          <span>GST-registered · UPI payment details with order confirmation · COD paused</span>
         </div>
       )}
 
