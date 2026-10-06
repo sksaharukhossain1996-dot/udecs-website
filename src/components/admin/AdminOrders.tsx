@@ -25,7 +25,7 @@ import {
   X,
   MessageSquare,
 } from 'lucide-react';
-import { generateWhatsAppLink, buildOrderPlacedMessage, buildOrderShippedMessage } from '../../services/whatsappService';
+import { generateWhatsAppLink, buildOrderPlacedMessage, buildOrderShippedMessage, buildOrderDeliveredMessage } from '../../services/whatsappService';
 
 export const AdminOrders: React.FC = () => {
   const { formatPrice, company, language, addAuditLog, whatsappConfig } = useStore();
@@ -290,7 +290,9 @@ export const AdminOrders: React.FC = () => {
                       <a
                         href={generateWhatsAppLink(
                           order.customerPhone,
-                          order.orderStatus === 'shipped'
+                          order.orderStatus === 'delivered'
+                            ? buildOrderDeliveredMessage(order, whatsappConfig, language === 'bn' ? 'bn' : 'en')
+                            : order.orderStatus === 'shipped'
                             ? buildOrderShippedMessage(order, whatsappConfig, language === 'bn' ? 'bn' : 'en')
                             : buildOrderPlacedMessage(order, whatsappConfig, language === 'bn' ? 'bn' : 'en')
                         )}
@@ -322,7 +324,7 @@ export const AdminOrders: React.FC = () => {
                       <button
                         onClick={() => setSelectedOrder(order)}
                         className="p-1.5 bg-[#EEF0E7] hover:bg-[#CBCFB9] text-[#0F1913] rounded transition-colors inline-block"
-                        title="View GST Tax Invoice"
+                        title="View internal order draft - not a tax invoice"
                       >
                         <FileText className="w-3.5 h-3.5 text-[#A87C1F]" />
                       </button>
@@ -413,7 +415,7 @@ export const AdminOrders: React.FC = () => {
           <div className="bg-white border border-[#CBCFB9] rounded-lg max-w-2xl w-full p-6 shadow-2xl my-6 max-h-[90vh] overflow-y-auto space-y-4">
             <div className="flex justify-between items-center pb-3 border-b border-[#CBCFB9]">
               <h3 className="font-heading font-bold text-base text-[#0F1913]">
-                Tax Invoice Preview · {selectedOrder.id}
+                Internal order draft · {selectedOrder.id}
               </h3>
               <button
                 onClick={() => setSelectedOrder(null)}
@@ -423,6 +425,7 @@ export const AdminOrders: React.FC = () => {
               </button>
             </div>
 
+            <p role="status" className="border rounded p-3 bg-amber-50 text-sm">Internal draft from recorded order fields. Test/verification orders are not commercial invoices. Invoice number/date, HSN, place of supply, tax basis and totals need review before issuing a GST invoice. This view does not create or file an invoice.</p>
             {/* Invoice Container */}
             <div className="border border-[#CBCFB9] p-5 rounded text-xs space-y-3 font-sans">
               <div className="flex justify-between items-start border-b border-[#CBCFB9] pb-3">
@@ -434,10 +437,10 @@ export const AdminOrders: React.FC = () => {
                 </div>
                 <div className="text-right">
                   <span className="bg-[#182620] text-[#CC9A2E] px-2 py-0.5 font-bold font-mono text-[10px]">
-                    TAX INVOICE
+                    INTERNAL DRAFT - NOT A TAX INVOICE
                   </span>
                   <p className="font-mono font-bold mt-1">{selectedOrder.id}</p>
-                  <p className="text-[11px] text-[#565F52]">Date: {selectedOrder.createdAt.slice(0, 10)}</p>
+                  <p className="text-[11px] text-[#565F52]">Order created: {selectedOrder.createdAt.slice(0, 10)} (not verified invoice date)</p>
                 </div>
               </div>
 
@@ -485,11 +488,11 @@ export const AdminOrders: React.FC = () => {
               <div className="pt-2 border-t border-[#CBCFB9] flex justify-end">
                 <div className="w-56 space-y-1 text-right text-[11px]">
                   <div className="flex justify-between">
-                    <span>Taxable:</span>
+                    <span>Recorded taxable amount:</span>
                     <span>{formatPrice(selectedOrder.taxableAmount)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>GST (CGST/SGST/IGST):</span>
+                    <span>Recorded GST (split unverified):</span>
                     <span>{formatPrice(selectedOrder.totalGst)}</span>
                   </div>
                   <div className="flex justify-between font-bold text-sm text-[#0F1913] pt-1 border-t border-[#CBCFB9]">
@@ -506,7 +509,7 @@ export const AdminOrders: React.FC = () => {
                 className="flex-1 bg-[#182620] hover:bg-[#0F1913] text-white py-2.5 rounded text-xs font-bold flex items-center justify-center gap-1.5"
               >
                 <Printer className="w-4 h-4 text-[#CC9A2E]" />
-                <span>Print GST Invoice</span>
+                <span>Print Internal Draft</span>
               </button>
               <button
                 onClick={() => {
@@ -515,7 +518,7 @@ export const AdminOrders: React.FC = () => {
                   startEmailForOrder(ord);
                 }}
                 className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-4 py-2.5 rounded text-xs font-bold flex items-center gap-1.5 transition-colors"
-                title="Email Invoice to Customer via Gmail"
+                title="Review an order-status email separately - no invoice attached"
               >
                 <Mail className="w-3.5 h-3.5" />
                 <span>Email via Gmail</span>
