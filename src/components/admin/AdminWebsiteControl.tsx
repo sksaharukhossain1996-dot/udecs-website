@@ -409,7 +409,7 @@ export const AdminWebsiteControl: React.FC = () => {
           <MessageSquare className="w-4 h-4 text-[#25D366]" />
           <span>WhatsApp Automation Hub</span>
           <span className="text-[9px] bg-[#25D366] text-white px-1.5 py-0.2 rounded font-mono font-bold">
-            ACTIVE
+            MANUAL TOOLS
           </span>
         </button>
 
