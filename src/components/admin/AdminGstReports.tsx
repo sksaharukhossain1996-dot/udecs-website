@@ -1,3 +1,4 @@
+import{printExport}from'../../lib/exportFile';
 import {GstDraftRegister} from '../../gst-stage/GstDraftRegister';
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
@@ -93,7 +94,7 @@ export const AdminGstReports: React.FC = () => {
 
         <div className="flex items-center gap-2 no-print">
           <button
-            onClick={() => window.print()}
+            onClick={() => void printExport().catch(e=>alert(e.message))}
             className="inline-flex items-center gap-2 bg-[#182620] hover:bg-[#0F1913] text-white px-3.5 py-2 rounded text-xs font-semibold shadow-xs"
           >
             <Printer className="w-3.5 h-3.5 text-[#CC9A2E]" />
