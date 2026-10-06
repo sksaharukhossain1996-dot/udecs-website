@@ -75,11 +75,11 @@ Order a new batch from the factory promptly.`;
     getWhatsAppStatus()
       .then(({ configured }) => {
         setGatewayConfigured(configured);
-        updateWhatsAppConfig({ isActive: false, gatewayStatus: 'paused' });
+        // Status reads must not save settings or claim an owner edit.
       })
       .catch(() => {
         setGatewayConfigured(false);
-        updateWhatsAppConfig({ isActive: false, gatewayStatus: 'paused' });
+        // Status reads must not save settings or claim an owner edit.
       });
   }, []);
 
