@@ -129,8 +129,8 @@ export const AdminNotifications: React.FC = () => {
                 required
                 placeholder={
                   broadcastChannel === 'sms'
-                    ? 'Dear Customer, explore exclusive B2B wholesale pallets and sports gear at udecs.store. Pay via PayU or COD. Support: +91 9845485437.'
-                    : 'Dear Valued Merchant, UNICK DIGITAL E-COMMERCE SOLUTIONS offers wholesale cartons at direct factory rates. GST invoice input tax credit included...'
+                    ? 'Write a demo message. No customer delivery is connected. Payment and shipping options need current review.'
+                    : 'Write an owner-reviewed draft. Tax credit eligibility and invoice details must not be promised without verification.'
                 }
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
