@@ -4,6 +4,7 @@ export function isDemoOrTestOrder(order: Order): boolean {
   const data = order as Order & Record<string, any>;
   return DEMO_IDS.has(order.id) || /^(TEST|SMOKE|DEMO)[_-]/i.test(order.id) ||
     data.isDemo === true || data.isTest === true || data.testMode === true ||
+    data.gatewayVerification === true || data.nonDelivery === true ||
     [data.source, data.environment, data.kind, data.mode, data.orderType].some(v => typeof v === 'string' && /^(demo|test|mock|sandbox)$/i.test(v));
 }
 export function validateOrderEmail(order: Order | null, reviewed: Order): void {
