@@ -1,3 +1,4 @@
+import{printExport}from'../../lib/exportFile';
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { auth } from '../../firebase/config';
@@ -389,7 +390,7 @@ export const AdminOrders: React.FC = () => {
 
             <div className="pt-2 flex gap-2">
               <button
-                onClick={() => window.print()}
+                onClick={() => void printExport().catch(e=>alert(e.message))}
                 className="flex-1 bg-black text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-1.5"
               >
                 <Printer className="w-3.5 h-3.5" />
@@ -501,7 +502,7 @@ export const AdminOrders: React.FC = () => {
 
             <div className="flex gap-2">
               <button
-                onClick={() => window.print()}
+                onClick={() => void printExport().catch(e=>alert(e.message))}
                 className="flex-1 bg-[#182620] hover:bg-[#0F1913] text-white py-2.5 rounded text-xs font-bold flex items-center justify-center gap-1.5"
               >
                 <Printer className="w-4 h-4 text-[#CC9A2E]" />
