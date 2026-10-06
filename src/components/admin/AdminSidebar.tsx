@@ -126,10 +126,10 @@ const NAV_STYLE=`
 .phone-management.phone-menu-open aside.udecs-workspace .workspace-brand p{display:block!important;font-size:9px!important;margin:6px 0 0!important}
 .phone-management.phone-menu-open aside.udecs-workspace .workspace-owner,.phone-management.phone-menu-open aside.udecs-workspace .workspace-search,.phone-management.phone-menu-open aside.udecs-workspace .workspace-footer{flex:none!important}
 .phone-management.phone-menu-open aside.udecs-workspace .workspace-close{flex:none!important;margin-top:0!important}
-.premium-admin aside.udecs-workspace{isolation:isolate}
+.premium-admin aside.udecs-workspace{position:relative;isolation:isolate}
 .udecs-workspace:before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNTYiIGhlaWdodD0iMTU2IiB2aWV3Qm94PSIwIDAgMTU2IDE1NiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYjVjZWU4IiBzdHJva2Utd2lkdGg9IjEuNSI+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTUgMTgpIHJvdGF0ZSgtMTIpIj48cGF0aCBkPSJNMCAwaDVsNCAxOWgxOWw1LTE0SDdNMTIgMjRoMW0xMiAwaDEiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjI0IiByPSIyIi8+PGNpcmNsZSBjeD0iMjUiIGN5PSIyNCIgcj0iMiIvPjwvZz48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg5MCA3MCkgcm90YXRlKDEwKSI+PHBhdGggZD0iTTAgNWwxNS03IDE1IDd2MjFsLTE1IDgtMTUtOFpNMCA1bDE1IDggMTUtOE0xNSAxM3YyMU03IDFsMTYgOCIvPjwvZz48cGF0aCBkPSJNMzAgMTEyaDI1djIxSDMwem0wIDhoMjVtLTE2LTh2MjFNMTA5IDE3aDIwdjIwaC0yMG0wLTIwIDIwIDIwIi8+PC9zdmc+Cg==');background-size:156px;opacity:.12}
 .premium-admin .udecs-workspace nav section{background:#ffffffed!important;box-shadow:0 4px 16px #0513260c}
-.premium-admin aside.udecs-workspace{background:linear-gradient(150deg,#25486f,#0e263f 65%,#1b3d5d)!important;color:#eef5ff!important}
+.premium-admin aside.udecs-workspace,.phone-management.phone-menu-open aside.udecs-workspace{background:linear-gradient(150deg,#25486f,#0e263f 65%,#1b3d5d)!important;color:#eef5ff!important}
 .premium-admin .udecs-workspace:before{opacity:.13}
 .premium-admin .workspace-brand p,.premium-admin .workspace-logo small{color:#bed0e4!important}
 .premium-admin .workspace-close{color:#e6f0fc!important}
