@@ -136,8 +136,8 @@ export function buildOrderShippedMessage(order: Order, config: WhatsAppAutomatio
   return renderWhatsAppTemplate(template, {
     customerName: order.customerName,
     orderId: order.id,
-    courierName: order.courierName || 'Delhivery Express Surface',
-    trackingNumber: order.trackingNumber || `DEL-${Math.floor(10000000 + Math.random() * 90000000)}`,
+    courierName: order.courierName || 'Not assigned',
+    trackingNumber: order.trackingNumber || 'Not recorded',
   });
 }
 
