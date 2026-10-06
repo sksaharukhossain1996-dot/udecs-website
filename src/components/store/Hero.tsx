@@ -28,7 +28,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenTracking, onOpenVoice }) => {
             </h1>
 
             <p className="text-base sm:text-lg text-[#565F52] max-w-2xl leading-relaxed mb-8">
-              {siteContent?.heroSubheadline || t('heroDesc')}
+              Household essentials, sports gear and wholesale supplies. GSTIN: 19AODPH1519N1ZS. Shipping availability and charges confirmed before dispatch.
             </p>
 
             {/* CTAs */}
