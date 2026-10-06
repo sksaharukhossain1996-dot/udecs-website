@@ -1,3 +1,4 @@
+import {isBundledAuditExample} from '../../lib/auditEvidence';
 import React,{useState} from 'react';
 import {dashboardSummary,orderCreationMonth} from '../../lib/dashboardSummary';
 import { useStore } from '../../context/StoreContext';
@@ -21,6 +22,7 @@ interface AdminOverviewProps {
 export const AdminOverview: React.FC<AdminOverviewProps> = ({ onNavigate }) => {
   const { orders, products, employees, auditLogs, formatPrice, company, language } = useStore();
 
+  const recordedAuditLogs=auditLogs.filter(log=>!isBundledAuditExample(log));
   const [month,setMonth]=useState(()=>orderCreationMonth(new Date().toISOString()));
   const summary=dashboardSummary(orders,month);
   const totalSales=summary.recordedValue,totalGstCollected=summary.paidValue,pendingOrders=summary.pending;
@@ -254,15 +256,16 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ onNavigate }) => {
               onClick={() => onNavigate('audit')}
               className="text-xs font-semibold text-[#A87C1F] hover:underline"
             >
-              Loaded log ({auditLogs.length}) →
+              Loaded recorded log ({recordedAuditLogs.length}) →
             </button>
           </div>
 
           <div className="space-y-3 text-xs">
-            {auditLogs.slice(0, 5).map((log) => (
+            <p>Browser-recorded entries only, not a complete server audit. Bundled examples are hidden; retained in Audit.</p>
+            {recordedAuditLogs.slice(0, 5).map((log) => (
               <div key={log.id} className="p-2.5 rounded bg-[#FBFAF5] border border-[#CBCFB9]/70">
                 <div className="flex items-center justify-between text-[11px] mb-1">
-                  <span className="font-bold text-[#0F1913]">{log.userName} ({log.userRole})</span>
+                  <span className="font-bold text-[#0F1913]">{log.userName || log.user || 'User not recorded'} ({log.userRole || log.role || 'Role not recorded'})</span>
                   <span className="text-[#565F52] font-mono text-[10px]">
                     {log.timestamp.slice(11, 19)}
                   </span>
