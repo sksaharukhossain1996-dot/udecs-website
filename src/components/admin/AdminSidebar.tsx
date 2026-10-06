@@ -1,5 +1,5 @@
 import {CUSTOMER_SUPPORT_ENABLED} from '../../customer-stage/featureFlags';
-import React from 'react';
+import React, {useState} from 'react';
 import { useStore } from '../../context/StoreContext';
 import { BrandLogo } from '../common/BrandLogo';
 import {
@@ -20,6 +20,7 @@ import {
   Mail,
   MessageSquare,
   TrendingUp,
+  Truck, PackagePlus, PackageSearch, RefreshCw, Handshake, ContactRound, CalendarClock, NotebookPen, Bot, Activity, Search, ChevronRight, Menu, X,
 } from 'lucide-react';
 
 export type AdminTab =
@@ -49,13 +50,16 @@ interface AdminSidebarProps {
   currentTab: AdminTab;
   onSelectTab: (tab: AdminTab) => void;
   onExitAdmin: () => void;
+  onCloseMenu?:()=>void;
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   currentTab,
   onSelectTab,
   onExitAdmin,
+  onCloseMenu,
 }) => {
+  const [query,setQuery]=useState(''),[mobileOpen,setMobileOpen]=useState(false),[matches,setMatches]=useState<string[]>([]);
   const {
     currentUser,
     logout,
@@ -68,122 +72,48 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 
   const navItems: { id: AdminTab; labelBn: string; labelEn: string; icon: any; roleMin?: string }[] = [
     { id:'erp',labelBn:'ERP - Inventory & Finance',labelEn:'ERP - Inventory & Finance',icon:Boxes,roleMin:'admin'},
-    { id: 'crm', labelBn: 'CRM - গ্রাহক সম্পর্ক', labelEn: 'CRM - Customer Relationships', icon: Users },
+    { id: 'crm', labelBn: 'CRM - গ্রাহক সম্পর্ক', labelEn: 'CRM - Customer Relationships', icon: ContactRound },
     { id: 'overview', labelBn: 'ড্যাশবোর্ড ওভারভিউ', labelEn: 'Executive Dashboard', icon: LayoutDashboard },
     { id: 'website_control', labelBn: 'ওয়েবসাইট সেটিংস ও কন্ট্রোল', labelEn: 'Website Settings & Control', icon: Globe },
     { id: 'whatsapp_automation', labelBn: 'হোয়াটসঅ্যাপ অটোমেশন 🟢', labelEn: 'WhatsApp Automation Hub', icon: MessageSquare },
-    { id: 'rfq', labelBn: 'B2B Wholesale Inquiry', labelEn: 'B2B Wholesale Inquiry', icon: MessageSquare },
-    { id: 'orders', labelBn: 'অর্ডার ও লজিস্টিকস শিপিং', labelEn: 'Orders & Logistics', icon: ShoppingBag },
-    { id: 'product_listing', labelBn: 'প্রোডাক্ট যোগ / ডিলিট', labelEn: 'Product listing', icon: ShoppingBag },
-    { id: 'stock_update', labelBn: 'স্টক আপডেট', labelEn: 'Stock Update', icon: Boxes },
-    { id: 'inventory', labelBn: 'অটোমেটেড ইনভেন্টরি', labelEn: 'Automated Inventory', icon: Boxes },
+    { id: 'rfq', labelBn: 'B2B Wholesale Inquiry', labelEn: 'B2B Wholesale Inquiry', icon: Handshake },
+    { id: 'orders', labelBn: 'অর্ডার ও লজিস্টিকস শিপিং', labelEn: 'Orders & Logistics', icon: Truck },
+    { id: 'product_listing', labelBn: 'প্রোডাক্ট যোগ / ডিলিট', labelEn: 'Product listing', icon: PackagePlus },
+    { id: 'stock_update', labelBn: 'স্টক আপডেট', labelEn: 'Stock Update', icon: RefreshCw },
+    { id: 'inventory', labelBn: 'অটোমেটেড ইনভেন্টরি', labelEn: 'Automated Inventory', icon: PackageSearch },
     { id: 'gst', labelBn: 'জিএসটি রিপোর্ট ও ট্যাক্স', labelEn: 'GST Reports & Filing', icon: FileSpreadsheet },
     { id: 'investors', labelBn: 'বিনিয়োগকারী লিড', labelEn: 'Investor Leads', icon: TrendingUp },
-    { id: 'hr', labelBn: 'কর্মচারী ও স্যালারি স্লিপ', labelEn: 'HR, Attendance & Payroll', icon: Users },
-    { id: 'collaboration', labelBn: 'টিম কোলাবরেশন নোটস', labelEn: 'Live Collaboration', icon: FileEdit },
+    { id: 'hr', labelBn: 'কর্মচারী ও স্যালারি স্লিপ', labelEn: 'HR, Attendance & Payroll', icon: CalendarClock },
+    { id: 'collaboration', labelBn: 'টিম কোলাবরেশন নোটস', labelEn: 'Live Collaboration', icon: NotebookPen },
     { id: 'gmail', labelBn: 'Gmail হাব ও গ্রাহক মেল', labelEn: 'Gmail Workspace Hub', icon: Mail },
     { id: 'notifications', labelBn: 'নোটিফিকেশন ও SMS হাব', labelEn: 'Notifications & SMS', icon: Bell },
-    {id:'ai_agent_hub',labelBn:'AI-Agent Hub',labelEn:'AI-Agent Hub',icon:Shield,roleMin:'admin'},
-    {id:'software_health',labelBn:'Software Health',labelEn:'Software Health',icon:Shield,roleMin:'admin'},
+    {id:'ai_agent_hub',labelBn:'AI-Agent Hub',labelEn:'AI-Agent Hub',icon:Bot,roleMin:'admin'},
+    {id:'software_health',labelBn:'Software Health',labelEn:'Software Health',icon:Activity,roleMin:'admin'},
     { id: 'audit', labelBn: 'সিস্টেম অডিট ট্রেইল লগ', labelEn: 'System Audit Trail', icon: History },
     { id: 'settings', labelBn: 'PayU ও সিস্টেম সেটিংস', labelEn: 'PayU & Settings', icon: Settings },
   ];
 
-  if(CUSTOMER_SUPPORT_ENABLED) navItems.push({id:'customers',labelBn:'Customer portal',labelEn:'Customer portal',icon:Users});
-  return (
-    <aside className="w-64 bg-[#0F1913] text-[#B9BFAE] border-r border-[#CBCFB9]/20 flex flex-col justify-between shrink-0">
-      {/* Brand Header */}
-      <div>
-        <div className="p-4 border-b border-white/10 flex items-center justify-between">
-          <div className="flex flex-col">
-            <BrandLogo size="xs" textColor="text-white" subtextColor="text-[#CC9A2E]" />
-            <p className="text-[10px] text-[#B9BFAE]/80 font-mono mt-1">
-              GSTIN: {company.gstin}
-            </p>
-          </div>
-
-          <button
-            onClick={onExitAdmin}
-            className="p-1.5 rounded hover:bg-white/10 text-[#B9BFAE] hover:text-white"
-            title="Return to Online Store"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* User Card */}
-        {currentUser && (
-          <div className="p-3.5 bg-white/5 border-b border-white/10 flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#3C6656] text-white flex items-center justify-center font-bold text-xs">
-              {currentUser.name.charAt(0)}
-            </div>
-            <div className="min-w-0 flex-1">
-              <span className="text-xs font-bold text-white block truncate">
-                {currentUser.name}
-              </span>
-              <div className="flex items-center gap-1.5 text-[10px] text-[#CC9A2E] font-mono">
-                <Shield className="w-3 h-3" />
-                <span className="uppercase">{currentUser.role}</span>
-                {isFirebaseConnected && (
-                  <span className="text-[9px] text-emerald-400 bg-emerald-950/60 px-1 py-0.5 rounded border border-emerald-800">
-                    Live
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Navigation List */}
-        <nav className="p-2 space-y-1 overflow-y-auto max-h-[calc(100vh-250px)]">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentTab === item.id;
-            return (
-              <button
-                key={item.id}
-                aria-current={isActive ? 'page' : undefined}
-                onClick={() => onSelectTab(item.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded text-xs font-medium transition-all ${
-                  isActive
-                    ? 'bg-[#182620] text-white font-bold border-l-3 border-[#CC9A2E]'
-                    : 'text-[#B9BFAE] hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-[#CC9A2E]' : 'text-[#8C9482]'}`} />
-                <span className="truncate">
-                  {language === 'bn' ? item.labelBn : item.labelEn}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Footer / Logout */}
-      <div className="p-3 border-t border-white/10 space-y-2">
-        <button
-          onClick={onExitAdmin}
-          className="w-full flex items-center justify-center gap-2 text-xs text-[#B9BFAE] hover:text-white bg-white/5 hover:bg-white/10 py-2 rounded transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>{language === 'bn' ? 'স্টোরে ফিরে যান' : 'Back to Storefront'}</span>
-        </button>
-
-        <button
-          onClick={() => {
-            if (firebaseUser) {
-              signOutFirebaseAuth();
-            } else {
-              logout();
-            }
-          }}
-          className="w-full flex items-center justify-center gap-2 text-xs text-red-300 hover:text-red-200 bg-red-950/40 hover:bg-red-900/60 py-2 rounded transition-colors"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          <span>{language === 'bn' ? 'লগআউট' : 'Sign Out'}</span>
-        </button>
-      </div>
+  if(CUSTOMER_SUPPORT_ENABLED) navItems.push({id:'customers',labelBn:'Customer portal',labelEn:'Customer portal',icon:UserCheck});
+  const groups=[{label:'Business',ids:['erp','crm','overview']},{label:'Commerce',ids:['website_control','whatsapp_automation','rfq','orders','product_listing','stock_update','inventory']},{label:'Finance & Team',ids:['gst','investors','hr','collaboration']},{label:'Workspace & System',ids:['gmail','notifications','ai_agent_hub','software_health','audit','settings','customers']}];
+  const findLoaded=()=>{const q=query.trim().toLowerCase();setMatches(q?Array.from(document.querySelectorAll('#udecs-current-view tr, #udecs-current-view article, .admin-content tr, .admin-content article')).filter((el,i,a)=>a.indexOf(el)===i&&(el.textContent||'').toLowerCase().includes(q)).slice(0,20).map(el=>(el.textContent||'').trim().replace(/\s+/g,' ').slice(0,240)):[]);};
+  const select=(tab:AdminTab)=>{setMatches([]);onSelectTab(tab);setMobileOpen(false);};
+  return (<>
+    <style>{NAV_STYLE}</style>
+    {!onCloseMenu&&<button className="workspace-menu-toggle" onClick={()=>setMobileOpen(!mobileOpen)} aria-expanded={mobileOpen}><Menu size={18}/> All tabs</button>}
+    {mobileOpen&&<button className="workspace-backdrop" aria-label="Close tabs menu" onClick={()=>setMobileOpen(false)}/>}
+    <aside className={`udecs-workspace ${mobileOpen?'workspace-open':''}`}>
+      <div className="workspace-brand"><div>
+        {(window as any).__UDECS_DESKTOP_ENTRY__?<div className="workspace-logo"><img src="./udecs-menu-owner-logo.jpg" alt="UDECS original 3D logo"/><div><strong>UDECS Management</strong><small>All business tabs</small></div></div>:<BrandLogo size="xs" textColor="text-[#183758]" subtextColor="text-[#e98b22]"/>}
+        <p>GSTIN: {company.gstin}</p></div><button className="workspace-close" aria-label="Close all tabs menu" onClick={()=>{setMobileOpen(false);onCloseMenu?.();}}><X size={18}/></button></div>
+      {currentUser&&<div className="workspace-owner"><div className="workspace-avatar">{currentUser.name.charAt(0)}</div><div><strong>{currentUser.name}</strong><small><Shield size={11}/> {currentUser.role}</small></div></div>}
+      <div className="workspace-search"><label><Search size={17}/><input type="search" aria-label="Search management" placeholder="Search tabs or loaded view..." value={query} onChange={e=>{setQuery(e.target.value);setMatches([]);}}/></label>{query.trim()&&<><button className="workspace-find" onClick={findLoaded}>Find in loaded view</button><small>Only loaded rows/cards. Other pages and attachments are not searched.</small></>}{matches.length>0&&<div className="workspace-results" role="status">{matches.length} matches (up to 20){matches.map((t,i)=><p key={i}>{t}</p>)}</div>}</div>
+      <nav aria-label="Business sections">{groups.map(group=>{const items=navItems.filter(item=>group.ids.includes(item.id)&&(!query.trim()||item.labelEn.toLowerCase().includes(query.trim().toLowerCase())||item.labelBn.includes(query.trim())));return items.length>0&&<section key={group.label}><h2>{group.label}</h2>{items.map(item=>{const Icon=item.icon;return <button key={item.id} onClick={()=>select(item.id)} aria-current={currentTab===item.id?'page':undefined}><span className="workspace-icon"><Icon size={19} strokeWidth={1.8}/></span><span>{language==='bn'?item.labelBn:item.labelEn}</span><ChevronRight size={13} className="workspace-chevron"/></button>;})}</section>;})}{query.trim()&&!navItems.some(item=>item.labelEn.toLowerCase().includes(query.trim().toLowerCase())||item.labelBn.includes(query.trim()))&&<p className="workspace-empty">No matching tab. You can search text in the loaded view.</p>}</nav>
+      <div className="workspace-footer"><button onClick={onExitAdmin}><ArrowLeft size={15}/>{language==='bn'?'স্টোরে ফিরে যান':'Back to Storefront'}</button><button onClick={()=>{if(firebaseUser)signOutFirebaseAuth();else logout();}}><LogOut size={15}/>{language==='bn'?'লগআউট':'Sign Out'}</button></div>
     </aside>
-  );
+  </>);
 };
+const NAV_STYLE=`
+.premium-admin aside.udecs-workspace{width:300px!important;max-height:none!important;background:#f5f8fc!important;color:#183758!important;display:flex;flex-direction:column;border-right:1px solid #dce5ef;flex-shrink:0;font-family:Arial,sans-serif;overflow:hidden}
+.udecs-workspace .workspace-brand{display:flex!important;padding:17px 16px 10px;align-items:flex-start;gap:5px}.workspace-brand>div{flex:1;min-width:0}.workspace-brand p{font-size:9px;margin:6px 0;color:#73869d!important}.workspace-logo{display:flex;gap:10px;align-items:center}.workspace-logo img{width:52px;height:52px;border-radius:12px}.workspace-logo strong{font-size:17px}.workspace-logo small{display:block;margin-top:5px;font-size:11px;color:#71879d}.workspace-close{border:0;background:none;color:#47617d;min-width:30px}.workspace-owner{display:flex!important;align-items:center;gap:10px;background:white;padding:12px;margin:0 13px;border-radius:12px}.workspace-avatar{width:34px;height:34px;border-radius:50%;background:#284c62;color:white;display:grid;place-items:center;flex-shrink:0}.workspace-owner strong{display:block;font-size:11px;overflow-wrap:anywhere}.workspace-owner small{display:flex;gap:4px;align-items:center;font-size:10px;margin-top:5px;color:#71849b;text-transform:uppercase}.workspace-search{padding:13px;display:block!important}.workspace-search label{display:flex;gap:8px;align-items:center;border:1px solid #d4dfed;background:white;padding:0 10px;border-radius:10px}.workspace-search input{width:100%;min-width:0;border:0!important;background:transparent;font-size:12px;outline:none;color:#183758;min-height:40px!important}.workspace-search small{display:block;font-size:10px;line-height:1.5;color:#71849b;margin-top:5px}.workspace-find{border:1px solid #d4dfed;background:white;color:#183758;border-radius:8px;padding:6px;font-size:11px;margin-top:6px}.workspace-results{max-height:160px;overflow:auto;font-size:11px}.workspace-results p{padding:8px;background:white;border-radius:8px}.premium-admin .udecs-workspace nav{display:block!important;overflow-y:auto!important;overflow-x:hidden;flex:1;min-height:0;max-height:none!important;padding:0 13px 14px!important}.udecs-workspace nav section{background:white;border:1px solid #dce5ef;border-radius:13px;margin-bottom:12px;padding:5px}.udecs-workspace nav h2{font-size:10px!important;letter-spacing:1px;color:#7a8ba0!important;text-transform:uppercase;margin:10px 9px}.premium-admin .udecs-workspace nav button{display:flex;align-items:center;width:100%!important;gap:10px;border:0!important;background:transparent;color:#193959!important;border-radius:9px;font-size:12px;min-height:44px;white-space:normal;text-align:left;padding:7px;box-shadow:none}.udecs-workspace nav button>span:nth-child(2){flex:1}.workspace-icon{width:29px;height:29px;border-radius:8px;background:#edf3f9;display:grid;place-items:center;flex-shrink:0}.premium-admin .udecs-workspace nav button svg{color:#456887!important}.workspace-chevron{opacity:.5}.premium-admin .udecs-workspace nav button[aria-current=page]{background:#e7f0f7!important;border-left:3px solid #f59625!important}.premium-admin .udecs-workspace nav button[aria-current=page] .workspace-icon{background:#294e6f}.premium-admin .udecs-workspace nav button[aria-current=page] .workspace-icon svg{color:#ffa638!important}.workspace-empty{font-size:12px;line-height:1.6;padding:10px}.udecs-workspace .workspace-footer{display:flex!important;gap:6px;padding:12px;border-top:1px solid #dce5ef;background:#f5f8fc}.workspace-footer button{display:flex!important;align-items:center;justify-content:center;gap:5px;background:white;border:1px solid #d4dfed;border-radius:9px;color:#244663;padding:8px;font-size:10px;flex:1}.workspace-footer button:last-child{color:#a24a53}.workspace-menu-toggle,.workspace-backdrop{display:none}.workspace-menu-toggle{align-items:center;gap:8px;padding:9px 12px;border:0;border-bottom:1px solid #dce5ef;background:#f5f8fc;color:#183758;flex-shrink:0;text-align:left}.phone-management.phone-menu-open aside.udecs-workspace{width:min(92vw,350px)!important;background:#f5f8fc!important;box-shadow:16px 0 45px #030c1855}.phone-management.phone-menu-open aside.udecs-workspace .workspace-brand,.phone-management.phone-menu-open aside.udecs-workspace .workspace-owner,.phone-management.phone-menu-open aside.udecs-workspace .workspace-search{display:flex!important}.phone-management.phone-menu-open aside.udecs-workspace .workspace-search{display:block!important}.phone-management.phone-menu-open aside.udecs-workspace nav{display:block!important}.phone-management.phone-menu-open aside.udecs-workspace .workspace-footer{display:flex!important}
+@media(min-width:761px){.workspace-close{display:none}}@media(max-width:760px){.workspace-menu-toggle{display:flex}.premium-admin:not(.phone-management) aside.udecs-workspace{display:none!important}.premium-admin:not(.phone-management) aside.udecs-workspace.workspace-open{display:flex!important;position:absolute;top:0;bottom:0;left:0;width:min(92vw,350px)!important;z-index:95}.workspace-backdrop{display:block;position:absolute;inset:0;background:#07111bbb;border:0;z-index:90}}
+`;
