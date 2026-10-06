@@ -131,7 +131,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
                   className="hover:text-white transition-colors flex items-center gap-1.5"
                 >
                   <Truck className="w-3.5 h-3.5 text-[#3C6656]" />
-                  <span>Track Courier Shipment</span>
+                  <span>Order status support</span>
                 </button>
               </li>
             </ul>
@@ -145,19 +145,19 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
             <ul className="space-y-2 text-xs">
               <li className="flex items-center gap-1.5">
                 <CreditCard className="w-3.5 h-3.5 text-[#CC9A2E]" />
-                <span>PayU India Gateway (UPI, Cards, NetBanking)</span>
+                <span>UPI payment details shared with order confirmation</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <Truck className="w-3.5 h-3.5 text-[#3C6656]" />
-                <span>Delhivery, Shiprocket & Blue Dart Surface</span>
+                <span>Shipping availability and charges confirmed before dispatch</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#CC9A2E]" />
-                <span>100% Tax Compliant GST Rule 46 Invoices</span>
+                <span>GSTIN: 19AODPH1519N1ZS · Invoice details confirmed with your order</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <Lock className="w-3.5 h-3.5 text-[#3C6656]" />
-                <span>256-Bit SSL Encrypted Transactions</span>
+                <span>Secure HTTPS connection</span>
               </li>
             </ul>
 
@@ -219,9 +219,9 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
           <div className="flex items-center gap-4">
             <span className="font-mono">udecs.store</span>
             <span>·</span>
-            <span>PayU & UPI · COD paused</span>
+            <span>UPI payment details · COD paused</span>
             <span>·</span>
-            <span>WhatsApp AI Customer Care</span>
+            <span>WhatsApp customer support</span>
           </div>
         </div>
       </div>
