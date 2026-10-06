@@ -1,3 +1,4 @@
+import{printExport}from'../../lib/exportFile';
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Employee, SalarySlip } from '../../types';
@@ -351,7 +352,7 @@ export const LegacyAdminHR: React.FC = () => {
             <div className="space-y-4">
               <div className="flex justify-end no-print">
                 <button
-                  onClick={() => window.print()}
+                  onClick={() => void printExport().catch(e=>alert(e.message))}
                   className="bg-[#182620] hover:bg-[#0F1913] text-white px-4 py-2 rounded text-xs font-bold flex items-center gap-2"
                 >
                   <Printer className="w-4 h-4 text-[#CC9A2E]" />
