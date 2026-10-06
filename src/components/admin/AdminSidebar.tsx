@@ -40,6 +40,7 @@ export type AdminTab =
   | 'collaboration'
   | 'notifications'
   | 'gmail'
+  | 'ai_agent_hub'
   | 'software_health'
   | 'audit'
   | 'settings';
@@ -82,6 +83,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'collaboration', labelBn: 'টিম কোলাবরেশন নোটস', labelEn: 'Live Collaboration', icon: FileEdit },
     { id: 'gmail', labelBn: 'Gmail হাব ও গ্রাহক মেল', labelEn: 'Gmail Workspace Hub', icon: Mail },
     { id: 'notifications', labelBn: 'নোটিফিকেশন ও SMS হাব', labelEn: 'Notifications & SMS', icon: Bell },
+    {id:'ai_agent_hub',labelBn:'AI-Agent Hub',labelEn:'AI-Agent Hub',icon:Shield,roleMin:'admin'},
     {id:'software_health',labelBn:'Software Health',labelEn:'Software Health',icon:Shield,roleMin:'admin'},
     { id: 'audit', labelBn: 'সিস্টেম অডিট ট্রেইল লগ', labelEn: 'System Audit Trail', icon: History },
     { id: 'settings', labelBn: 'PayU ও সিস্টেম সেটিংস', labelEn: 'PayU & Settings', icon: Settings },
