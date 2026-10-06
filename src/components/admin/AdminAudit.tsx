@@ -1,3 +1,4 @@
+import{saveExport}from'../../lib/exportFile';
 import {csvText,auditIp} from '../../lib/csvExport';
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
@@ -35,7 +36,7 @@ export const AdminAudit: React.FC = () => {
     return matchesSearch && matchesModule && (showExamples || !isExample(log));
   });
 
-  const exportAuditCsv = () => {
+  const exportAuditCsv = async () => {
     const headers = ['Timestamp (raw, original timezone)', 'User', 'Role', 'Module', 'Action', 'Details', 'IP Address', 'Evidence status'];
     const rows = filteredLogs.map((l) => [
       l.timestamp,
@@ -47,14 +48,7 @@ export const AdminAudit: React.FC = () => {
       auditIp(l.ipAddress),
       isExample(l)?'Example, not a business event':'Client record; not independently verified',
     ]);
-    const encodedUri=URL.createObjectURL(new Blob([csvText([headers,...rows])],{type:'text/csv;charset=utf-8'}));
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `udecs_audit_logs_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(encodedUri);
+    try{await saveExport(new Blob([csvText([headers,...rows])],{type:'text/csv;charset=utf-8'}),`udecs_audit_logs_${Date.now()}.csv`);}catch(e){alert(e instanceof Error?e.message:'CSV export failed.');}
   };
 
   return (
