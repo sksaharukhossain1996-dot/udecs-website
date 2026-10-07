@@ -162,13 +162,13 @@ export const AdminGmailHub: React.FC = () => {
   // Compose templates
   const applyTemplate = (type: 'dispatch' | 'wholesale' | 'invoice') => {
     if (type === 'dispatch') {
-      setComposeSubject(`[UDECS] Order Dispatched: Tracking & Delivery Details`);
+      setComposeSubject(`[UDECS] Order update - verify details before sending`);
       setComposeBody(
-        `Dear Customer,\n\nWe are pleased to inform you that your order from UDECS (Unick Digital E-Commerce Solutions) has been processed and handed over to our courier partner.\n\n` +
-        `Courier Partner: Delhivery Express\n` +
-        `Air Waybill (AWB): DLHV-${Math.floor(10000000 + Math.random() * 90000000)}\n` +
-        `Estimated Delivery: 2-3 Business Days\n\n` +
-        `Track your consignment directly or reply to this email for assistance.\n\n` +
+        `Dear Customer,\n\n[Add the verified order ID and current status before sending.]\n\n` +
+        `Courier Partner: Not verified - add only after checking the actual order\n` +
+        `Air Waybill (AWB): [Not verified - copy only from the actual shipment]\n` +
+        `Estimated Delivery: [Not verified - add only from the courier]\n\n` +
+        `[Add a verified tracking link only if a shipment exists.] Reply to this email for assistance.\n\n` +
         `Warm regards,\n` +
         `UDECS Order Fulfillment Team\n` +
         `Pratappur, Panskura, West Bengal 721152\n` +
@@ -181,28 +181,28 @@ export const AdminGmailHub: React.FC = () => {
         `Business Details:\n` +
         `• Seller: ${company.legalName}\n` +
         `• GSTIN: ${company.gstin} (West Bengal)\n` +
-        `• Payment Terms: Advance / Verified Net 15 for registered retailers\n` +
-        `• Delivery: Doorstep logistics across all districts of West Bengal & PAN-India\n\n` +
-        `Attached / Included below are the bulk rate slabs for 50+, 200+, and 500+ unit orders.\n\n` +
+        `• Payment Terms: [Confirm the agreed terms for this quotation]\n` +
+        `• Delivery: [Confirm serviceable destination and shipping charges]\n\n` +
+        `[Add reviewed quantities, prices and the actual quotation attachment before sending.]\n\n` +
         `Please let us know your required quantities so we can issue a formal Proforma Invoice.\n\n` +
         `Sincerely,\n` +
         `SK Saharuk Hossain\n` +
-        `Founder, UDECS (udecs.in)\n` +
-        `Contact: +91-7319190514`
+        `Founder, UDECS (udecs.store)\n` +
+        `Contact: ${company.whatsapp}`
       );
     } else if (type === 'invoice') {
-      setComposeSubject(`[UDECS] Tax Invoice & GST Receipt: Order Confirmation`);
+      setComposeSubject(`[UDECS] Invoice enquiry - verify document and payment`);
       setComposeBody(
         `Dear Valued Customer,\n\n` +
-        `Thank you for shopping with UDECS. Your Tax Invoice for your recent purchase is ready.\n\n` +
+        `Thank you for shopping with UDECS. [Add the verified order ID and invoice reference; attach the reviewed document if available.]\n\n` +
         `Invoice Summary:\n` +
         `• Supplier: UDECS (GSTIN: ${company.gstin})\n` +
         `• Registered Address: ${company.address}\n` +
-        `• Status: Paid in Full\n\n` +
-        `A copy has been recorded in our GST compliance filings (GSTR-1). Please retain this email for warranty and record-keeping purposes.\n\n` +
+        `• Payment status: [Verify from the actual payment record]\n\n` +
+        `[GST filing status is not verified here. Do not claim a filing without evidence.] Please retain the reviewed document for your records.\n\n` +
         `Warm regards,\n` +
         `Accounts & Billing Department\n` +
-        `UDECS — Unick Digital E-Commerce Solutions`
+        `UDECS - Unick Digital E-Commerce Solutions`
       );
     }
   };
@@ -379,7 +379,7 @@ export const AdminGmailHub: React.FC = () => {
               <span>Connect Official UDECS Gmail Account ({company.emailGmail})</span>
             </div>
             <p className="text-xs text-amber-800 leading-relaxed">
-              Enabling Gmail allows the UDECS Business Suite to read client inquiries, check wholesale order correspondence, send courier dispatch notices with Delhivery tracking, and distribute GST tax invoices directly to buyers.
+              Gmail access is separate Google consent for this browser session. Review the mailbox, recipient and message before sending. Courier, tracking and invoice facts must be verified from the actual order; connecting Gmail does not create them.
             </p>
             <div className="flex items-center gap-4 pt-2 text-[11px] text-amber-900 font-mono">
               <span className="flex items-center gap-1">
