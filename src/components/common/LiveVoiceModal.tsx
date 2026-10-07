@@ -39,6 +39,7 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
   >('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const mutedRef = useRef(false);
   const [selectedVoice, setSelectedVoice] = useState<'Zephyr' | 'Kore' | 'Puck' | 'Charon' | 'Fenrir'>('Zephyr');
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [textInput, setTextInput] = useState('');
@@ -211,7 +212,11 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log('[Voice Modal] Connected to Live WebSocket server');
+        console.log('[Voice Modal] Transport open; waiting for AI readiness');
+      };
+
+      const beginReadySession = () => {
+        if (wsRef.current !== ws || processorRef.current) return;
         setStatus('connected');
         setMessages((prev) => [
           ...prev,
@@ -238,7 +243,7 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
           processorRef.current = processor;
 
           processor.onaudioprocess = (e) => {
-            if (isMuted) {
+            if (mutedRef.current) {
               setUserAudioLevel(0);
               return;
             }
@@ -269,10 +274,12 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          if (data.type === 'ready') { beginReadySession(); return; }
 
           if (data.type === 'error' || data.error) {
             console.error('[Voice Modal] Server reported error:', data.error);
             setErrorMessage(data.error || 'Live API connection error');
+            stopVoiceSession(false);
             setStatus('error');
             return;
           }
@@ -319,14 +326,15 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
       ws.onerror = (e) => {
         console.error('[Voice Modal] WebSocket error:', e);
         setErrorMessage('Could not establish WebSocket connection to Live API.');
+        stopVoiceSession(false);
         setStatus('error');
       };
 
       ws.onclose = () => {
         console.log('[Voice Modal] WebSocket closed');
-        if (status !== 'error') {
-          setStatus('idle');
-        }
+        if (wsRef.current !== ws) return;
+        stopVoiceSession(false);
+        setStatus(previous => previous === 'error' ? 'error' : 'idle');
       };
     } catch (err: any) {
       console.error('[Voice Modal] Failed to start voice session:', err);
@@ -335,6 +343,7 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
           ? 'Microphone permission was denied. Please allow microphone access to use voice conversation.'
           : err?.message || 'Failed to start Live Voice session'
       );
+      stopVoiceSession(false);
       setStatus('error');
     }
   };
@@ -345,6 +354,7 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
 
     if (processorRef.current) {
       try {
+        processorRef.current.onaudioprocess = null;
         processorRef.current.disconnect();
       } catch (e) {
         // Ignore
@@ -381,7 +391,9 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
 
     if (wsRef.current) {
       try {
-        wsRef.current.close();
+        const socket = wsRef.current;
+        wsRef.current = null;
+        socket.close();
       } catch (e) {
         // Ignore
       }
@@ -621,7 +633,7 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
           {/* Quick Voice Controls */}
           <div className="flex items-center gap-3 mt-4">
             <button
-              onClick={() => setIsMuted(!isMuted)}
+              onClick={() => { mutedRef.current = !mutedRef.current; setIsMuted(mutedRef.current); }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
                 isMuted
                   ? 'bg-red-800 hover:bg-red-700 text-white'
