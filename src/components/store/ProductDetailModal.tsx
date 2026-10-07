@@ -178,7 +178,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               )}
             </div>
 
-            {product.shippingMode === 'quote' && <p className="text-xs text-[#565F52] mb-3">Minimum order: {wholesaleMinimumQty(product)} pcs per product. Price is per piece, GST extra. Shipping quoted separately before payment. No carton piece-count assumed.</p>}
+            {product.shippingMode === 'quote' && <p className="text-xs text-[#565F52] mb-3">Minimum order: {wholesaleMinimumQty(product)} pcs per product. Price is per piece, GST {product.supplier==='rajkot'&&product.gstExtra?'extra':'included'}. Shipping quoted separately before payment. No carton piece-count assumed.</p>}
             {/* Quantity Selector */}
             <div className="flex flex-wrap items-center gap-3 mb-6">
               <span className="text-xs font-semibold text-[#0F1913]">
