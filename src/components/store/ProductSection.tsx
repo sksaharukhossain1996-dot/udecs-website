@@ -259,7 +259,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                           {Math.round((1 - product.price / product.originalPrice) * 100)}% OFF
                         </span>
                       )}
-                      {!(product as any).gatewayVerification&&product.wholesalePrice && (
+                      {!(product as any).gatewayVerification&&product.wholesalePrice && (product.supplier==='rajkot'||product.minWholesaleQty>1) && (
                         <div className="text-[10px] text-[#A87C1F] font-medium leading-none mt-1">
                           {language === 'bn' ? 'পাইকারি:' : 'Wholesale:'} {product.supplier === 'rajkot' ? new Intl.NumberFormat('en-IN', {style:'currency',currency:'INR',minimumFractionDigits:2}).format(product.wholesalePrice) : formatPrice(product.wholesalePrice)} ({product.supplier === 'rajkot' ? `Min ${wholesaleMinimumQty(product)} pcs / product` : product.minimumOrderQty ? `Min ${product.minimumOrderQty} pcs` : `${product.minWholesaleQty}+`})
                         </div>
