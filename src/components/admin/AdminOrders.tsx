@@ -287,7 +287,7 @@ export const AdminOrders: React.FC = () => {
                     </td>
 
                     <td className="p-3 text-right space-x-1.5 whitespace-nowrap">
-                      <a
+                      {!isDemoOrTestOrder(order) ? <a
                         href={generateWhatsAppLink(
                           order.customerPhone,
                           order.orderStatus === 'delivered'
@@ -302,7 +302,7 @@ export const AdminOrders: React.FC = () => {
                         title="Send WhatsApp Update to Customer"
                       >
                         <MessageSquare className="w-3.5 h-3.5 fill-current" />
-                      </a>
+                      </a> : <span className="text-xs text-[#565F52]">Test order: WhatsApp disabled</span>}
 
                       <button
                         onClick={() => setShowShippingLabel(order)}
