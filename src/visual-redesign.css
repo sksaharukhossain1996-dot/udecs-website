@@ -120,3 +120,6 @@
   background:rgba(255,255,255,.42)!important;box-shadow:none!important;
  }
 }
+
+.management-back{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;min-width:80px;padding:8px 12px;border:1px solid #ba934d;border-radius:9px;background:#fffdf7;color:#17385b;font-size:14px;font-weight:700;flex-shrink:0;cursor:pointer}.management-back:hover{background:#f8edd9}.management-back:focus-visible{outline:3px solid #2770a7;outline-offset:2px}.management-back:disabled{opacity:.5;cursor:default}@media(max-width:640px){.premium-admin .admin-topbar{flex-wrap:wrap;gap:6px}.premium-admin .admin-topbar>div{max-width:100%}.premium-admin .admin-topbar>div:last-child{margin-left:auto}.premium-admin .admin-topbar button[title='Click to view Live Domain Activation & DNS Status']{display:none}}
+.premium-admin .admin-topbar button.management-back{min-height:44px!important;padding:8px 12px!important;font-size:14px!important}
