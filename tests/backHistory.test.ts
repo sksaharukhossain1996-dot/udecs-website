@@ -1,0 +1,3 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {visit,previous} from '../src/navigation/backHistory';
+test('tracks previous views and does not add duplicate clicks',()=>{const a={current:'overview',history:[] as string[]};const b=visit(a,'orders');assert.deepEqual(visit(b,'orders'),b);const c=visit(b,'hr');assert.deepEqual(previous(c,'overview'),b);assert.deepEqual(previous(b,'overview'),a);assert.deepEqual(previous(a,'overview'),a)});
+test('bounds navigation history to 100 entries',()=>{let a={current:'overview',history:[] as string[]};for(let i=0;i<150;i++)a=visit(a,'view-'+i);assert.equal(a.history.length,100);assert.equal(previous(a,'overview').current,'view-148')});
