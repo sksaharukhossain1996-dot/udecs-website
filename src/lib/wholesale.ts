@@ -13,7 +13,11 @@ export const quoteTotals = (items:{price:number;qty:number;rate:number}[]) => {
 };
 
 // Presentation only: retain supplier/catalog data for inventory and sourcing.
-export const customerProductText = (product: {supplier?:string}, text?:string) =>
- product.supplier === 'rajkot' ? (text || '').replace(/ali\s*rajkot|rajkot/gi, 'UDECS') : (text || '');
+export const customerProductText = (product: {supplier?:string}, text?:string) => {
+ if (product.supplier !== 'rajkot') return text || '';
+ return (text || '')
+   .replace(/ali\s*rajkot|rajkot/gi, 'UDECS')
+   .replace(/(?:manufacturer(?:\s+and\s+wholesaler)?|manufacturing|kitchenware\s+wholesaler)\s+in\s+UDECS/gi, 'Wholesale by UDECS');
+};
 export const customerProductTitle = (product: {supplier?:string;name:string;nameBn?:string}, language='en') =>
  customerProductText(product, language === 'bn' ? product.nameBn || product.name : product.name);
