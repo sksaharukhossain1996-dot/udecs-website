@@ -8,6 +8,7 @@ import { ProductIcon } from '../common/ProductIcon';
 import { Plus, Check, Star, Info, ShieldCheck, Tag, Box, ArrowRight } from 'lucide-react';
 
 interface ProductSectionProps {
+  b2bOnly?: boolean;
   selectedCategory: string;
   onSelectCategory: (cat: any) => void;
   onQuickBuy: (product: Product) => void;
@@ -16,6 +17,7 @@ interface ProductSectionProps {
 
 export const ProductSection: React.FC<ProductSectionProps> = ({
   selectedCategory,
+  b2bOnly = false,
   onSelectCategory,
   onQuickBuy,
   onOpenProductModal,
@@ -101,6 +103,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
           </div>
         </div>
 
+        {!b2bOnly && <>
         {/* Supplier-only B2B view, no catalog mutations */}
         <div className="mb-4"><button onClick={() => onSelectCategory('rajkot')} aria-pressed={selectedCategory === 'rajkot'} className={`px-4 py-3 rounded-lg text-sm font-bold border ${selectedCategory === 'rajkot' ? 'bg-[#0F1913] text-white' : 'bg-[#FBFAF5] text-[#182620] border-[#CBCFB9]'}`}>UDECS B2B Wholesale</button></div>
         {/* Category Tabs */}
@@ -157,6 +160,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
           </button>
         </div>
 
+        </>}
         {/* Product Cards Grid */}
         {filteredTotal === 0 && !pageBusy && !catalogError && !pageError ? (
           <div className="text-center py-16 bg-[#FBFAF5] border border-dashed border-[#CBCFB9] rounded p-8">
@@ -166,7 +170,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
             <button
               onClick={() => {
                 setSearchQuery('');
-                onSelectCategory('all');
+                onSelectCategory(b2bOnly ? 'rajkot' : 'all');
               }}
               className="mt-3 text-xs text-[#A87C1F] font-semibold underline"
             >
