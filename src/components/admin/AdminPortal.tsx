@@ -1,3 +1,5 @@
+import {ManagementBackContext, BackButton, type LocalBack} from '../../navigation/ManagementBack';
+import {visit,previous} from '../../navigation/backHistory';
 import {AdminAgentHub} from './AdminAgentHub';
 import {AdminSoftwareHealth} from './AdminSoftwareHealth';
 import { googleSignInHelp, requiresExternalGoogleBrowser, STAFF_SIGN_IN_URL } from '../../firebase/googleSignInEnvironment';
@@ -6,7 +8,7 @@ import {CUSTOMER_SUPPORT_ENABLED} from '../../customer-stage/featureFlags';
 import {CustomerPortalTab} from '../../customer-stage/CustomerPortalTab';
 import {AdminCRM} from '../../business/AdminCRM';
 import '../../business/business.css';
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { AdminSidebar, AdminTab } from './AdminSidebar';
 import { AdminOverview } from './AdminOverview';
@@ -52,7 +54,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
     signInWithGoogleAuth,
     signOutFirebaseAuth,
   } = useStore();
-  const [currentTab, setCurrentTab] = useState<AdminTab>('overview');
+  const [navigation, setNavigation] = useState({current: 'overview' as AdminTab, history: [] as AdminTab[]});
+  const currentTab = navigation.current;
+  const [localBack, setLocalBack] = useState<LocalBack[]>([]);
+  const dirty = useRef(false);
+  const registerBack = useCallback((entry: LocalBack) => { setLocalBack(x => [...x, entry]); return () => setLocalBack(x => x.filter(y => y !== entry)); }, []);
+  const allowLeave = () => !dirty.current || window.confirm('Leave this page? Unsaved changes will not be saved.');
+  const setCurrentTab = (tab: AdminTab) => { if(tab === currentTab || !allowLeave()) return; dirty.current = false; setNavigation(x => visit(x,tab)); };
+  const goBack = () => { if(!allowLeave()) return; if(localBack.length) { localBack.at(-1)!.run(); return; } dirty.current=false; setNavigation(x => previous(x,'overview')); };
+
 
   const [loginError, setLoginError] = useState('');
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
@@ -85,6 +95,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
             ✕
           </button>
 
+          <BackButton onClick={onClose} label="Back to storefront"/>
           <div className="text-center mb-6">
             <div className="w-12 h-12 rounded-full bg-[#182620] text-[#CC9A2E] flex items-center justify-center mx-auto mb-3 shadow-md border border-[#CC9A2E]/30">
               <Lock className="w-6 h-6" />
@@ -154,12 +165,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
 
   // Logged-in full ERP View
   return (
-    <div className="premium-admin fixed inset-0 z-50 bg-[#F4F6EE] flex overflow-hidden animate-fadeIn">
+    <ManagementBackContext.Provider value={registerBack}><div className="premium-admin fixed inset-0 z-50 bg-[#F4F6EE] flex overflow-hidden animate-fadeIn">
       {/* Sidebar */}
       <AdminSidebar
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
-        onExitAdmin={onClose}
+        onExitAdmin={() => { if(allowLeave()) onClose(); }}
       />
 
       {/* Main Content Area with Executive Top Bar */}
@@ -167,7 +178,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         {/* Executive Top Navigation Bar */}
         <header className="admin-topbar bg-white border-b border-[#CBCFB9] px-4 sm:px-6 py-2.5 flex items-center justify-between shrink-0 shadow-xs gap-3">
           {/* Left: Domain Indicator & Tab Shortcuts */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0"><BackButton onClick={goBack} label={localBack.at(-1)?.label || (navigation.history.length ? 'Back to previous page' : 'Back to Dashboard')}/>
             <button
               onClick={() => setCurrentTab('website_control')}
               className="flex items-center gap-1.5 bg-[#E4E8D9] hover:bg-[#d8dcce] px-2.5 py-1 rounded border border-[#CBCFB9] text-xs transition-colors cursor-pointer group"
@@ -225,7 +236,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
             </div>
 
             <button
-              onClick={onClose}
+              onClick={() => { if(allowLeave()) onClose(); }}
               className="text-xs text-[#565F52] hover:text-[#0F1913] p-1.5 rounded hover:bg-slate-100 flex items-center gap-1"
               title="Return to Storefront"
             >
@@ -236,7 +247,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         </header>
 
         {/* Main Content Area */}
-        <main className="admin-content flex-1 overflow-y-auto relative"><style>{`.portal-watermark{position:sticky;top:0;height:0;width:100%;z-index:20;pointer-events:none;user-select:none}.portal-watermark img{position:absolute;top:18vh;right:8%;width:min(54vw,520px);height:auto;opacity:.055;pointer-events:none}@media(max-width:640px){.portal-watermark img{top:24vh;right:5%;width:90%;opacity:.045}}@media print{.portal-watermark{display:none}}`}</style><div aria-hidden="true" className="portal-watermark"><img src="/UDECS_Logo_Premium_Transparent.png" alt="" draggable={false}/></div><div className="admin-module">
+        <main className="admin-content flex-1 overflow-y-auto relative"><style>{`.portal-watermark{position:sticky;top:0;height:0;width:100%;z-index:20;pointer-events:none;user-select:none}.portal-watermark img{position:absolute;top:18vh;right:8%;width:min(54vw,520px);height:auto;opacity:.055;pointer-events:none}@media(max-width:640px){.portal-watermark img{top:24vh;right:5%;width:90%;opacity:.045}}@media print{.portal-watermark{display:none}}`}</style><div aria-hidden="true" className="portal-watermark"><img src="/UDECS_Logo_Premium_Transparent.png" alt="" draggable={false}/></div><div className="admin-module" onChangeCapture={e => { const target = e.target as HTMLElement; if(target.closest('form')) dirty.current=true; }}>
           {currentTab === 'overview' && (
             <AdminOverview onNavigate={(tab) => setCurrentTab(tab)} />
           )}
@@ -262,6 +273,6 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           {currentTab === 'settings' && <AdminSettings />}
         </div></main>
       </div>
-    </div>
+    </div></ManagementBackContext.Provider>
   );
 };
