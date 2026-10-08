@@ -4,7 +4,7 @@ import { saveRfq } from '../../firebase/rfqService';
 import { useStore } from '../../context/StoreContext';
 import { Box, ShieldCheck, Truck, Percent, Phone, Mail, CheckCircle2 } from 'lucide-react';
 
-export const WholesaleSection: React.FC = () => {
+export const WholesaleSection: React.FC<{standalone?:boolean}> = ({standalone=false}) => {
   const { company, siteContent, language, catalogIndex, catalogError } = useStore();
   const [formData, setFormData] = useState({
     businessName: '',
@@ -61,7 +61,8 @@ export const WholesaleSection: React.FC = () => {
   return (
     <section className="py-14 sm:py-20 bg-[#182620] text-white border-b border-[#CBCFB9]/40" id="wholesale">
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        <div className={`grid grid-cols-1 ${standalone ? "" : "lg:grid-cols-12"} gap-10 items-center`}>
+          {!standalone && <>
           {/* Left Column: B2B Program Benefits */}
           <div className="lg:col-span-6 space-y-6">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-white/10 text-[#CC9A2E] text-xs font-semibold uppercase tracking-wider font-mono">
@@ -135,8 +136,9 @@ export const WholesaleSection: React.FC = () => {
             </div>
           </div>
 
+          </>}
           {/* Right Column: Inquiry Form */}
-          <div className="lg:col-span-6 bg-[#FBFAF5] text-[#0F1913] p-6 sm:p-8 rounded-lg border border-[#CBCFB9] shadow-xl">
+          <div className={`${standalone ? "max-w-3xl w-full mx-auto" : "lg:col-span-6"} bg-[#FBFAF5] text-[#0F1913] p-6 sm:p-8 rounded-lg border border-[#CBCFB9] shadow-xl`}>
             {isSubmitted ? (
               <div className="text-center py-8 space-y-3">
                 <CheckCircle2 className="w-12 h-12 text-[#3C6656] mx-auto" />
@@ -169,7 +171,7 @@ export const WholesaleSection: React.FC = () => {
                     {language === 'bn' ? 'B2B পাইকারি কোটেশন রিকোয়েস্ট' : 'Request Wholesale Pallet Quotation'}
                   </h3>
                   <p className="text-[11px] text-[#565F52]">
-                    Get instant catalog prices, sample shipment and credit terms.
+                    Request availability, GST, shipping and the final quote before payment. This is not an order.
                   </p>
                 </div>
 
@@ -284,7 +286,7 @@ export const WholesaleSection: React.FC = () => {
                       }
                       className="w-full text-xs bg-white border border-[#CBCFB9] rounded p-2 text-[#0F1913]"
                     >
-                      <option value="50">50 - 100 Units (Starter Merchant)</option>
+                      <option value="100">100+ Units (Starter Merchant)</option>
                       <option value="250">100 - 500 Units (Carton Pallet)</option>
                       <option value="1000">500 - 2,000 Units (Regional Hub)</option>
                       <option value="5000">2,000+ Units (Container FCL)</option>
@@ -294,11 +296,11 @@ export const WholesaleSection: React.FC = () => {
 
                 <div>
                   <label className="block text-[11px] font-bold text-[#182620] mb-1">
-                    Special Packaging or Custom Branding Notes
+                    Product quantities and delivery requirements
                   </label>
                   <textarea
                     rows={2}
-                    placeholder="Provide details about custom labels, barcode requirements, or delivery city..."
+                    placeholder="Enter SKUs, pieces per product (minimum 100, full carton steps), delivery PIN and any requirements..."
                     value={formData.notes}
                     onChange={(e) =>
                       setFormData({ ...formData, notes: e.target.value })
