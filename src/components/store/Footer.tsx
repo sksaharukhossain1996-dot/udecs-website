@@ -212,7 +212,8 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
         </div>
 
         <nav aria-label="Website policies" className="pt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-white">
-          <a className="hover:underline" href="/payment-policy.html">Payment policy</a>
+          <a href="/b2b.html" className="text-xs underline">B2B wholesale</a>
+<a className="hover:underline" href="/payment-policy.html">Payment policy</a>
           <a className="hover:underline" href="/return-refund-policy.html">Return and refund policy</a>
           <a className="hover:underline" href="/shipping-policy.html">Shipping policy</a>
           <a className="hover:underline" href="/terms-and-conditions.html">Terms and conditions</a>

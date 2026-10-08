@@ -10,6 +10,7 @@ export default defineConfig(() => {
       rollupOptions: {
         input: {
           main: path.resolve(import.meta.dirname, 'index.html'),
+          b2b: path.resolve(import.meta.dirname, 'b2b.html'),
           customerApp: path.resolve(import.meta.dirname, 'customer-app.html'),
           staff: path.resolve(import.meta.dirname, 'staff.html'),
           admin: path.resolve(import.meta.dirname, 'admin-app.html'),
