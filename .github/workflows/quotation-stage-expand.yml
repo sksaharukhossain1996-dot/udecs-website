@@ -19,11 +19,12 @@ jobs:
           node-version: 24
       - name: Expand scoped source
         run: |
+          cp package-lock.json /tmp/quotation-baseline-lock.json
           base64 -d quotation-source-stage.b64 > quotation-source-stage.tar.gz
           echo "fd54f15b54dc7ff4c9135fe0f39961430e275bd6fdfb44d0064e5b7fd8aada5e  quotation-source-stage.tar.gz" | sha256sum -c -
           tar -xzf quotation-source-stage.tar.gz
           rm -f .github/workflows/.github/workflows/quotation-stage-expand.yml
-          git show 7a18047251a2f4d7b0ba84913e694abc64b72295:package-lock.json > package-lock.json
+          cp /tmp/quotation-baseline-lock.json package-lock.json
           npm install --package-lock-only --ignore-scripts
           npm ci
           npx tsx --test tests/quotation.test.ts tests/quotation-import.test.ts
