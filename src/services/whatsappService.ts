@@ -17,7 +17,7 @@ export const DEFAULT_WHATSAPP_CONFIG: WhatsAppAutomationConfig = {
   totalDispatchedCount: 0,
   templates: {
     orderPlacedBn: `নমস্কার {customerName}! 🛍️
-UNICK DIGITAL (udecs.store)-এ আপনার অর্ডার সফলভাবে নিশ্চিত হয়েছে।
+UDECS (udecs.store)-এ আপনার অর্ডার সফলভাবে নিশ্চিত হয়েছে।
 
 📦 অর্ডার আইডি: #{orderId}
 💰 মোট মূল্য: ₹{totalAmount}
@@ -31,7 +31,7 @@ UNICK DIGITAL (udecs.store)-এ আপনার অর্ডার সফলভ�
 ধন্যবাদ, UDECS পরিবার।`,
 
     orderPlacedEn: `Hello {customerName}! 🛍️
-Your order at UNICK DIGITAL (udecs.store) is confirmed!
+Your order at UDECS (udecs.store) is confirmed!
 
 📦 Order ID: #{orderId}
 💰 Total Amount: ₹{totalAmount}
@@ -69,14 +69,14 @@ Support Hotline: +91 9845485437 · UDECS`,
 আপনার কেনাকাটার অভিজ্ঞতা কেমন ছিল জানাতে WhatsApp-এ রিপ্লাই দিতে পারেন।
 পরবর্তী অর্ডারের জন্য ভিজিট করুন: https://udecs.store
 
-ধন্যবাদ, UNICK DIGITAL E-COMMERCE SOLUTIONS`,
+ধন্যবাদ, UDECS`,
 
     orderDeliveredEn: `Congratulations {customerName}! 🎉
 Your UDECS order #{orderId} has been successfully delivered.
 
 We hope you love your purchase! For future orders or wholesale bulk pallets, visit https://udecs.store
 
-Thank you, UNICK DIGITAL E-COMMERCE SOLUTIONS`,
+Thank you, UDECS`,
 
     lowStockAlertBn: `⚠️ জরুরি স্টক সতর্কতা (UDECS Admin Alert)
 প্রডাক্ট: {productName} ({sku})
@@ -99,7 +99,7 @@ Thank you, UNICK DIGITAL E-COMMERCE SOLUTIONS`,
  * Format a template with dynamic variables
  */
 export function renderWhatsAppTemplate(template: string, vars: Record<string, string | number>): string {
-  let result = template;
+  let result = template.replace(/UNICK DIGITAL(?: E-COMMERCE SOLUTIONS)?/gi, 'UDECS');
   for (const [key, value] of Object.entries(vars)) {
     result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), String(value || ''));
   }
