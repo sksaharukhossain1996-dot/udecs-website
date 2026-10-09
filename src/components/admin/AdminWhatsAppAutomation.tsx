@@ -55,7 +55,7 @@ export const AdminWhatsAppAutomation: React.FC = () => {
   const [simCourier, setSimCourier] = useState('Delhivery Express Cargo');
   const [simTracking, setSimTracking] = useState('DEL982417032IN');
   const [simCustomText, setSimCustomText] = useState(
-    'Hello! UNICK DIGITAL (udecs.store) has a special 10% discount for you. Browse the catalog: udecs.store'
+    'Hello! UDECS (udecs.store) has a special 10% discount for you. Browse the catalog: udecs.store'
   );
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState<{ success: boolean; msg: string } | null>(null);
@@ -69,7 +69,7 @@ Order a new batch from the factory promptly.`;
   // Keep existing saved templates untouched until the user saves an edit.
   // Present the legacy low-stock field in English when it contains Bengali.
   // Template Editing State
-  const [templatesForm, setTemplatesForm] = useState({ ...whatsappConfig.templates, lowStockAlertBn: /[\u0980-\u09FF]/.test(whatsappConfig.templates.lowStockAlertBn) ? englishLowStockTemplate : whatsappConfig.templates.lowStockAlertBn });
+  const [templatesForm, setTemplatesForm] = useState({ ...Object.fromEntries(Object.entries(whatsappConfig.templates).map(([key, value]) => [key, value.replace(/UNICK DIGITAL(?: E-COMMERCE SOLUTIONS)?/gi, 'UDECS')])) as typeof whatsappConfig.templates, lowStockAlertBn: /[\u0980-\u09FF]/.test(whatsappConfig.templates.lowStockAlertBn) ? englishLowStockTemplate : whatsappConfig.templates.lowStockAlertBn });
 
   useEffect(() => {
     getWhatsAppStatus()
@@ -341,7 +341,7 @@ Order a new batch from the factory promptly.`;
                   </span>
                 </div>
                 <h3 className="text-lg font-black font-heading text-white">
-                  UNICK DIGITAL E-COMMERCE SOLUTIONS · WhatsApp Engine
+                  UDECS · WhatsApp Engine
                 </h3>
                 <p className="text-xs text-[#B9BFAE] max-w-2xl">
                   Manual sends require an authorized Firebase admin and configured Meta sender. Storefront order triggers and inbound auto-replies are not connected yet.
@@ -850,7 +850,7 @@ Order a new batch from the factory promptly.`;
                 {/* Message Bubble */}
                 <div className="self-start max-w-[92%] bg-white rounded-lg rounded-tl-none p-3 shadow-xs text-xs text-[#111B21] leading-relaxed relative">
                   <div className="text-[10px] font-bold text-[#075E54] mb-1">
-                    UNICK DIGITAL E-COMMERCE SOLUTIONS
+                    UDECS
                   </div>
                   <pre className="font-sans whitespace-pre-wrap text-[11.5px] text-[#111B21]">
                     {previewMessage}
