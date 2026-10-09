@@ -210,6 +210,7 @@ Order a new batch from the factory promptly.`;
 
   return (
     <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto">
+      <style>{`.wa-paused-heading{color:#fff!important}`}</style>
       {/* Toast Notification */}
       {successToast && (
         <div className="fixed bottom-6 right-6 z-50 bg-[#182620] text-white px-4 py-3 rounded-lg shadow-2xl flex items-center gap-3 border border-[#25D366] animate-slideIn">
@@ -287,7 +288,7 @@ Order a new batch from the factory promptly.`;
         </div>
         <div className="bg-[#182620] text-white border border-[#CBCFB9] rounded-xl p-5 space-y-3">
           <p className="text-xs uppercase tracking-wide text-[#B9BFAE]">Order auto-messages</p>
-          <div className="flex items-center justify-between"><h2 className="text-xl font-bold">Paused</h2><input aria-label="Order auto-messages (not connected)" type="checkbox" role="switch" disabled checked={false} readOnly /></div>
+          <div className="flex items-center justify-between"><h2 className="wa-paused-heading text-xl font-bold">Paused</h2><input aria-label="Order auto-messages (not connected)" type="checkbox" role="switch" disabled checked={false} readOnly /></div>
           <p className="text-sm text-[#B9BFAE]">COD confirmation stays paused. The order pipeline is not connected and needs your approval before activation.</p>
           <p className="text-xs text-[#B9BFAE]">This switch cannot start customer messages.</p>
         </div>
