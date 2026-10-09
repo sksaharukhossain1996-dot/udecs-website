@@ -3,7 +3,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 import { readRecentRfqs, Rfq, RfqInput, addOwnerRfq, archiveOwnerRfq } from '../../firebase/rfqService';
 
-export const AdminRfqInbox: React.FC = () => {
+export const AdminRfqInbox: React.FC<{onCreateQuotation?:(row:Rfq)=>void}> = ({onCreateQuotation}) => {
   const [allowed, setAllowed] = useState(false);
   const [rows, setRows] = useState<Rfq[]>([]);
   const [loading, setLoading] = useState(false);
@@ -46,6 +46,7 @@ export const AdminRfqInbox: React.FC = () => {
     {!loading && !error && rows.length === 0 && <p className="rounded border bg-white p-5 text-sm">No saved RFQs found.</p>}
     <div className="grid gap-4">{rows.filter(row=>showArchived || row.status!=='archived').map(row => <article key={row.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex flex-wrap justify-between gap-2"><h3 className="text-lg font-bold">{row.businessName}</h3><span className="rounded bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-800">{row.status || 'Unknown status'}</span></div>
+      {row.status!=='archived' && onCreateQuotation && <button className="mt-3 mr-3 rounded border px-3 py-2 text-sm font-semibold" onClick={()=>onCreateQuotation(row)}>Create quotation</button>}
       {row.status!=='archived' && <button disabled={busy} onClick={()=>{setPendingDelete(row);setConfirmId('');}} className="mt-3 rounded border border-red-300 px-3 py-1 text-sm font-semibold text-red-700">Delete Lead</button>}
       <div className="mt-1 break-all font-mono text-xs text-slate-500">{row.id}</div>
       <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">{[['Contact',row.contactPerson],['Phone',row.phone],['Email',row.email || 'Not supplied'],['Product category',row.category || 'Not supplied'],['Estimated volume',row.estVolume || 'Not supplied'],['Submitted',row.createdAt ? new Date(row.createdAt).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})+' IST' : 'Unknown']].map(([label,value]) => <div key={label}><dt className="text-xs text-slate-500">{label}</dt><dd className="mt-1 break-words font-medium">{value}</dd></div>)}</dl>

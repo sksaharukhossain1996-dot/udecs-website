@@ -1,0 +1,12 @@
+import {test}from'node:test';import assert from'node:assert/strict';import{decimal,totals,verifyQuote,blankCustomer,mappedCustomer,QuoteDraft}from'../src/quotation/model';
+const draft=():QuoteDraft=>({id:'demo',revision:1,number:'Q1',date:'2026-10-09',validUntil:'2026-10-16',customer:{...blankCustomer(),business:'Sample'},items:[{id:'1',sku:'A',name:'Sample',hsn:'1234',unit:'pcs',quantity:'100',price:'50.00',gst:'18',minimum:100,step:1}],taxMode:'exclusive',taxType:'',freight:'0',discount:'0',terms:''});
+test('exact paise and tax',()=>{assert.equal(decimal('0.01'),1);assert.equal(verifyQuote(draft()).total,590000)});
+test('bad amounts rejected',()=>{for(const x of['-1','NaN','Infinity','1e3','0.001',''])assert.throws(()=>decimal(x))});
+test('inclusive GST preserves total',()=>{const d=draft();d.taxMode='inclusive';d.items[0].price='59';assert.equal(totals(d).total,590000);assert.equal(totals(d).net,500000)});
+test('MOQ and quantity step',()=>{const d=draft();d.items[0].quantity='99';assert.throws(()=>totals(d));d.items[0].quantity='101';d.items[0].step=10;assert.throws(()=>totals(d))});
+test('publication requires fields and tax confirmation',()=>{assert.throws(()=>verifyQuote(draft(),true));const d=draft();Object.assign(d.customer,{contact:'Buyer',phone:'sample',billing:'address',shipping:'address',state:'WB',postcode:'721152'});d.taxType='cgst-sgst';d.terms='Subject to confirmation';assert.equal(verifyQuote(d,true).total,590000)});
+test('formula cells do not execute or import',()=>{assert.throws(()=>mappedCustomer([{formula:'x'}],{business:0}))});
+test('string identifiers and no fuzzy merge',()=>{const c=mappedCustomer(['012345','Sample'],{phone:0,business:1});assert.equal(c.phone,'012345');assert.equal(c.business,'Sample')});
+test('discount bound',()=>{const d=draft();d.discount='6000';assert.throws(()=>totals(d))});
+test('dates cannot reverse',()=>{const d=draft();d.validUntil='2026-10-01';assert.throws(()=>verifyQuote(d))});
+test('missing HSN blocks final',()=>{const d=draft();d.items[0].hsn='';assert.throws(()=>verifyQuote(d,true))});

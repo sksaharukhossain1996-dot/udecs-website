@@ -12,6 +12,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { AdminSidebar, AdminTab } from './AdminSidebar';
 import { AdminOverview } from './AdminOverview';
+import {AdminQuotation} from '../../quotation/AdminQuotation';
 import { AdminRfqInbox } from './AdminRfqInbox';
 import { AdminOrders } from './AdminOrders';
 import {AdminProductListings} from './AdminProductListings';
@@ -56,6 +57,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
   } = useStore();
   const [navigation, setNavigation] = useState({current: 'overview' as AdminTab, history: [] as AdminTab[]});
   const currentTab = navigation.current;
+  const [quotationSeed,setQuotationSeed]=useState<any>(null);
   const [localBack, setLocalBack] = useState<LocalBack[]>([]);
   const dirty = useRef(false);
   const registerBack = useCallback((entry: LocalBack) => { setLocalBack(x => [...x, entry]); return () => setLocalBack(x => x.filter(y => y !== entry)); }, []);
@@ -254,7 +256,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           {currentTab === 'website_control' && <AdminWebsiteControl />}
           {currentTab === 'whatsapp_automation' && <AdminWhatsAppAutomation />}
           {currentTab === 'orders' && <AdminOrders />}
-          {currentTab === 'rfq' && <AdminRfqInbox />}
+          {currentTab === 'b2b_quotation' && <AdminQuotation seed={quotationSeed} onSeedUsed={()=>setQuotationSeed(null)}/>}
+          {currentTab === 'rfq' && <AdminRfqInbox onCreateQuotation={row=>{if(!allowLeave())return;setQuotationSeed(row);setCurrentTab('b2b_quotation')}} />}
           {CUSTOMER_SUPPORT_ENABLED && currentTab === 'customers' && <CustomerPortalTab enabled/>}
           {currentTab === 'product_listing' && <AdminProductListings />}
           {currentTab === 'stock_update' && <StockUpdate products={products} company={company}/> }

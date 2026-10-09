@@ -9,6 +9,7 @@ export default defineConfig(() => {
     build: {
       rollupOptions: {
         input: {
+          quotation: path.resolve(import.meta.dirname, 'quotation.html'),
           main: path.resolve(import.meta.dirname, 'index.html'),
           b2b: path.resolve(import.meta.dirname, 'b2b.html'),
           customerApp: path.resolve(import.meta.dirname, 'customer-app.html'),

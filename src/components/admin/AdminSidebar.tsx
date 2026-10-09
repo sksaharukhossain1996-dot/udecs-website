@@ -31,6 +31,7 @@ export type AdminTab =
   | 'whatsapp_automation'
   | 'orders'
   | 'rfq'
+  | 'b2b_quotation'
   | 'customers'
   | 'product_listing'
   | 'inventory'
@@ -76,6 +77,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'overview', labelBn: 'ড্যাশবোর্ড ওভারভিউ', labelEn: 'Executive Dashboard', icon: LayoutDashboard },
     { id: 'website_control', labelBn: 'ওয়েবসাইট সেটিংস ও কন্ট্রোল', labelEn: 'Website Settings & Control', icon: Globe },
     { id: 'whatsapp_automation', labelBn: 'হোয়াটসঅ্যাপ অটোমেশন 🟢', labelEn: 'WhatsApp Automation Hub', icon: MessageSquare },
+    {id:'b2b_quotation',labelBn:'B2B Customer Quotation',labelEn:'B2B Customer Quotation',icon:FileEdit},
     { id: 'rfq', labelBn: 'B2B Wholesale Inquiry', labelEn: 'B2B Wholesale Inquiry', icon: Handshake },
     { id: 'orders', labelBn: 'অর্ডার ও লজিস্টিকস শিপিং', labelEn: 'Orders & Logistics', icon: Truck },
     { id: 'product_listing', labelBn: 'প্রোডাক্ট যোগ / ডিলিট', labelEn: 'Product listing', icon: PackagePlus },
@@ -94,7 +96,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   ];
 
   if(CUSTOMER_SUPPORT_ENABLED) navItems.push({id:'customers',labelBn:'Customer portal',labelEn:'Customer portal',icon:UserCheck});
-  const groups=[{label:'Business',ids:['erp','crm','overview']},{label:'Commerce',ids:['website_control','whatsapp_automation','rfq','orders','product_listing','stock_update','inventory']},{label:'Finance & Team',ids:['gst','investors','hr','collaboration']},{label:'Workspace & System',ids:['gmail','notifications','ai_agent_hub','software_health','audit','settings','customers']}];
+  const groups=[{label:'Business',ids:['erp','crm','overview']},{label:'Commerce',ids:['website_control','whatsapp_automation','rfq','b2b_quotation','orders','product_listing','stock_update','inventory']},{label:'Finance & Team',ids:['gst','investors','hr','collaboration']},{label:'Workspace & System',ids:['gmail','notifications','ai_agent_hub','software_health','audit','settings','customers']}];
   const findLoaded=()=>{const q=query.trim().toLowerCase();setMatches(q?Array.from(document.querySelectorAll('#udecs-current-view tr, #udecs-current-view article, .admin-content tr, .admin-content article')).filter((el,i,a)=>a.indexOf(el)===i&&(el.textContent||'').toLowerCase().includes(q)).slice(0,20).map(el=>(el.textContent||'').trim().replace(/\s+/g,' ').slice(0,240)):[]);};
   const select=(tab:AdminTab)=>{setMatches([]);onSelectTab(tab);setMobileOpen(false);};
   return (<>
