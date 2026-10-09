@@ -24,6 +24,7 @@ import {
   renderWhatsAppTemplate,
   generateWhatsAppLink,
   getWhatsAppStatus,
+  registerWhatsAppNumber,
   sendAutomatedWhatsAppApi,
 } from '../../services/whatsappService';
 import { getApiUrl } from '../../services/api';
@@ -43,6 +44,26 @@ export const AdminWhatsAppAutomation: React.FC = () => {
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [gatewayConfigured, setGatewayConfigured] = useState(false);
+  const [liveStatus, setLiveStatus] = useState<{configured:boolean;active?:boolean;gateway?:string|null;status:string}|null>(null);
+  const [statusError, setStatusError] = useState('');
+  const [statusCheckedAt, setStatusCheckedAt] = useState('');
+  const refreshConnection = async () => {
+    setStatusError('');
+    try { const status = await getWhatsAppStatus(); setLiveStatus(status); setGatewayConfigured(status.configured); setStatusCheckedAt(new Date().toLocaleTimeString()); }
+    catch { setStatusError('Connection check unavailable. Last result may be stale.'); }
+  };
+
+  const [registrationPin, setRegistrationPin] = useState('');
+  const [registrationReviewed, setRegistrationReviewed] = useState(false);
+  const [registrationBusy, setRegistrationBusy] = useState(false);
+  const [registrationResult, setRegistrationResult] = useState('');
+  const handleRegister = async () => {
+    if (!registrationReviewed || !/^\d{6}$/.test(registrationPin) || registrationBusy) return;
+    setRegistrationBusy(true); setRegistrationResult('');
+    try { const result = await registerWhatsAppNumber(registrationPin); setRegistrationResult(result.message || 'Meta confirmed registration. Automation stays paused.'); }
+    catch(error) { setRegistrationResult(error instanceof Error ? error.message : 'Registration result unknown. Check Meta phone status before retrying.'); }
+    finally { setRegistrationPin(''); setRegistrationReviewed(false); setRegistrationBusy(false); }
+  };
 
   // Simulator State
   const [selectedTemplate, setSelectedTemplate] = useState<
@@ -71,17 +92,7 @@ Order a new batch from the factory promptly.`;
   // Template Editing State
   const [templatesForm, setTemplatesForm] = useState({ ...Object.fromEntries(Object.entries(whatsappConfig.templates).map(([key, value]) => [key, value.replace(/UNICK DIGITAL(?: E-COMMERCE SOLUTIONS)?/gi, 'UDECS')])) as typeof whatsappConfig.templates, lowStockAlertBn: /[\u0980-\u09FF]/.test(whatsappConfig.templates.lowStockAlertBn) ? englishLowStockTemplate : whatsappConfig.templates.lowStockAlertBn });
 
-  useEffect(() => {
-    getWhatsAppStatus()
-      .then(({ configured }) => {
-        setGatewayConfigured(configured);
-        // Status reads must not save settings or claim an owner edit.
-      })
-      .catch(() => {
-        setGatewayConfigured(false);
-        // Status reads must not save settings or claim an owner edit.
-      });
-  }, []);
+  useEffect(() => { void refreshConnection(); }, []);
 
   const showToast = (msg: string) => {
     setSuccessToast(msg);
@@ -194,7 +205,7 @@ Order a new batch from the factory promptly.`;
 
   // Filter WhatsApp notifications from log
   const whatsAppLogs = notifications.filter(
-    (n) => n.channel === 'whatsapp' || n.type === 'order_placed' || n.type === 'order_shipped'
+    (n) => n.channel === 'whatsapp'
   );
 
   return (
@@ -216,7 +227,7 @@ Order a new batch from the factory promptly.`;
             </div>
             <div>
               <h1 className="text-2xl sm:text-3xl font-black font-heading text-[#0F1913] flex items-center gap-3">
-                WhatsApp Automation Hub
+                WhatsApp Automation
                 <span
                   className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase ${
                     gatewayConfigured
@@ -264,6 +275,43 @@ Order a new batch from the factory promptly.`;
         </div>
       </div>
 
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4" aria-label="Connection summary">
+        <div className="bg-white border border-[#CBCFB9] rounded-xl p-5 space-y-2">
+          <p className="text-xs uppercase tracking-wide text-[#565F52]">Live connection</p>
+          <h2 className="text-xl font-bold">{liveStatus ? liveStatus.configured ? 'Credentials configured' : 'Not configured' : 'Checking connection...'}</h2>
+          <p className="text-sm">{liveStatus?.gateway || 'Gateway not verified'}</p>
+          <p className="text-xs text-[#565F52]">Worker active: {liveStatus ? liveStatus.active ? 'Yes' : 'No' : 'Unknown'} · {liveStatus?.status || 'Awaiting result'}</p>
+          <p className="text-xs text-[#565F52]">Checked: {statusCheckedAt || 'Not yet'}. Configuration does not confirm delivery.</p>
+          {statusError && <p role="alert" className="text-xs text-red-700">{statusError}</p>}
+          <button type="button" onClick={() => void refreshConnection()} className="border rounded-lg px-3 py-2 text-xs font-bold">Refresh connection</button>
+        </div>
+        <div className="bg-[#182620] text-white border border-[#CBCFB9] rounded-xl p-5 space-y-3">
+          <p className="text-xs uppercase tracking-wide text-[#B9BFAE]">Order auto-messages</p>
+          <div className="flex items-center justify-between"><h2 className="text-xl font-bold">Paused</h2><input aria-label="Order auto-messages (not connected)" type="checkbox" role="switch" disabled checked={false} readOnly /></div>
+          <p className="text-sm text-[#B9BFAE]">COD confirmation stays paused. The order pipeline is not connected and needs your approval before activation.</p>
+          <p className="text-xs text-[#B9BFAE]">This switch cannot start customer messages.</p>
+        </div>
+        <div className="bg-white border border-[#CBCFB9] rounded-xl p-5 space-y-3">
+          <p className="text-xs uppercase tracking-wide text-[#565F52]">Message history</p>
+          <h2 className="text-xl font-bold">{whatsAppLogs.length} local records</h2>
+          <p className="text-sm text-[#565F52]">This device's manual-send history only. Clearing browser data removes it.</p>
+          <p className="text-xs text-[#565F52]">Future order messages: not connected. Meta acceptance is not proof of delivery.</p>
+          <button type="button" onClick={() => setActiveTab('logs')} className="border rounded-lg px-3 py-2 text-xs font-bold">View manual-send history</button>
+        </div>
+      </section>
+
+      <section className="bg-white border border-[#CBCFB9] rounded-xl p-5 space-y-4" aria-label="Register business number">
+        <div><h2 className="text-xl font-bold">Register UDECS Orders</h2><p className="text-sm text-[#565F52] mt-2">One-time Meta registration for +91 86605 80564. Phone ID: 1393523580503157. This does not activate customer auto-messages or COD.</p></div>
+        <p className="text-xs text-[#565F52]">Enter your chosen six-digit PIN. It is used only for this request and cleared afterwards. It is never saved to browser storage or message history. Keep your secure backup.</p>
+        <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+          <label className="block text-sm font-bold">Six-digit registration PIN<input type="password" inputMode="numeric" autoComplete="off" maxLength={6} value={registrationPin} onChange={e => setRegistrationPin(e.target.value.replace(/\D/g,''))} className="block border rounded-lg p-3 mt-2 w-full sm:w-56" disabled={registrationBusy}/></label>
+          <button type="button" onClick={() => void handleRegister()} disabled={!registrationReviewed || !/^\d{6}$/.test(registrationPin) || registrationBusy} className="bg-[#182620] text-white rounded-lg p-3 font-bold disabled:opacity-50">{registrationBusy ? 'Registering...' : 'Register Number'}</button>
+        </div>
+        <label className="flex gap-3 items-start text-sm"><input type="checkbox" checked={registrationReviewed} onChange={e => setRegistrationReviewed(e.target.checked)} disabled={registrationBusy}/><span>I approve registering +91 86605 80564 with Meta using this PIN. The existing business number remains untouched.</span></label>
+        <p className="text-xs text-[#565F52]">Do not repeat registration after a timeout. Check Meta phone status first. Meta limits registration attempts.</p>
+        {registrationResult && <p role="status" className="border rounded-lg p-3 text-sm">{registrationResult}</p>}
+      </section>
+
       {/* Sub-Navigation Tabs */}
       <div className="flex items-center gap-1.5 border-b border-[#CBCFB9] overflow-x-auto pb-1">
         <button
@@ -275,7 +323,7 @@ Order a new batch from the factory promptly.`;
           }`}
         >
           <Sliders className="w-3.5 h-3.5 text-[#25D366]" />
-          <span>Automation Switches & Triggers</span>
+          <span>Connection & automation</span>
         </button>
 
         <button
@@ -287,7 +335,7 @@ Order a new batch from the factory promptly.`;
           }`}
         >
           <Send className="w-3.5 h-3.5 text-[#A87C1F]" />
-          <span>Live Message Tester & Simulator</span>
+          <span>Test message</span>
         </button>
 
         <button
@@ -956,16 +1004,16 @@ Order a new batch from the factory promptly.`;
         <div className="bg-white p-5 rounded-lg border border-[#CBCFB9] shadow-xs space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-[#CBCFB9]">
             <h3 className="font-heading font-bold text-sm text-[#0F1913] uppercase tracking-wider">
-              Automated WhatsApp Dispatch Logs ({whatsAppLogs.length})
+              This device's manual-send history ({whatsAppLogs.length})
             </h3>
             <span className="text-[10px] text-[#565F52]">
-              Delivery results are unavailable until Meta integration is configured.
+              Delivery receipts and cross-device history are not connected.
             </span>
           </div>
 
           {whatsAppLogs.length === 0 ? (
             <div className="p-8 text-center text-xs text-[#565F52]">
-              No successful WhatsApp sends are recorded. Direct wa.me messaging is available; automated delivery is not configured.
+              No manual sends are recorded on this device. Server-side order-message history is not connected.
             </div>
           ) : (
             <div className="overflow-x-auto">
