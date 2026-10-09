@@ -181,11 +181,20 @@ export async function sendAutomatedWhatsAppApi(payload: {
   return result;
 }
 
-export async function getWhatsAppStatus(): Promise<{ configured: boolean; status: string }> {
+export async function getWhatsAppStatus(): Promise<{ configured: boolean; active?: boolean; gateway?: string | null; status: string }> {
   const res = await fetch(getApiUrl('/api/whatsapp/status'));
   const result = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(result.error || `WhatsApp API responded with status ${res.status}`);
   }
+  return result;
+}
+
+export async function registerWhatsAppNumber(pin: string): Promise<{success:boolean;message?:string;error?:{code:number|null;message:string}}> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Sign in with an authorized admin account first.');
+  const response = await fetch(getApiUrl('/api/whatsapp/register'), {method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${await user.getIdToken()}`},body:JSON.stringify({pin})});
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || result.success !== true) throw new Error(typeof result.error === 'object' ? result.error.message : result.error || 'Registration was not confirmed. Check phone status before trying again.');
   return result;
 }
