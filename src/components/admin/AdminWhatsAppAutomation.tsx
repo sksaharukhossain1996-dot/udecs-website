@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import {
   MessageSquare,
@@ -68,16 +68,17 @@ export const AdminWhatsAppAutomation: React.FC = () => {
   // Simulator State
   const [selectedTemplate, setSelectedTemplate] = useState<
     'orderPlaced' | 'orderShipped' | 'orderDelivered' | 'lowStock' | 'custom'
-  >('orderPlaced');
-  const [simPhone, setSimPhone] = useState('9845485437');
-  const [simName, setSimName] = useState('Anirban Mukherjee');
-  const [simAmount, setSimAmount] = useState('2499');
-  const [simOrderId, setSimOrderId] = useState('UDECS-ORD-4821');
-  const [simCourier, setSimCourier] = useState('Delhivery Express Cargo');
-  const [simTracking, setSimTracking] = useState('DEL982417032IN');
-  const [simCustomText, setSimCustomText] = useState(
-    'Hello! UDECS (udecs.store) has a special 10% discount for you. Browse the catalog: udecs.store'
-  );
+  >('custom');
+  const [simPhone, setSimPhone] = useState('');
+  const [simName, setSimName] = useState('');
+  const [simAmount, setSimAmount] = useState('');
+  const [simOrderId, setSimOrderId] = useState('');
+  const [simCourier, setSimCourier] = useState('');
+  const [simTracking, setSimTracking] = useState('');
+  const [simCustomText, setSimCustomText] = useState('');
+  const [sendReviewOpen, setSendReviewOpen] = useState(false);
+  const [sampleReviewed, setSampleReviewed] = useState(false);
+  const sendingRef = useRef(false);
   const [isSending, setIsSending] = useState(false);
   const [sendResult, setSendResult] = useState<{ success: boolean; msg: string } | null>(null);
 
@@ -134,10 +135,10 @@ Order a new batch from the factory promptly.`;
     }
     if (selectedTemplate === 'lowStock') {
       return renderWhatsAppTemplate(templatesForm.lowStockAlertBn, {
-        productName: 'Non-Stick Cookware Frypan Set (3 Pcs)',
-        sku: 'KT-104',
-        stock: '3',
-        minStockAlert: '10',
+        productName: '[SAMPLE product]',
+        sku: '[SAMPLE SKU]',
+        stock: '[unverified]',
+        minStockAlert: '[unverified]',
       });
     }
     return '';
@@ -149,6 +150,9 @@ Order a new batch from the factory promptly.`;
 
   // Send Test Message
   const handleSendTest = async () => {
+    if (sendingRef.current || isSending || !simPhone.trim() || !previewMessage.trim() || (selectedTemplate !== 'custom' && !sampleReviewed)) return;
+    setSendReviewOpen(false); setSampleReviewed(false);
+    sendingRef.current = true;
     setIsSending(true);
     setSendResult(null);
     try {
@@ -156,8 +160,8 @@ Order a new batch from the factory promptly.`;
         to: simPhone,
         message: previewMessage,
         templateType: selectedTemplate,
-        orderId: simOrderId,
-        customerName: simName,
+        orderId: selectedTemplate === 'custom' ? undefined : simOrderId,
+        customerName: selectedTemplate === 'custom' ? undefined : simName,
       });
 
       sendNotification(
@@ -188,6 +192,7 @@ Order a new batch from the factory promptly.`;
         msg: err?.message || 'Meta did not accept the message request.',
       });
     } finally {
+      sendingRef.current = false;
       setIsSending(false);
     }
   };
@@ -211,6 +216,7 @@ Order a new batch from the factory promptly.`;
   return (
     <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto">
       <style>{`.wa-paused-heading{color:#fff!important}`}</style>
+      {sendReviewOpen && <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"><section role="dialog" aria-modal="true" aria-label="Review WhatsApp send" className="bg-white rounded-xl p-6 max-w-xl w-full max-h-[90vh] overflow-y-auto space-y-4"><h2 className="text-xl font-bold">Review WhatsApp send</h2><p>From: UDECS Orders, +91 86605 80564</p><p>To: +91 {simPhone}</p><p>{selectedTemplate === 'custom' ? 'Custom message' : 'SAMPLE message, not a real order'}</p><pre className="whitespace-pre-wrap break-words border rounded p-3 text-sm font-sans">{previewMessage}</pre>{selectedTemplate !== 'custom' && <label className="flex gap-2 text-sm"><input type="checkbox" checked={sampleReviewed} onChange={e => setSampleReviewed(e.target.checked)} />I reviewed this sample. Its order/customer/stock details are demonstration content and must not be represented as a real order.</label>}<p className="text-xs">Send only with a valid customer-service window or other permitted Meta message type. No automatic retry. Acceptance is not delivery.</p><div className="flex gap-3"><button type="button" className="border rounded p-3" onClick={() => setSendReviewOpen(false)}>Cancel</button><button type="button" disabled={isSending || (selectedTemplate !== 'custom' && !sampleReviewed)} className="border rounded p-3 disabled:opacity-50" onClick={() => void handleSendTest()}>Confirm one send</button></div></section></div>}
       {/* Toast Notification */}
       {successToast && (
         <div className="fixed bottom-6 right-6 z-50 bg-[#182620] text-white px-4 py-3 rounded-lg shadow-2xl flex items-center gap-3 border border-[#25D366] animate-slideIn">
@@ -678,6 +684,7 @@ Order a new batch from the factory promptly.`;
                   Select Notification Event Template
                 </label>
                 <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setSelectedTemplate('custom')} className="p-2.5 rounded font-bold border text-left">Custom message</button>
                   <button
                     type="button"
                     onClick={() => setSelectedTemplate('orderPlaced')}
@@ -687,7 +694,7 @@ Order a new batch from the factory promptly.`;
                         : 'bg-[#FBFAF5] text-[#565F52] border-[#CBCFB9]'
                     }`}
                   >
-                    <span className="block text-[11px]">📦 Order Placed</span>
+                    <span className="block text-[11px]">📦 Order Placed - SAMPLE</span>
                     <span className="text-[9px] opacity-75 font-normal">Order confirmation</span>
                   </button>
 
@@ -700,7 +707,7 @@ Order a new batch from the factory promptly.`;
                         : 'bg-[#FBFAF5] text-[#565F52] border-[#CBCFB9]'
                     }`}
                   >
-                    <span className="block text-[11px]">🚚 Order Shipped</span>
+                    <span className="block text-[11px]">🚚 Order Shipped - SAMPLE</span>
                     <span className="text-[9px] opacity-75 font-normal">AWB tracking</span>
                   </button>
 
@@ -713,7 +720,7 @@ Order a new batch from the factory promptly.`;
                         : 'bg-[#FBFAF5] text-[#565F52] border-[#CBCFB9]'
                     }`}
                   >
-                    <span className="block text-[11px]">🎉 Delivered</span>
+                    <span className="block text-[11px]">🎉 Delivered - SAMPLE</span>
                     <span className="text-[9px] opacity-75 font-normal">Delivery completed</span>
                   </button>
 
@@ -726,12 +733,14 @@ Order a new batch from the factory promptly.`;
                         : 'bg-[#FBFAF5] text-[#565F52] border-[#CBCFB9]'
                     }`}
                   >
-                    <span className="block text-[11px]">⚠️ Low Stock Alert</span>
+                    <span className="block text-[11px]">⚠️ Low Stock Alert - SAMPLE</span>
                     <span className="text-[9px] opacity-75 font-normal">Urgent stock alert</span>
                   </button>
                 </div>
               </div>
 
+              {selectedTemplate === 'custom' && <label className="block font-bold">Exact message to send<textarea value={simCustomText} onChange={e => setSimCustomText(e.target.value)} rows={5} placeholder="Enter the reviewed message. Nothing is pre-filled." className="block w-full border rounded p-3 mt-2 font-normal" /></label>}
+              <p className="text-xs">Meta sender: +91 86605 80564 (UDECS Orders). Samples are previews, not real orders. Meta acceptance does not confirm delivery.</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#0F1913] mb-1">
@@ -743,7 +752,7 @@ Order a new batch from the factory promptly.`;
                       type="text"
                       value={simPhone}
                       onChange={(e) => setSimPhone(e.target.value)}
-                      placeholder="9845485437"
+                      placeholder="Recipient number"
                       className="w-full py-2 bg-transparent text-[#0F1913] font-mono focus:outline-none"
                     />
                   </div>
@@ -821,8 +830,8 @@ Order a new batch from the factory promptly.`;
               <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
                 <button
                   type="button"
-                  disabled={isSending || !gatewayConfigured}
-                  onClick={handleSendTest}
+                  disabled={isSending || !gatewayConfigured || !simPhone.trim() || !previewMessage.trim()}
+                  onClick={() => { setSampleReviewed(false); setSendReviewOpen(true); }}
                   className="flex-1 bg-[#25D366] hover:bg-[#1EBE5D] text-white py-2.5 rounded font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
                 >
                   <Send className="w-3.5 h-3.5" />
@@ -836,7 +845,9 @@ Order a new batch from the factory promptly.`;
                 </button>
 
                 <a
-                  href={directWhatsAppLink}
+                  href={simPhone.trim() && previewMessage.trim() ? directWhatsAppLink : undefined}
+                  aria-disabled={!simPhone.trim() || !previewMessage.trim()}
+                  onClick={e => { if (!simPhone.trim() || !previewMessage.trim()) e.preventDefault(); }}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-2.5 bg-[#182620] hover:bg-[#0F1913] text-white rounded font-bold flex items-center justify-center gap-1.5 transition-all"
@@ -870,7 +881,7 @@ Order a new batch from the factory promptly.`;
                 Customer Phone Screen Preview
               </span>
               <span className="text-[10px] text-[#565F52] font-mono">
-                Recipient: +91 {simPhone}
+                Recipient: {simPhone ? `+91 ${simPhone}` : 'Not selected'}
               </span>
             </div>
 
@@ -883,10 +894,10 @@ Order a new batch from the factory promptly.`;
                 </div>
                 <div className="min-w-0 flex-1">
                   <span className="text-xs font-bold block truncate">
-                    UDECS · Unick Digital
+                    UDECS Orders · +91 86605 80564
                   </span>
                   <span className="text-[10px] text-emerald-100 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#25D366]"></span> Official Business Account
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#25D366]"></span> Message preview only
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-white/80">
