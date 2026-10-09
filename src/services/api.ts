@@ -27,6 +27,10 @@ function getApiBaseUrl(): URL | null {
 }
 
 export function getApiUrl(path: string): string {
+  // WhatsApp uses the configured production sender; other API routes stay unchanged.
+  if (path.startsWith('/api/whatsapp/')) {
+    return new URL(path, 'https://udecs-api.sksaharukhossain1996.workers.dev').toString();
+  }
   const baseUrl = getApiBaseUrl();
   return baseUrl ? new URL(path.replace(/^\/+/, ''), baseUrl).toString() : path;
 }
