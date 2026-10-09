@@ -2,7 +2,7 @@ name: Stage approved quotation source and isolated service
 on:
   push:
     branches: [quotation-approved-20261009]
-    paths: [quotation-source-stage.b64, .github/workflows/quotation-stage-expand.yml]
+    paths: [quotation-source-stage.b64, quotation-final-fixes.b64, .github/workflows/quotation-stage-expand.yml]
   workflow_dispatch:
 permissions:
   contents: write
@@ -25,6 +25,11 @@ jobs:
           tar -xzf quotation-source-stage.tar.gz
           rm -f .github/workflows/.github/workflows/quotation-stage-expand.yml
           cp /tmp/quotation-baseline-lock.json package-lock.json
+          if [ -f quotation-final-fixes.b64 ]; then
+            base64 -d quotation-final-fixes.b64 > /tmp/quotation-final-fixes.tar.gz
+            echo "ee495e0788dde55f94127118480b4f4de3046648637ed063cb9c1c40a9d659b3  /tmp/quotation-final-fixes.tar.gz" | sha256sum -c -
+            tar -xzf /tmp/quotation-final-fixes.tar.gz
+          fi
           npm install --package-lock-only --ignore-scripts
           npm ci
           npx tsx --test tests/quotation.test.ts tests/quotation-import.test.ts
