@@ -1,0 +1,17 @@
+{
+  "name": "udecs-quotations",
+  "main": "worker.mjs",
+  "account_id": "bfa14054934d0f067511f26979c971d4",
+  "compatibility_date": "2026-10-09",
+  "workers_dev": true,
+  "observability": {
+    "enabled": false
+  },
+  "d1_databases": [
+    {
+      "binding": "QUOTE_DB",
+      "database_name": "udecs-quotations",
+      "database_id": "44935407-9643-4fd8-934c-ad8a9aad94b4"
+    }
+  ]
+}

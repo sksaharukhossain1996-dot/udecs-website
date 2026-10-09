@@ -12,6 +12,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { AdminSidebar, AdminTab } from './AdminSidebar';
 import { AdminOverview } from './AdminOverview';
+import {AdminQuotation} from '../../quotation/AdminQuotation';
 import { AdminRfqInbox } from './AdminRfqInbox';
 import { AdminOrders } from './AdminOrders';
 import {AdminProductListings} from './AdminProductListings';
@@ -56,12 +57,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
   } = useStore();
   const [navigation, setNavigation] = useState({current: 'overview' as AdminTab, history: [] as AdminTab[]});
   const currentTab = navigation.current;
+  const [quotationSeed,setQuotationSeed]=useState<any>(null);
   const [localBack, setLocalBack] = useState<LocalBack[]>([]);
   const dirty = useRef(false);
   const registerBack = useCallback((entry: LocalBack) => { setLocalBack(x => [...x, entry]); return () => setLocalBack(x => x.filter(y => y !== entry)); }, []);
   const allowLeave = () => !dirty.current || window.confirm('Leave this page? Unsaved changes will not be saved.');
   const setCurrentTab = (tab: AdminTab) => { if(tab === currentTab || !allowLeave()) return; dirty.current = false; setNavigation(x => visit(x,tab)); };
-  const goBack = () => { if(!allowLeave()) return; if(localBack.length) { localBack.at(-1)!.run(); return; } dirty.current=false; setNavigation(x => previous(x,'overview')); };
+  const goBack = () => { if(localBack.length) { localBack.at(-1)!.run(); return; } if(!allowLeave()) return; dirty.current=false; setNavigation(x => previous(x,'overview')); };
 
 
   const [loginError, setLoginError] = useState('');
@@ -247,14 +249,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         </header>
 
         {/* Main Content Area */}
-        <main className="admin-content flex-1 overflow-y-auto relative"><style>{`.portal-watermark{position:sticky;top:0;height:0;width:100%;z-index:20;pointer-events:none;user-select:none}.portal-watermark img{position:absolute;top:18vh;right:8%;width:min(54vw,520px);height:auto;opacity:.055;pointer-events:none}@media(max-width:640px){.portal-watermark img{top:24vh;right:5%;width:90%;opacity:.045}}@media print{.portal-watermark{display:none}}`}</style><div aria-hidden="true" className="portal-watermark"><img src="/UDECS_Logo_Premium_Transparent.png" alt="" draggable={false}/></div><div className="admin-module" onChangeCapture={e => { const target = e.target as HTMLElement; if(target.closest('form')) dirty.current=true; }}>
+        <main className="admin-content flex-1 overflow-y-auto relative"><style>{`.portal-watermark{position:sticky;top:0;height:0;width:100%;z-index:20;pointer-events:none;user-select:none}.portal-watermark img{position:absolute;top:18vh;right:8%;width:min(54vw,520px);height:auto;opacity:.055;pointer-events:none}@media(max-width:640px){.portal-watermark img{top:24vh;right:5%;width:90%;opacity:.045}}@media print{.portal-watermark{display:none}}`}</style><div aria-hidden="true" className="portal-watermark"><img src="/UDECS_Logo_Premium_Transparent.png" alt="" draggable={false}/></div><div className="admin-module" onChangeCapture={e => { const target = e.target as HTMLElement; if(currentTab !== 'b2b_quotation' && target.closest('form')) dirty.current=true; }}>
           {currentTab === 'overview' && (
             <AdminOverview onNavigate={(tab) => setCurrentTab(tab)} />
           )}
           {currentTab === 'website_control' && <AdminWebsiteControl />}
           {currentTab === 'whatsapp_automation' && <AdminWhatsAppAutomation />}
           {currentTab === 'orders' && <AdminOrders />}
-          {currentTab === 'rfq' && <AdminRfqInbox />}
+          {currentTab === 'b2b_quotation' && <AdminQuotation onDirtyChange={value=>{dirty.current=value}} seed={quotationSeed} onSeedUsed={()=>setQuotationSeed(null)}/>}
+          {currentTab === 'rfq' && <AdminRfqInbox onCreateQuotation={row=>{if(!allowLeave())return;setQuotationSeed(row);setCurrentTab('b2b_quotation')}} />}
           {CUSTOMER_SUPPORT_ENABLED && currentTab === 'customers' && <CustomerPortalTab enabled/>}
           {currentTab === 'product_listing' && <AdminProductListings />}
           {currentTab === 'stock_update' && <StockUpdate products={products} company={company}/> }
