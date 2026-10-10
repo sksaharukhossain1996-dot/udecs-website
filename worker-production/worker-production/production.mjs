@@ -763,3 +763,30 @@ route = async function(request, env, ctx) {
     return json({success:false,error:{code:null,message:'Registration result is unknown. Check Meta phone status before attempting again.'}}, 502);
   }
 };
+
+// Scoped receive/store/notify only. Customer automation remains off.
+import {recordsFor as inquiryRecordsFor,InquiryInbox} from './inquiry.mjs';
+export {InquiryInbox};
+const inquiryPreviousRoute=route;
+route=async function(request,env,ctx){
+ const path=new URL(request.url).pathname;
+ if(path==='/api/whatsapp/inquiry-status'){
+  const auth=await verifyFirebaseAdmin(request,env);if(auth instanceof Response)return auth;
+  if(request.method!=='GET')return json({error:'Method not allowed.'},405);
+  if(!env.INQUIRY_INBOX)return json({error:'Inquiry storage unavailable.'},503);
+  const resp=await env.INQUIRY_INBOX.get(env.INQUIRY_INBOX.idFromName('udecs-inquiry-v1')).fetch('https://inbox/counts');
+  return json({...(await resp.json()),customerAutoReply:false,ownerWhatsApp:false});
+ }
+ if(path!=='/api/whatsapp/webhook'||request.method!=='POST')return inquiryPreviousRoute(request,env,ctx);
+ const config=getWhatsAppMetaConfig(env);
+ if(!config||config.phoneNumberId!=='1393523580503157'||!env.INQUIRY_INBOX)return json({error:'Inquiry receiving is not ready.'},503);
+ const declared=Number(request.headers.get('content-length')||0);if(declared>1048576)return json({error:'Body too large.'},413);
+ const raw=new Uint8Array(await request.arrayBuffer());if(raw.byteLength>1048576)return json({error:'Body too large.'},413);
+ if(!await verifyWhatsAppWebhookSignature(raw,request.headers.get('x-hub-signature-256'),config.appSecret))return json({error:'Invalid signature.'},401);
+ let records;try{records=inquiryRecordsFor(JSON.parse(new TextDecoder().decode(raw)));}catch{return json({error:'Invalid inquiry payload.'},400);}
+ if(records.length){try{
+  const resp=await env.INQUIRY_INBOX.get(env.INQUIRY_INBOX.idFromName('udecs-inquiry-v1')).fetch('https://inbox/accept',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(records)});
+  if(!resp.ok)return json({error:'Inquiry storage was not confirmed.'},503);
+ }catch{return json({error:'Inquiry storage was not confirmed.'},503);}}
+ return new Response(null,{status:200});
+};
