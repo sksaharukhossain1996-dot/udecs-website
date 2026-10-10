@@ -1,3 +1,6 @@
+import { formatRecordedTax } from '../../lib/orderDisplay';
+import{OperationsRegisters}from'../../operations-stage/OperationsRegisters';
+import{UnifiedOrderRegister}from'../../order-register-stage/UnifiedOrderRegister';
 import{printExport}from'../../lib/exportFile';
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
@@ -141,6 +144,7 @@ export const AdminOrders: React.FC = () => {
 
   return (
     <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto">
+      <OperationsRegisters/><UnifiedOrderRegister/>
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#CBCFB9]">
         <div>
@@ -240,7 +244,7 @@ export const AdminOrders: React.FC = () => {
 
                     <td className="p-3">
                       <span className="font-bold text-[#0F1913] block">{formatPrice(order.totalAmount)}</span>
-                      <span className="text-[10px] text-[#3C6656]">Tax: {formatPrice(order.totalGst)}</span>
+                      <span className="text-[10px] text-[#3C6656]">Tax: {formatRecordedTax(order.totalGst, formatPrice)}</span>
                     </td>
 
                     <td className="p-3">

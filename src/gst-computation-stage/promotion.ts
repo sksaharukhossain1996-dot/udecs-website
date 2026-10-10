@@ -1,0 +1,2 @@
+import{GstDraftInput}from'../gst-stage/draftInvoices';
+export function referenceToGstEditor(row:Record<string,string>):GstDraftInput{const amount=(key:string)=>/^\d+(\.\d{1,2})?$/.test(row[key]||'')?Number(row[key]):NaN;return{invoiceNumber:row.invoiceNumber||'',invoiceDate:row.date||'',customerName:'',recipientGstin:row.gstin||'',placeOfSupply:row.placeOfSupply||'',taxableValue:amount('taxableValue'),cgst:amount('cgst'),sgst:amount('sgst'),igst:amount('igst'),invoiceValue:NaN,sourceOrderId:'',note:'Imported reference: '+(row.sourceReference||'')};}

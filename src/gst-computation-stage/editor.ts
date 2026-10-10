@@ -1,0 +1,5 @@
+import{TaxInvoice,TaxLine,computeInvoice}from'./model';import{ReturnInvoice}from'./export';
+export const blankLine=():TaxLine=>({id:crypto.randomUUID(),description:'',hsn:'',uqc:'',quantity:'',unitPrice:'',priceMode:'exclusive',gstRate:'',rateSource:'',rateValidFrom:'',rateValidTo:'',discount:'0',charge:'0',reviewed:false});
+export const blankRecord=():ReturnInvoice=>({ecoGstin:'',ecoName:'',ecoReviewed:false,classificationReviewed:false,recordSource:'',invoiceVerified:false,cessConfirmedZero:false,invoice:{number:'',date:'',supplierGstin:'',supplierState:'',recipientName:'',recipientGstin:'',recipientType:'unregistered',billingState:'',deliveryState:'',placeOfSupply:'',posReason:'',posReviewed:false,supplyType:'ordinary-domestic',taxMode:'cgst-sgst',reverseCharge:false,lines:[blankLine()]}});
+export function deriveSplit(d:TaxInvoice):TaxInvoice{return{...d,supplierState:d.supplierGstin.slice(0,2),taxMode:d.supplierGstin.slice(0,2)===d.placeOfSupply?'cgst-sgst':'igst'};}
+export function previewCalculation(r:ReturnInvoice){return computeInvoice(deriveSplit(r.invoice));}

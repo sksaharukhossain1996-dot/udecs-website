@@ -1,3 +1,6 @@
+import{GstReconciliation}from'../../operations-stage/GstReconciliation';
+import{GstInvoiceEntry}from'../../gst-computation-stage/GstInvoiceEntry';
+import{GstComputationPanel}from'../../gst-computation-stage/GstComputationPanel';
 import{printExport}from'../../lib/exportFile';
 import {GstDraftRegister} from '../../gst-stage/GstDraftRegister';
 import React, { useState } from 'react';
@@ -65,7 +68,7 @@ export const AdminGstReports: React.FC = () => {
   return (
     <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto">
       <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-5 text-sm space-y-2"><h2 className="font-bold">Draft bookkeeping summary, not filing-ready</h2><p>Only loaded orders created in your selected month are included. Order creation date is not a verified invoice date. Credits, cancellations, marketplace reports, amendments, input tax credit and reverse-charge tax are not reconciled here.</p><p>HSN quantity/rate is shown, but item taxable value and tax are not inferred from gross prices. Missing recorded item tax values appear as zero and must be reviewed against invoices. Do not file from this screen.</p>{invalidTaxRecords>0&&<p>{invalidTaxRecords} loaded orders lack complete recorded tax fields. Totals are incomplete.</p>}<p>Free preparation roadmap: upload sales reports, review mapped invoices/credit notes, validate against GST schemas, generate a reviewed JSON file. Final GST portal submission stays separate and needs explicit owner approval.</p></div>
-      <GstDraftRegister company={company}/>
+      <GstInvoiceEntry/><GstReconciliation/><GstComputationPanel/><GstDraftRegister company={company}/>
       {/* GST portal quick access (owner request) */}
       <div className="p-4 bg-[#FBFAF5] border border-[#CBCFB9] rounded-lg flex flex-wrap items-center gap-4">
         <div>
