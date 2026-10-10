@@ -19,5 +19,31 @@
   },
   "vars": {
     "LISTING_AI_FREE_TIER": "confirmed"
-  }
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "INQUIRY_INBOX",
+        "class_name": "InquiryInbox"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "udecs-inquiry-v1",
+      "new_sqlite_classes": [
+        "InquiryInbox"
+      ]
+    }
+  ],
+  "find_additional_modules": true,
+  "rules": [
+    {
+      "type": "ESModule",
+      "globs": [
+        "**/*.mjs"
+      ],
+      "fallthrough": true
+    }
+  ]
 }
