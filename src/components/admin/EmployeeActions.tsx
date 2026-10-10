@@ -1,3 +1,5 @@
+import{employeePreflight}from'../../import-stage/preflight';
+import {ImportPanel} from '../../import-stage/ImportPanel';import {specs} from '../../import-stage/model';import {getDocsFromServer,collection} from 'firebase/firestore';import {db} from '../../firebase/config';import {requireHROwner} from '../../firebase/employeeService';
 import {useLocalBack} from '../../navigation/ManagementBack';
 import React,{useEffect,useState}from'react';
 import{subscribeEmployees,createEmployee,removeEmployee}from'../../firebase/employeeService';
@@ -17,7 +19,7 @@ export function EmployeeActions(){
  if(!owner)return <p className="p-4 border rounded-lg">Employee records are available to the signed-in owner only.</p>;
  const field=(key:keyof EmployeeForm,label:string,type='text',optional=false)=><label key={key} className="block text-sm font-semibold">{label}{optional?' (optional)':''}<input type={type} required={!optional} value={form[key]} onChange={e=>{setForm({...form,[key]:e.target.value});setError('');}} className="mt-1 mb-3 block w-full rounded border p-3 bg-white text-slate-900" maxLength={type==='text'?120:undefined}/></label>;
  return <section className="p-4 bg-white border rounded-lg space-y-4">
- <h2 className="text-lg font-bold">Add / Delete Employee</h2>
+ <h2 className="text-lg font-bold">Add / Delete Employee</h2><ImportPanel key={firebaseUser?.uid} spec={specs.employees} disabled={!loaded||busy} validate={r=>{try{validateEmployee(r as EmployeeForm);return [];}catch(e){return [(e as Error).message];}}} commit={async(imported,ids,progress)=>{const uid=requireHROwner();const fresh=await getDocsFromServer(collection(db,"hrEmployees"));const existing=fresh.docs.map(d=>({...d.data(),id:d.id} as Employee));const prepared=employeePreflight(imported,ids,existing);for(let i=0;i<imported.length;i++){if(requireHROwner()!==uid)throw Error("Account changed. Import stopped.");const e=prepared[i];const same=existing.find(x=>x.id===e.id);if(!same)checkEmployeeDuplicate(existing,e);await createEmployee(e);if(!same)existing.push(e);progress(i+1);}setNotice("Reviewed employee import saved. No login access granted.");}}/>
  <p className="text-sm text-amber-900 bg-amber-50 p-3 rounded">Cloud employee directory: same list on phone and laptop when signed in as owner. Adding an employee does not grant portal login access. Existing browser attendance/payroll records are not migrated or changed.</p>
  {error&&<p role="alert" className="text-red-700">{error}</p>}{notice&&<p role="status" className="text-green-800">{notice}</p>}
  <button disabled={!loaded||busy} onClick={()=>{setOpen(!open);setReview(null);setError('');setNotice('');}} className="bg-[#182620] text-white rounded px-4 py-3">{open?'← Back to employees':'Add Employee'}</button>
