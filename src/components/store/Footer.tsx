@@ -169,6 +169,16 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
                 <Lock className="w-3.5 h-3.5" />
                 <span>Staff & Management Portal</span>
               </button>
+              <a
+                href="https://udecs-investor-demo.sksaharukhossain1996.workers.dev/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/10 hover:bg-[#CC9A2E] hover:text-[#0F1913] text-white font-semibold transition-colors"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>Investor Login</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
             </div>
           </div>
 
