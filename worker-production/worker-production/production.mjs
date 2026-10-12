@@ -1125,7 +1125,11 @@ var WhatsAppTemplateSender = class extends WorkerEntrypoint {
     if (!config || config.phoneNumberId !== "1393523580503157") throw Error("Verified sender unavailable");
     const r = await fetch(`https://graph.facebook.com/${config.apiVersion}/267792923264197?fields=id,name,status,category,language,components`, { headers: { Authorization: "Bearer " + config.accessToken }, signal: AbortSignal.timeout(15e3) });
     const j = await r.json();
-    if (!r.ok) return { ready: false, metaHttpStatus: r.status, metaErrorCode: j.error?.code || null };
+    if (!r.ok) {
+      const br = await fetch(`https://graph.facebook.com/${config.apiVersion}/2201691143944747/owned_whatsapp_business_accounts?fields=id,currency,name&limit=5`, { headers: { Authorization: "Bearer " + config.accessToken }, signal: AbortSignal.timeout(15e3) });
+      const bj = await br.json();
+      return { ready: false, metaHttpStatus: r.status, metaErrorCode: j.error?.code || null, metaErrorSubcode: j.error?.error_subcode || null, metaErrorMessage: String(j.error?.message || "").slice(0, 500), businessHttpStatus: br.status, businessErrorCode: bj.error?.code || null, businessErrorMessage: String(bj.error?.message || "").slice(0, 500), accounts: br.ok ? bj.data?.map((a) => ({ id: a.id, currency: a.currency, name: a.name })) : [] };
+    }
     const expected = "Hi {{1}}! UDECS Orders: We received your order {{2}} for INR {{3}}. Payment status: {{4}}. We will send another update when it ships.";
     const ready = j.id === "267792923264197" && j.name === "udecs_order_received_v1" && j.language === "en_US" && j.status === "APPROVED" && j.category === "UTILITY" && j.components?.length === 1 && j.components[0].type === "BODY" && j.components[0].text === expected;
     return { ready, checkedAt: (/* @__PURE__ */ new Date()).toISOString(), templateId: j.id, name: j.name, status: j.status, category: j.category, language: j.language, components: j.components, body: expected, senderPhoneId: config.phoneNumberId, directMetaCloudApi: true, customerMode: "off" };
