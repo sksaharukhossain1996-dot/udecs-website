@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
+test('portal authorization never comes from browser employee records',()=>{const s=fs.readFileSync('src/context/StoreContext.tsx','utf8');assert.equal((s.match(/const isAdmin = user.emailVerified && ADMIN_EMAILS.includes\(userEmail\)/g)||[]).length,2);assert.doesNotMatch(s,/employees\.find\(\(entry\) => entry\.email\.toLowerCase\(\) === userEmail\)/)});
+test('repo admin helper requires verified owner only',()=>{const s=fs.readFileSync('firestore.rules','utf8');const f=s.slice(s.indexOf('function isAdmin()'),s.indexOf('function isValidProduct'));assert.match(f,/email_verified == true/);assert.doesNotMatch(f,/exists\(/)});
+test('legacy error text is escaped before HTML rendering',()=>{const s=fs.readFileSync('public/admin.html','utf8');assert.match(s,/Could not load products: ' \+ esc\(e.message\)/)});
