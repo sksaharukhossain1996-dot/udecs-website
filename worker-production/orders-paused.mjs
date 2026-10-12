@@ -1,5 +1,8 @@
 // ../../tmp/udecs-wa-owner-test/owner-test.mjs
-var OWNER_UID = "ZAN8rLkaeFNvIKz0WyAN2g2nHOJ2";
+var OWNER_PAIRS = {
+  "sksaharukhossain1996@gmail.com": "ZAN8rLkaeFNvIKz0WyAN2g2nHOJ2",
+  "ecommerceunickdigital@gmail.com": "u2rhAyVJYCMcoWkGfabm2bmaQRv2"
+};
 var RECIPIENT = "917319190514";
 var TEMPLATE = "udecs_order_received_v1";
 function exactScope(scope) {
@@ -20,7 +23,7 @@ async function approvedControl({ scope, approvalRef, approvedHash, chargeCapInr,
   return { scope: s, approvalRef, approvedHash, chargeCapInr, verifiedMaximumChargeInr, expiresAt, templateCheckedAt, enabled: true };
 }
 function verifyOwner(principal2, origin) {
-  if (origin !== "https://udecs.store" || principal2?.uid !== OWNER_UID || principal2?.emailVerified !== true || !["sksaharukhossain1996@gmail.com", "ecommerceunickdigital@gmail.com"].includes(principal2?.email)) throw Error("Verified owner required");
+  if (origin !== "https://udecs.store" || principal2?.emailVerified !== true || !OWNER_PAIRS[principal2?.email] || principal2?.uid !== OWNER_PAIRS[principal2?.email]) throw Error("Verified owner required");
 }
 async function verifySenderGate(input, control, { customerMode = "off", testEnabled = false } = {}, now = Date.now()) {
   if (customerMode !== "off" || testEnabled !== true || control?.enabled !== true) throw Error("Customer mode must remain OFF and isolated test enabled");
