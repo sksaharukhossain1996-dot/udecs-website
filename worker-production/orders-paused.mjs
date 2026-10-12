@@ -1,4 +1,224 @@
-// preferences.mjs
+// ../../tmp/udecs-wa-owner-test/owner-test.mjs
+var OWNER_UID = "ZAN8rLkaeFNvIKz0WyAN2g2nHOJ2";
+var RECIPIENT = "917319190514";
+var TEMPLATE = "udecs_order_received_v1";
+function exactScope(scope) {
+  if (!scope || Object.keys(scope).sort().join() !== "amount,customerName,orderId,paymentStatus,recipient,template,templateLanguage,testId") throw Error("Exact test fields required");
+  if (scope.recipient !== RECIPIENT || scope.template !== TEMPLATE || scope.templateLanguage !== "en_US") throw Error("Outside owner English test scope");
+  if (!/^owner-test-[a-zA-Z0-9-]{1,60}$/.test(scope.testId) || !/^UDECS-TEST-[a-zA-Z0-9-]{1,60}$/.test(scope.orderId)) throw Error("Synthetic reference required");
+  if (typeof scope.customerName !== "string" || !scope.customerName.trim() || scope.customerName.length > 150 || !Number.isFinite(scope.amount) || scope.amount < 0 || Math.round(scope.amount * 100) !== scope.amount * 100 || !["pending", "paid"].includes(scope.paymentStatus)) throw Error("Invalid sample fields");
+  return { testId: scope.testId, recipient: scope.recipient, template: scope.template, templateLanguage: scope.templateLanguage, customerName: scope.customerName, orderId: scope.orderId, amount: scope.amount, paymentStatus: scope.paymentStatus };
+}
+async function scopeHash(scope) {
+  return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(exactScope(scope))))), (x) => x.toString(16).padStart(2, "0")).join("");
+}
+async function approvedControl({ scope, approvalRef, approvedHash, chargeCapInr, verifiedMaximumChargeInr, expiresAt, templateCheckedAt }, now = Date.now()) {
+  const s = exactScope(scope);
+  if (typeof approvalRef !== "string" || !approvalRef.startsWith("wamid.") || approvedHash !== await scopeHash(s)) throw Error("Exact owner approval missing");
+  if (!Number.isFinite(chargeCapInr) || chargeCapInr < 0 || !Number.isFinite(verifiedMaximumChargeInr) || verifiedMaximumChargeInr < 0 || verifiedMaximumChargeInr > chargeCapInr) throw Error("Verified charge exceeds approval");
+  if (!Number.isFinite(Date.parse(expiresAt)) || Date.parse(expiresAt) <= now || !Number.isFinite(Date.parse(templateCheckedAt)) || Date.parse(templateCheckedAt) > now) throw Error("Expired or unverified test control");
+  return { scope: s, approvalRef, approvedHash, chargeCapInr, verifiedMaximumChargeInr, expiresAt, templateCheckedAt, enabled: true };
+}
+function verifyOwner(principal2, origin) {
+  if (origin !== "https://udecs.store" || principal2?.uid !== OWNER_UID || principal2?.emailVerified !== true || !["sksaharukhossain1996@gmail.com", "ecommerceunickdigital@gmail.com"].includes(principal2?.email)) throw Error("Verified owner required");
+}
+async function verifySenderGate(input, control, { customerMode = "off", testEnabled = false } = {}, now = Date.now()) {
+  if (customerMode !== "off" || testEnabled !== true || control?.enabled !== true) throw Error("Customer mode must remain OFF and isolated test enabled");
+  const c = await approvedControl(control, now), s = exactScope(input);
+  if (await scopeHash(s) !== c.approvedHash) throw Error("Test scope changed");
+  return s;
+}
+async function invokeOwnerTest({ principal: principal2, origin, scope, control, flags, db, sender, now = () => Date.now() }) {
+  verifyOwner(principal2, origin);
+  const s = await verifySenderGate(scope, control, flags, now());
+  const snapshot = { scopeHash: await scopeHash(s), approvalRef: control.approvalRef, expiresAt: control.expiresAt };
+  const claim = await db.claim(s.testId, snapshot);
+  if (!claim.claimed) return { state: claim.state || "not_claimed" };
+  try {
+    const fresh = await db.recheck(s.testId, claim.lease);
+    if (!fresh || fresh.suppressed) {
+      await db.finish(s.testId, claim.lease, { state: "held", reason: "opted_out_or_control_missing" });
+      return { state: "held" };
+    }
+    await verifySenderGate(s, fresh.control, flags, now());
+    if (fresh.control.approvalRef !== snapshot.approvalRef || fresh.control.expiresAt !== snapshot.expiresAt) throw Error("Control changed");
+  } catch {
+    await db.finish(s.testId, claim.lease, { state: "held", reason: "gate_changed" });
+    return { state: "held" };
+  }
+  let result;
+  try {
+    result = await sender(s);
+  } catch {
+    result = { accepted: false };
+  }
+  if (result?.accepted === true && typeof result.messageId === "string" && /^wamid\./.test(result.messageId)) {
+    const saved = await db.finish(s.testId, claim.lease, { state: "submitted", messageId: result.messageId });
+    return { state: saved ? "submitted" : "manual_review" };
+  }
+  await db.finish(s.testId, claim.lease, { state: "manual_review", reason: result?.definiteRejection ? "rejected" : "uncertain_submission" });
+  return { state: "manual_review" };
+}
+
+// ../../tmp/udecs-wa-owner-test/route.mjs
+function ownerTestRouter({ verify, loadCurrent, store, sender, prepare, readiness }) {
+  return async function(request, env) {
+    const origin = request.headers.get("Origin"), path = new URL(request.url).pathname;
+    const headers = { "Content-Type": "application/json", "Cache-Control": "no-store", "Vary": "Origin", ...origin === "https://udecs.store" ? { "Access-Control-Allow-Origin": origin } : {} };
+    const reply = (status, body) => new Response(JSON.stringify(body), { status, headers });
+    if (!["/api/whatsapp/owner-test", "/api/whatsapp/owner-test/status", "/api/whatsapp/owner-test/prepare", "/api/whatsapp/owner-test/readiness"].includes(path)) return null;
+    if (origin !== "https://udecs.store") return reply(403, { error: "Origin not allowed" });
+    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: { ...headers, "Access-Control-Allow-Headers": "Authorization, Content-Type", "Access-Control-Allow-Methods": "GET,POST,OPTIONS" } });
+    try {
+      const principal2 = await verify(request.headers.get("Authorization")?.match(/^Bearer (.+)$/)?.[1], env);
+      verifyOwner(principal2, origin);
+      if (env.WHATSAPP_ORDER_MODE !== "off") return reply(503, { error: "Customer dispatch must remain OFF" });
+      if (path.endsWith("/readiness") && request.method === "GET") return reply(200, await readiness(env));
+      const current = await loadCurrent(env);
+      if (!current) return reply(503, { error: "Owner test not prepared" });
+      if (path.endsWith("/status") && request.method === "GET") return reply(200, { scope: current.scope, state: current.state, approvalRef: current.control.approvalRef });
+      if (path.endsWith("/status") || request.method !== "POST") return reply(405, { error: "Method not allowed" });
+      const text2 = await request.text();
+      if (text2.length > 512) return reply(400, { error: "Invalid test request" });
+      const body = JSON.parse(text2);
+      if (Object.keys(body).sort().join() !== "scopeHash,testId" || body.testId !== current.scope.testId || body.scopeHash !== await scopeHash(current.scope)) return reply(400, { error: "Exact prepared fixture required" });
+      if (path.endsWith("/prepare")) {
+        if (env.WHATSAPP_OWNER_TEST_ENABLED !== "true") return reply(503, { error: "Owner test disabled" });
+        return reply(200, await prepare(env, current.control));
+      }
+      const result = await invokeOwnerTest({ principal: principal2, origin, scope: current.scope, control: current.control, flags: { customerMode: env.WHATSAPP_ORDER_MODE, testEnabled: env.WHATSAPP_OWNER_TEST_ENABLED === "true" }, db: store(env), sender: (s) => sender(env, s) });
+      return reply(200, result);
+    } catch {
+      return reply(403, { error: "Owner test unavailable or outside approved scope" });
+    }
+  };
+}
+
+// ../../tmp/udecs-wa-owner-test/receipt-helpers.mjs
+var rank = { sent: 1, delivered: 2, read: 3 };
+function reconcileReceipt(event, receipt) {
+  if (!["submitted", "sent", "delivered", "read", "delivery_failed"].includes(event?.state) || event.messageId !== receipt.messageId || event.recipient !== receipt.recipient) return { apply: false, reason: "unmatched" };
+  if (!Number.isSafeInteger(receipt.timestamp) || receipt.timestamp <= 0) return { apply: false, reason: "invalid" };
+  const old = Number(event.lastReceiptTimestamp || 0);
+  if (receipt.timestamp < old) return { apply: false, reason: "older" };
+  const current = event.state === "submitted" ? 0 : rank[event.state] || 0;
+  if (receipt.status === "failed") {
+    if (current >= 2) return { apply: false, reason: "already_delivered" };
+    if (event.state === "delivery_failed" && receipt.timestamp === old) return { apply: false, reason: "duplicate" };
+    return { apply: true, update: { state: "delivery_failed", lastReceiptTimestamp: receipt.timestamp, automaticRetry: false } };
+  }
+  if (!rank[receipt.status] || rank[receipt.status] <= current) return { apply: false, reason: "duplicate_or_regression" };
+  return { apply: true, update: { state: receipt.status, lastReceiptTimestamp: receipt.timestamp, automaticRetry: false } };
+}
+function validateReceipt(r) {
+  if (!r || Object.keys(r).some((k) => !["messageId", "recipient", "status", "timestamp"].includes(k)) || !/^wamid\.[A-Za-z0-9_+=\/-]{1,250}$/.test(r.messageId || "") || !/^\d{8,15}$/.test(r.recipient || "") || !["sent", "delivered", "read", "failed"].includes(r.status) || !Number.isSafeInteger(r.timestamp) || r.timestamp <= 0) throw Error("Invalid receipt");
+  return r;
+}
+async function receiptKey(id) {
+  return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode("udecs-whatsapp-receipt-v1:" + id))), (x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+// ../../tmp/udecs-wa-owner-test/receipts.mjs
+async function finishTestWithIndex(db, id, lease, update, now = () => (/* @__PURE__ */ new Date()).toISOString()) {
+  if (!["held", "submitted", "manual_review"].includes(update.state)) throw Error("Invalid test state");
+  return db.runTransaction(async (tx) => {
+    const ref = db.collection("whatsappOwnerTests").doc(id), d = await tx.get(ref);
+    if (!d.exists || d.data().state !== "submitting" || d.data().leaseToken !== lease) return false;
+    let receiptUpdate = {};
+    if (update.state === "submitted") {
+      const key = await receiptKey(update.messageId), index = db.collection("whatsappOwnerTestMessageIndex").doc(key), receipt = db.collection("whatsappMessageReceipts").doc(key);
+      const [ix, rc] = await tx.getAll(index, receipt);
+      if (ix.exists && ix.data().testId !== id) throw Error("Test message index conflict");
+      if (rc.exists) {
+        const decision = reconcileReceipt({ ...d.data(), ...update }, rc.data());
+        if (decision.apply) receiptUpdate = decision.update;
+      }
+      if (!ix.exists) tx.create(index, { testId: id, messageId: update.messageId });
+    }
+    tx.update(ref, { ...update, ...receiptUpdate, leaseToken: null, automaticRetry: false, updatedAt: now() });
+    return true;
+  });
+}
+async function reconcileIsolatedReceipt(db, receipt, now = () => (/* @__PURE__ */ new Date()).toISOString()) {
+  validateReceipt(receipt);
+  const key = await receiptKey(receipt.messageId);
+  return db.runTransaction(async (tx) => {
+    const ix = await tx.get(db.collection("whatsappOwnerTestMessageIndex").doc(key));
+    if (!ix.exists) return { matched: false };
+    const ref = db.collection("whatsappOwnerTests").doc(ix.data().testId), d = await tx.get(ref);
+    if (!d.exists) return { matched: false };
+    const decision = reconcileReceipt(d.data(), receipt);
+    if (decision.apply) tx.update(ref, { ...decision.update, automaticRetry: false, updatedAt: now() });
+    return { matched: decision.apply };
+  });
+}
+
+// ../../tmp/udecs-wa-owner-test/store.mjs
+function isolatedStore(db, { now = () => Date.now(), random = () => crypto.randomUUID(), recipientKey } = {}) {
+  const fixture = (id) => db.collection("whatsappOwnerTests").doc(id);
+  const control = db.collection("whatsappOwnerTestControl").doc("once");
+  return {
+    async claim(id, snapshot) {
+      return db.runTransaction(async (tx) => {
+        const ref = fixture(id), d = await tx.get(ref);
+        if (!d.exists || d.data().state !== "pending" || d.data().attempts !== 0) return { claimed: false, state: d.exists ? d.data().state : "not_prepared" };
+        if (d.data().scopeHash !== snapshot.scopeHash || d.data().approvalRef !== snapshot.approvalRef || d.data().expiresAt !== snapshot.expiresAt) return { claimed: false, state: "scope_mismatch" };
+        const lease = random();
+        tx.update(ref, { state: "submitting", attempts: 1, leaseToken: lease, submitStartedAt: new Date(now()).toISOString() });
+        return { claimed: true, lease };
+      });
+    },
+    async recheck(id, lease) {
+      return db.runTransaction(async (tx) => {
+        const d = await tx.get(fixture(id));
+        if (!d.exists || d.data().leaseToken !== lease || d.data().state !== "submitting") return null;
+        const [c, s] = await tx.getAll(control, db.collection("whatsappUpdateSuppressions").doc(await recipientKey(d.data().recipient)));
+        return { control: c.exists ? c.data() : null, suppressed: s.exists && s.data().suppressed === true };
+      });
+    },
+    async finish(id, lease, update) {
+      return finishTestWithIndex(db, id, lease, update, () => new Date(now()).toISOString());
+    }
+  };
+}
+
+// ../../tmp/udecs-wa-owner-test/adapters.mjs
+async function currentControl(env) {
+  if (env.WHATSAPP_ORDER_MODE !== "off" || env.WHATSAPP_OWNER_TEST_ENABLED !== "true" || !env.WHATSAPP_OWNER_TEST_CONTROL) throw Error("Owner test disabled");
+  const c = JSON.parse(env.WHATSAPP_OWNER_TEST_CONTROL);
+  if (c.enabled !== true) throw Error("Owner test disabled");
+  return approvedControl(c);
+}
+async function loadFixture(env, db) {
+  const c = await currentControl(env), id = c.scope.testId;
+  return db.runTransaction(async (tx) => {
+    const d = await tx.get(db.collection("whatsappOwnerTests").doc(id));
+    return { scope: c.scope, control: c, state: d.exists ? d.data().state : "not_prepared" };
+  });
+}
+
+// ../../tmp/udecs-wa-owner-test/setup.mjs
+async function prepareFixture(db, control, now = () => Date.now()) {
+  const c = await approvedControl(control, now());
+  if (control.enabled !== true) throw Error("Disabled test");
+  const id = c.scope.testId, hash = await scopeHash(c.scope);
+  return db.runTransaction(async (tx) => {
+    const ref = db.collection("whatsappOwnerTests").doc(id), ctrl = db.collection("whatsappOwnerTestControl").doc("once"), [old, prior] = await tx.getAll(ref, ctrl);
+    if (old.exists) {
+      const d = old.data();
+      if (d.scopeHash !== hash || d.approvalRef !== c.approvalRef || d.expiresAt !== c.expiresAt) throw Error("Fixture exists with different scope");
+      return { prepared: true, state: d.state, duplicate: true };
+    }
+    if (prior.exists && prior.data().scope?.testId !== id) throw Error("Another test control exists");
+    tx.create(ref, { scope: c.scope, scopeHash: hash, recipient: c.scope.recipient, approvalRef: c.approvalRef, expiresAt: c.expiresAt, state: "pending", attempts: 0, automaticRetry: false, synthetic: true, createdAt: new Date(now()).toISOString() });
+    if (prior.exists) tx.update(ctrl, { ...c, enabled: true });
+    else tx.create(ctrl, { ...c, enabled: true });
+    return { prepared: true, state: "pending" };
+  });
+}
+
+// ../../tmp/udecs-wa-owner-test/orders-integrated.mjs
+import { WorkerEntrypoint } from "cloudflare:workers";
 var CONSENT_VERSION = "udecs-order-whatsapp-v1";
 var CONSENT_TEXT = "I agree to receive WhatsApp order, shipping and delivery updates from UDECS at this number. I can opt out by replying STOP. Optional; I can order without selecting this.";
 function canonicalRecipient(phone) {
@@ -24,56 +244,49 @@ function receivedEvent(id, order) {
   if (order.whatsappLanguage !== "en" || order.whatsappConsent.version !== CONSENT_VERSION || order.whatsappConsent.recipient !== canonicalRecipient(order.customerPhone)) throw Error("Order WhatsApp preferences invalid");
   return { eventId: "received_" + id, orderId: id, kind: "received", state: "pending", createdAt: order.createdAt, language: order.whatsappLanguage, recipient: order.whatsappConsent.recipient, attempts: 0 };
 }
-
-// orders-integrated-draft.mjs
-import { WorkerEntrypoint } from "cloudflare:workers";
-
-// receipts.mjs
-var rank = { sent: 1, delivered: 2, read: 3 };
-function reconcileReceipt(event, receipt) {
+var rank2 = { sent: 1, delivered: 2, read: 3 };
+function reconcileReceipt2(event, receipt) {
   if (!["submitted", "sent", "delivered", "read", "delivery_failed"].includes(event?.state) || event.messageId !== receipt.messageId || event.recipient !== receipt.recipient) return { apply: false, reason: "unmatched" };
   if (!Number.isSafeInteger(receipt.timestamp) || receipt.timestamp <= 0) return { apply: false, reason: "invalid" };
   const old = Number(event.lastReceiptTimestamp || 0);
   if (receipt.timestamp < old) return { apply: false, reason: "older" };
-  const current = event.state === "submitted" ? 0 : rank[event.state] || 0;
+  const current = event.state === "submitted" ? 0 : rank2[event.state] || 0;
   if (receipt.status === "failed") {
     if (current >= 2) return { apply: false, reason: "already_delivered" };
     if (event.state === "delivery_failed" && receipt.timestamp === old) return { apply: false, reason: "duplicate" };
     return { apply: true, update: { state: "delivery_failed", lastReceiptTimestamp: receipt.timestamp, automaticRetry: false } };
   }
-  if (!rank[receipt.status] || rank[receipt.status] <= current) return { apply: false, reason: "duplicate_or_regression" };
+  if (!rank2[receipt.status] || rank2[receipt.status] <= current) return { apply: false, reason: "duplicate_or_regression" };
   return { apply: true, update: { state: receipt.status, lastReceiptTimestamp: receipt.timestamp, automaticRetry: false } };
 }
-function validateReceipt(r) {
+function validateReceipt2(r) {
   if (!r || Object.keys(r).some((k) => !["messageId", "recipient", "status", "timestamp"].includes(k)) || !/^wamid\.[A-Za-z0-9_+=\/-]{1,250}$/.test(r.messageId || "") || !/^\d{8,15}$/.test(r.recipient || "") || !["sent", "delivered", "read", "failed"].includes(r.status) || !Number.isSafeInteger(r.timestamp) || r.timestamp <= 0) throw Error("Invalid receipt");
   return r;
 }
-async function receiptKey(id) {
+async function receiptKey2(id) {
   return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode("udecs-whatsapp-receipt-v1:" + id))), (x) => x.toString(16).padStart(2, "0")).join("");
 }
 async function persistReceipt(db, receipt, now = () => (/* @__PURE__ */ new Date()).toISOString()) {
-  validateReceipt(receipt);
-  const key = await receiptKey(receipt.messageId), ref = db.collection("whatsappMessageReceipts").doc(key), index = db.collection("whatsappMessageIndex").doc(key);
+  validateReceipt2(receipt);
+  const key = await receiptKey2(receipt.messageId), ref = db.collection("whatsappMessageReceipts").doc(key), index = db.collection("whatsappMessageIndex").doc(key);
   return db.runTransaction(async (tx) => {
     const [prior, ix] = await tx.getAll(ref, index);
     const previous = prior.exists ? prior.data() : null;
     if (previous && previous.recipient !== receipt.recipient) throw Error("Receipt recipient conflict");
     let chosen = receipt;
     if (previous) {
-      const update = reconcileReceipt({ state: previous.status === "failed" ? "delivery_failed" : previous.status, messageId: previous.messageId, recipient: previous.recipient, lastReceiptTimestamp: previous.timestamp }, receipt);
+      const update = reconcileReceipt2({ state: previous.status === "failed" ? "delivery_failed" : previous.status, messageId: previous.messageId, recipient: previous.recipient, lastReceiptTimestamp: previous.timestamp }, receipt);
       if (!update.apply) return { persisted: true, duplicate: true };
     }
     const eventRef = ix.exists ? db.collection("whatsappOrderOutbox").doc(ix.data().eventId) : null;
     const eventDoc = eventRef ? await tx.get(eventRef) : null;
     if (previous) tx.update(ref, { ...chosen, recordedAt: now() });
     else tx.create(ref, { ...chosen, recordedAt: now() });
-    const decision = eventDoc?.exists ? reconcileReceipt(eventDoc.data(), chosen) : { apply: false };
+    const decision = eventDoc?.exists ? reconcileReceipt2(eventDoc.data(), chosen) : { apply: false };
     if (decision.apply) tx.update(eventRef, { ...decision.update, updatedAt: now() });
     return { persisted: true, matched: !!decision.apply };
   });
 }
-
-// dispatcher.mjs
 var PHONE_ID = "1393523580503157";
 function eligibility(event, order, control, suppressed) {
   if (!control || control.mode !== "owner-test" && control.mode !== "live") return "paused";
@@ -124,8 +337,6 @@ async function dispatchOne(id, { store, sender }) {
     return { state: "manual_review" };
   }
 }
-
-// ledger.mjs
 var END_TIME = "9999-12-31T00:00:00.000Z";
 function eventLedger(db, { now = () => Date.now(), random = () => crypto.randomUUID(), recipientKey } = {}) {
   const eventRef = (id) => db.collection("whatsappOrderOutbox").doc(id);
@@ -184,11 +395,11 @@ function eventLedger(db, { now = () => Date.now(), random = () => crypto.randomU
         if (!d.exists || d.data().leaseToken !== lease) return false;
         let receiptUpdate = {};
         if (update.state === "submitted") {
-          const key = await receiptKey(update.messageId), index = db.collection("whatsappMessageIndex").doc(key), receipt = db.collection("whatsappMessageReceipts").doc(key);
+          const key = await receiptKey2(update.messageId), index = db.collection("whatsappMessageIndex").doc(key), receipt = db.collection("whatsappMessageReceipts").doc(key);
           const [ix, rc] = await tx.getAll(index, receipt);
           if (ix.exists && ix.data().eventId !== id) throw Error("Message index conflict");
           if (rc.exists) {
-            const decision = reconcileReceipt({ ...d.data(), ...update }, rc.data());
+            const decision = reconcileReceipt2({ ...d.data(), ...update }, rc.data());
             if (decision.apply) receiptUpdate = decision.update;
           }
           if (!ix.exists) tx.create(index, { eventId: id, messageId: update.messageId });
@@ -202,8 +413,6 @@ function eventLedger(db, { now = () => Date.now(), random = () => crypto.randomU
 function sendSnapshot({ event, order, control }) {
   return { recipient: event.recipient, language: event.language, orderId: order.id, name: order.customerName, total: order.totalAmount, payment: order.paymentStatus, template: control?.templates?.[event.language]?.received, mode: control?.mode, review: control?.postReviewRef, postTest: control?.postTestApprovalRef, enabledAt: control?.enabledAt };
 }
-
-// suppression.mjs
 var WA_UPDATES_PHONE_ID = "1393523580503157";
 function validateWaStopEvent(e) {
   if (!e || typeof e !== "object" || Array.isArray(e) || Object.keys(e).some((k) => !["kind", "phoneNumberId", "recipient", "messageId", "timestamp"].includes(k)) || e.kind !== "opt_out" || e.phoneNumberId !== WA_UPDATES_PHONE_ID || !/^\d{8,15}$/.test(e.recipient || "") || typeof e.messageId !== "string" || !/^wamid\.[A-Za-z0-9_+=\/-]{1,250}$/.test(e.messageId) || !/^\d{1,12}$/.test(e.timestamp || "") || !Number.isSafeInteger(Number(e.timestamp)) || Number(e.timestamp) <= 0) throw Error("Invalid opt-out event");
@@ -223,12 +432,10 @@ async function persistWaStop(db, event, now = () => (/* @__PURE__ */ new Date())
     return { persisted: true, duplicate: false };
   });
 }
-
-// orders-integrated-draft.mjs
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 var SENDER = "orders@notifications.udecs.store";
-var RECIPIENT = "g02rue@mail.instinct.com";
+var RECIPIENT2 = "g02rue@mail.instinct.com";
 function createdAlert(id, o) {
   if (o.gatewayVerification || o.nonDelivery || o.taxReportingExcluded) return null;
   return { eventId: "created_" + id, payload: { orderId: id, customerName: o.customerName, items: o.items.map((i) => ({ name: i.name, quantity: i.quantity })), amount: o.totalAmount, paymentStatus: o.paymentStatus, time: o.createdAt }, state: "pending", attempts: 0, nextAttemptAt: o.createdAt, leaseUntil: null, leaseToken: null, firstAttemptAt: null, submittedMessageId: null };
@@ -236,7 +443,7 @@ function createdAlert(id, o) {
 __name(createdAlert, "createdAlert");
 function emailFor(e) {
   const p = e.payload;
-  return { from: SENDER, to: [RECIPIENT], subject: "UDECS new order " + p.orderId, text: [`Order: ${p.orderId}`, `Customer: ${p.customerName}`, ...p.items.map((i) => `${i.name} x ${i.quantity}`), `Amount: INR ${Number(p.amount).toFixed(2)}`, `Payment status: ${p.paymentStatus}`, `Time: ${p.time}`].join("\n") };
+  return { from: SENDER, to: [RECIPIENT2], subject: "UDECS new order " + p.orderId, text: [`Order: ${p.orderId}`, `Customer: ${p.customerName}`, ...p.items.map((i) => `${i.name} x ${i.quantity}`), `Amount: INR ${Number(p.amount).toFixed(2)}`, `Payment status: ${p.paymentStatus}`, `Time: ${p.time}`].join("\n") };
 }
 __name(emailFor, "emailFor");
 function alertStore(db) {
@@ -793,6 +1000,21 @@ var worker_default = { ...router(), async scheduled(event, env, ctx) {
     }
   })());
 } };
+var ownerTestDb = async (env) => restDb(env.FIREBASE_PROJECT_ID, await sharedServerToken(env));
+var isolatedOwnerRoute = ownerTestRouter({
+  verify: principal,
+  loadCurrent: async (env) => loadFixture(env, await ownerTestDb(env)),
+  store: (env) => ({ claim: async (...a) => isolatedStore(await ownerTestDb(env), { recipientKey: waRecipientKey }).claim(...a), recheck: async (...a) => isolatedStore(await ownerTestDb(env), { recipientKey: waRecipientKey }).recheck(...a), finish: async (...a) => isolatedStore(await ownerTestDb(env), { recipientKey: waRecipientKey }).finish(...a) }),
+  prepare: async (env, c) => prepareFixture(await ownerTestDb(env), c),
+  readiness: async (env) => env.WA_TEMPLATE_SENDER.ownerTestReadiness(),
+  sender: async (env, s) => env.WA_TEMPLATE_SENDER.sendOwnerFixture(s)
+});
+var preservedOrderFetch = worker_default.fetch;
+worker_default = { ...worker_default, async fetch(request, env, ctx) {
+  const path = new URL(request.url).pathname;
+  if (path.startsWith("/api/whatsapp/owner-test")) return await isolatedOwnerRoute(request, env) || new Response("Not found", { status: 404 });
+  return preservedOrderFetch(request, env, ctx);
+} };
 var CustomerRateLimit = class {
   static {
     __name(this, "CustomerRateLimit");
@@ -848,7 +1070,9 @@ var WhatsAppOrders = class extends WorkerEntrypoint {
 async function receiptPersistenceAdapter(env, receipt) {
   if (!env.ORDER_SERVICE_ACCOUNT || !env.FIREBASE_PROJECT_ID) throw Error("Receipts unavailable");
   const db = restDb(env.FIREBASE_PROJECT_ID, await sharedServerToken(env));
-  return persistReceipt(db, receipt);
+  const result = await persistReceipt(db, receipt);
+  await reconcileIsolatedReceipt(db, receipt);
+  return result;
 }
 export {
   CustomerRateLimit,
