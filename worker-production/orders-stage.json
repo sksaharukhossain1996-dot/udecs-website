@@ -1,0 +1,50 @@
+{
+  "name": "udecs-orders-api",
+  "main": "orders-paused.mjs",
+  "compatibility_date": "2026-10-02",
+  "vars": {
+    "ENABLED": "true",
+    "FIREBASE_PROJECT_ID": "udecs-store",
+    "FIREBASE_WEB_API_KEY": "AIzaSyANRNCASxjGE-IZSLdCws_6W4VpjemO1aI",
+    "CUSTOMER_PAYU_ENABLED": "true",
+    "ORDER_ALERTS_ENABLED": "true",
+    "WHATSAPP_ORDER_MODE": "off"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "RATE_LIMITER",
+        "class_name": "CustomerRateLimit"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "CustomerRateLimit"
+      ]
+    }
+  ],
+  "account_id": "bfa14054934d0f067511f26979c971d4",
+  "compatibility_flags": [
+    "global_fetch_strictly_public"
+  ],
+  "triggers": {
+    "crons": [
+      "17 * * * *"
+    ]
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "invocation_logs": false
+    },
+    "traces": {
+      "enabled": false
+    }
+  },
+  "keep_vars": true
+}
