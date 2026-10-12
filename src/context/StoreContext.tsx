@@ -557,9 +557,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setFirebaseUser(user);
       if (user) {
         const userEmail = user.email?.toLowerCase() || '';
-        const isAdmin = ADMIN_EMAILS.includes(userEmail);
-        const employee = employees.find((entry) => entry.email.toLowerCase() === userEmail);
-        if (!isAdmin && !employee) {
+        const isAdmin = user.emailVerified && ADMIN_EMAILS.includes(userEmail);
+        if (!isAdmin) {
           setCurrentUser(null);
           setUserRole('customer');
           void logOutFirebase().catch((error) => console.error('Unauthorized Firebase sign-in could not be closed:', error));
@@ -568,10 +567,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setCurrentUser({
           name: user.displayName || user.email?.split('@')[0] || 'Store Staff',
           email: user.email || '',
-          role: isAdmin ? 'admin' : employee!.role,
+          role: 'admin' as const,
         });
-        setUserRole(isAdmin ? 'admin' : employee!.role);
-        logAction('FIREBASE_AUTH', `Authenticated as ${user.email} (${isAdmin ? 'Admin' : 'Staff'})`, {name:user.email || 'Authenticated staff',role:isAdmin?'admin':employee!.role});
+        setUserRole('admin');
+        logAction('FIREBASE_AUTH', `Authenticated as ${user.email} (${isAdmin ? 'Admin' : 'Staff'})`, {name:user.email || 'Authenticated staff',role:'admin'});
       } else {
         setCurrentUser(null);
         setUserRole('customer');
@@ -1049,9 +1048,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       if (user) {
         setFirebaseUser(user);
         const userEmail = user.email?.toLowerCase() || '';
-        const isAdmin = ADMIN_EMAILS.includes(userEmail);
-        const employee = employees.find((entry) => entry.email.toLowerCase() === userEmail);
-        if (!isAdmin && !employee) {
+        const isAdmin = user.emailVerified && ADMIN_EMAILS.includes(userEmail);
+        if (!isAdmin) {
           await logOutFirebase();
           setFirebaseUser(null);
           throw new Error('This Google account is not authorized for staff access.');
@@ -1059,11 +1057,11 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const staffUser = {
           name: user.displayName || user.email?.split('@')[0] || 'Store Staff',
           email: user.email || '',
-          role: isAdmin ? 'admin' : employee!.role,
+          role: 'admin' as const,
         };
         setCurrentUser(staffUser);
-        setUserRole(isAdmin ? 'admin' : employee!.role);
-        logAction('FIREBASE_GOOGLE_LOGIN', `Logged in with Google: ${user.email}`, {name:user.email || 'Authenticated staff',role:isAdmin?'admin':employee!.role});
+        setUserRole('admin');
+        logAction('FIREBASE_GOOGLE_LOGIN', `Logged in with Google: ${user.email}`, {name:user.email || 'Authenticated staff',role:'admin'});
       }
     } catch (err) {
       console.error('Google Sign-In Error:', err);
