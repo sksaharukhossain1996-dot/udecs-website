@@ -18,7 +18,8 @@
     "enabled": true
   },
   "vars": {
-    "LISTING_AI_FREE_TIER": "confirmed"
+    "LISTING_AI_FREE_TIER": "confirmed",
+    "WHATSAPP_ORDER_MODE": "off"
   },
   "durable_objects": {
     "bindings": [
@@ -36,14 +37,11 @@
       ]
     }
   ],
-  "find_additional_modules": true,
-  "rules": [
+  "services": [
     {
-      "type": "ESModule",
-      "globs": [
-        "**/*.mjs"
-      ],
-      "fallthrough": true
+      "binding": "WA_ORDER_SERVICE",
+      "service": "udecs-orders-api",
+      "entrypoint": "WhatsAppOrders"
     }
   ]
 }
