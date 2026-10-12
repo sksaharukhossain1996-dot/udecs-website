@@ -1,3 +1,4 @@
+import {OrderWhatsAppPreferences} from './OrderWhatsAppPreferences';
 import {readProductsByIds} from '../../firebase/catalogIndex';
 import {wholesaleAvailability} from '../../lib/wholesale';
 import { customerProductText, customerProductTitle } from '../../lib/wholesale';
@@ -140,6 +141,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const signInForOrder=async()=>{setLoginBusy(true);setLoginError('');try{await customerSignIn();}catch{setLoginError('Google sign-in did not finish. Please try again. No order was placed.');}finally{setLoginBusy(false);}};
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('payu');
+  const whatsappLanguage='en' as const;const setWhatsappLanguage=()=>{};
+  const [whatsappUpdates,setWhatsappUpdates]=useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const gatewayRef=useRef<HTMLDivElement>(null);const [payuError,setPayuError]=useState('');const [payuBusy,setPayuBusy]=useState(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
@@ -253,7 +256,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
       if(recovered.found)saved=recovered.order;
       else{
         if(attempt.current&&attempt.current.uid!==user!.uid)attempt.current=null;
-        if(!attempt.current)attempt.current={uid:user!.uid,key:reference.key,input:{customerName:formData.name,customerPhone:formData.phone,shippingAddress:formData.address,city:formData.city,state:formData.state,pincode:formData.pincode,gstin:formData.gstin||undefined,currency:'INR',paymentMethod:method,expectedTotal:totalAmount,items:checkoutItems.map(i=>({productId:i.product.id,quantity:i.quantity,isWholesale:i.isWholesale}))}};
+        if(!attempt.current)attempt.current={uid:user!.uid,key:reference.key,input:{customerName:formData.name,customerPhone:formData.phone,shippingAddress:formData.address,city:formData.city,state:formData.state,pincode:formData.pincode,gstin:formData.gstin||undefined,currency:'INR',paymentMethod:method,whatsappLanguage,whatsappConsent:{accepted:!gatewayVerification&&whatsappUpdates,version:'udecs-order-whatsapp-v1'},expectedTotal:totalAmount,items:checkoutItems.map(i=>({productId:i.product.id,quantity:i.quantity,isWholesale:i.isWholesale}))}};
         saved=(await api.create(attempt.current.input,attempt.current.key)).order;
       }
       if(customerAuth.currentUser?.uid!==user!.uid)throw Error('Customer account changed. Sign in to the original account to recover the saved order.');
@@ -438,6 +441,8 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                     className="w-full text-xs bg-white border border-[#CBCFB9] rounded p-2.5 text-[#0F1913] uppercase font-mono"
                   />
                 </div>
+
+                {!gatewayVerification&&!quoteShipping&&<OrderWhatsAppPreferences language={whatsappLanguage} accepted={whatsappUpdates} disabled={isProcessing||!!attempt.current||recoverOnLoad} onLanguageChange={setWhatsappLanguage} onAcceptedChange={setWhatsappUpdates}/>}
 
                 {/* Payment Selection */}
                 <div className="pt-2" hidden={quoteShipping}>
