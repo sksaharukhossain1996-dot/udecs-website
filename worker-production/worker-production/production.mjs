@@ -1125,10 +1125,10 @@ var WhatsAppTemplateSender = class extends WorkerEntrypoint {
     if (!config || config.phoneNumberId !== "1393523580503157") throw Error("Verified sender unavailable");
     const r = await fetch(`https://graph.facebook.com/${config.apiVersion}/267792923264197?fields=id,name,status,category,language,components`, { headers: { Authorization: "Bearer " + config.accessToken }, signal: AbortSignal.timeout(15e3) });
     const j = await r.json();
-    if (!r.ok || j.id !== "267792923264197" || j.name !== "udecs_order_received_v1" || j.language !== "en_US" || j.status !== "APPROVED" || j.category !== "UTILITY") throw Error("Current English utility template not confirmed");
+    if (!r.ok) return { ready: false, metaHttpStatus: r.status, metaErrorCode: j.error?.code || null };
     const expected = "Hi {{1}}! UDECS Orders: We received your order {{2}} for INR {{3}}. Payment status: {{4}}. We will send another update when it ships.";
-    if (j.components?.length !== 1 || j.components[0].type !== "BODY" || j.components[0].text !== expected) throw Error("Template body changed");
-    return { checkedAt: (/* @__PURE__ */ new Date()).toISOString(), templateId: j.id, name: j.name, status: j.status, category: j.category, language: j.language, body: expected, senderPhoneId: config.phoneNumberId, directMetaCloudApi: true, customerMode: "off" };
+    const ready = j.id === "267792923264197" && j.name === "udecs_order_received_v1" && j.language === "en_US" && j.status === "APPROVED" && j.category === "UTILITY" && j.components?.length === 1 && j.components[0].type === "BODY" && j.components[0].text === expected;
+    return { ready, checkedAt: (/* @__PURE__ */ new Date()).toISOString(), templateId: j.id, name: j.name, status: j.status, category: j.category, language: j.language, components: j.components, body: expected, senderPhoneId: config.phoneNumberId, directMetaCloudApi: true, customerMode: "off" };
   }
   async sendOwnerFixture(input) {
     const control = await currentControl(this.env);
