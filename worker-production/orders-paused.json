@@ -8,7 +8,8 @@
     "FIREBASE_WEB_API_KEY": "AIzaSyANRNCASxjGE-IZSLdCws_6W4VpjemO1aI",
     "CUSTOMER_PAYU_ENABLED": "true",
     "ORDER_ALERTS_ENABLED": "true",
-    "WHATSAPP_ORDER_MODE": "off"
+    "WHATSAPP_ORDER_MODE": "off",
+    "WHATSAPP_OWNER_TEST_ENABLED": "false"
   },
   "durable_objects": {
     "bindings": [

@@ -1,4 +1,4 @@
-name: Deploy paused English order WhatsApp pipeline
+name: Deploy isolated disabled English owner-test routes
 on:
   push:
     branches: [main]
@@ -23,10 +23,9 @@ jobs:
         run: |
           node --check worker-production/worker-production/production.mjs
           node --check worker-production/orders-paused.mjs
-          node -e "const fs=require('fs'),c=require('crypto');for(const [p,h] of [['worker-production/worker-production/production.mjs','522de8cc52d05e75042dc49ecd44b5f9658c666c557e1b716c7a83637a467cb1'],['worker-production/orders-paused.mjs','a99f0abd6a5addaaff6dd88756a3491101533eb194fcefa55a97e3ecf7178231']])if(c.createHash('sha256').update(fs.readFileSync(p)).digest('hex')!==h)throw Error('Reviewed source changed');for(const p of ['orders-stage.json','orders-paused.json','wrangler.json']){const j=JSON.parse(fs.readFileSync('worker-production/'+p));if(j.vars.WHATSAPP_ORDER_MODE!=='off')throw Error('Sending must stay off');if(p.startsWith('orders-')&&(j.vars.ENABLED!=='true'||j.vars.CUSTOMER_PAYU_ENABLED!=='true'||j.vars.ORDER_ALERTS_ENABLED!=='true'||j.triggers.crons.join()!=='17 * * * *'))throw Error('Order settings changed')}"
+          node -e "const fs=require('fs'),c=require('crypto');for(const [p,h] of [['worker-production/worker-production/production.mjs','52bb3e06a3fcaf97bdec5584991afd1597441c723241d7eea50e2221f69144cb'],['worker-production/orders-paused.mjs','266d9ec64191ebe7cb4b38ba6d4cc3b174369e00c28866a3ce3595dc020af0c4']])if(c.createHash('sha256').update(fs.readFileSync(p)).digest('hex')!==h)throw Error('Reviewed source changed');for(const p of ['orders-paused.json','wrangler.json']){const j=JSON.parse(fs.readFileSync('worker-production/'+p));if(j.vars.WHATSAPP_ORDER_MODE!=='off'||j.vars.WHATSAPP_OWNER_TEST_ENABLED!=='false')throw Error('Sending must stay off');if(p.startsWith('orders-')&&(j.vars.ENABLED!=='true'||j.vars.CUSTOMER_PAYU_ENABLED!=='true'||j.vars.ORDER_ALERTS_ENABLED!=='true'||j.triggers.crons.join()!=='17 * * * *'))throw Error('Order settings changed')}"
       - name: Dry runs without upload
         run: |
-          npx wrangler deploy --config worker-production/orders-stage.json --no-bundle --keep-vars --dry-run
           npx wrangler deploy --config worker-production/wrangler.json --no-bundle --keep-vars --dry-run
           npx wrangler deploy --config worker-production/orders-paused.json --no-bundle --keep-vars --dry-run
       - name: Deploy paused private entrypoints and bindings
@@ -34,6 +33,5 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: bfa14054934d0f067511f26979c971d4
         run: |
-          npx wrangler deploy --config worker-production/orders-stage.json --no-bundle --keep-vars
           npx wrangler deploy --config worker-production/wrangler.json --no-bundle --keep-vars
           npx wrangler deploy --config worker-production/orders-paused.json --no-bundle --keep-vars

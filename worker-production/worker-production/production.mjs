@@ -1,4 +1,40 @@
-// inquiry.mjs
+// ../../tmp/udecs-wa-owner-test/owner-test.mjs
+var RECIPIENT = "917319190514";
+var TEMPLATE = "udecs_order_received_v1";
+function exactScope(scope) {
+  if (!scope || Object.keys(scope).sort().join() !== "amount,customerName,orderId,paymentStatus,recipient,template,templateLanguage,testId") throw Error("Exact test fields required");
+  if (scope.recipient !== RECIPIENT || scope.template !== TEMPLATE || scope.templateLanguage !== "en_US") throw Error("Outside owner English test scope");
+  if (!/^owner-test-[a-zA-Z0-9-]{1,60}$/.test(scope.testId) || !/^UDECS-TEST-[a-zA-Z0-9-]{1,60}$/.test(scope.orderId)) throw Error("Synthetic reference required");
+  if (typeof scope.customerName !== "string" || !scope.customerName.trim() || scope.customerName.length > 150 || !Number.isFinite(scope.amount) || scope.amount < 0 || Math.round(scope.amount * 100) !== scope.amount * 100 || !["pending", "paid"].includes(scope.paymentStatus)) throw Error("Invalid sample fields");
+  return { testId: scope.testId, recipient: scope.recipient, template: scope.template, templateLanguage: scope.templateLanguage, customerName: scope.customerName, orderId: scope.orderId, amount: scope.amount, paymentStatus: scope.paymentStatus };
+}
+async function scopeHash(scope) {
+  return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(exactScope(scope))))), (x) => x.toString(16).padStart(2, "0")).join("");
+}
+async function approvedControl({ scope, approvalRef, approvedHash, chargeCapInr, verifiedMaximumChargeInr, expiresAt, templateCheckedAt }, now = Date.now()) {
+  const s = exactScope(scope);
+  if (typeof approvalRef !== "string" || !approvalRef.startsWith("wamid.") || approvedHash !== await scopeHash(s)) throw Error("Exact owner approval missing");
+  if (!Number.isFinite(chargeCapInr) || chargeCapInr < 0 || !Number.isFinite(verifiedMaximumChargeInr) || verifiedMaximumChargeInr < 0 || verifiedMaximumChargeInr > chargeCapInr) throw Error("Verified charge exceeds approval");
+  if (!Number.isFinite(Date.parse(expiresAt)) || Date.parse(expiresAt) <= now || !Number.isFinite(Date.parse(templateCheckedAt)) || Date.parse(templateCheckedAt) > now) throw Error("Expired or unverified test control");
+  return { scope: s, approvalRef, approvedHash, chargeCapInr, verifiedMaximumChargeInr, expiresAt, templateCheckedAt, enabled: true };
+}
+async function verifySenderGate(input, control, { customerMode = "off", testEnabled = false } = {}, now = Date.now()) {
+  if (customerMode !== "off" || testEnabled !== true || control?.enabled !== true) throw Error("Customer mode must remain OFF and isolated test enabled");
+  const c = await approvedControl(control, now), s = exactScope(input);
+  if (await scopeHash(s) !== c.approvedHash) throw Error("Test scope changed");
+  return s;
+}
+
+// ../../tmp/udecs-wa-owner-test/adapters.mjs
+async function currentControl(env) {
+  if (env.WHATSAPP_ORDER_MODE !== "off" || env.WHATSAPP_OWNER_TEST_ENABLED !== "true" || !env.WHATSAPP_OWNER_TEST_CONTROL) throw Error("Owner test disabled");
+  const c = JSON.parse(env.WHATSAPP_OWNER_TEST_CONTROL);
+  if (c.enabled !== true) throw Error("Owner test disabled");
+  return approvedControl(c);
+}
+
+// ../../tmp/udecs-wa-owner-test/wa-integrated.mjs
+import { WorkerEntrypoint } from "cloudflare:workers";
 var PHONE = "1393523580503157";
 var TO = ["g02rue@mail.instinct.com", "ecommerceunickdigital@gmail.com"];
 var FROM = "UDECS Inquiry Alerts <inquiries@notifications.udecs.store>";
@@ -133,11 +169,6 @@ var InquiryInbox = class {
     if (next !== Infinity) await this.state.storage.setAlarm(Math.max(Date.now() + 2e3, next));
   }
 };
-
-// wa-integrated-draft.mjs
-import { WorkerEntrypoint } from "cloudflare:workers";
-
-// sender.mjs
 var PHONE_ID = "1393523580503157";
 function templateBody({ phoneNumberId, to, template, order }) {
   if (phoneNumberId !== PHONE_ID || !/^\d{8,15}$/.test(to) || template.name !== "udecs_order_received_v1" || template.languageCode !== "en_US") throw Error("Sender or template outside scope");
@@ -166,8 +197,6 @@ async function sendTemplate(input, { fetcher, accessToken, apiVersion }) {
   if (r.ok && j?.messaging_product === "whatsapp" && typeof messageId === "string" && /^wamid\./.test(messageId)) return { accepted: true, messageId };
   return { accepted: false, definiteRejection: !r.ok && r.status >= 400 && r.status < 500 };
 }
-
-// receipts.mjs
 var PHONE2 = "1393523580503157";
 function receiptEvents(payload) {
   if (payload?.object !== "whatsapp_business_account" || !Array.isArray(payload.entry)) throw Error("Invalid receipt payload");
@@ -189,8 +218,6 @@ function receiptEvents(payload) {
   }
   return out;
 }
-
-// wa-integrated-draft.mjs
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 function getWhatsAppMetaConfig(env) {
@@ -1092,6 +1119,24 @@ route = async function(request, env, ctx) {
   }
 };
 var WhatsAppTemplateSender = class extends WorkerEntrypoint {
+  async ownerTestReadiness() {
+    if (this.env.WHATSAPP_ORDER_MODE !== "off") throw Error("Customer mode must remain OFF");
+    const config = getWhatsAppMetaConfig(this.env);
+    if (!config || config.phoneNumberId !== "1393523580503157") throw Error("Verified sender unavailable");
+    const r = await fetch(`https://graph.facebook.com/${config.apiVersion}/267792923264197?fields=id,name,status,category,language,components`, { headers: { Authorization: "Bearer " + config.accessToken }, signal: AbortSignal.timeout(15e3) });
+    const j = await r.json();
+    if (!r.ok || j.id !== "267792923264197" || j.name !== "udecs_order_received_v1" || j.language !== "en_US" || j.status !== "APPROVED" || j.category !== "UTILITY") throw Error("Current English utility template not confirmed");
+    const expected = "Hi {{1}}! UDECS Orders: We received your order {{2}} for INR {{3}}. Payment status: {{4}}. We will send another update when it ships.";
+    if (j.components?.length !== 1 || j.components[0].type !== "BODY" || j.components[0].text !== expected) throw Error("Template body changed");
+    return { checkedAt: (/* @__PURE__ */ new Date()).toISOString(), templateId: j.id, name: j.name, status: j.status, category: j.category, language: j.language, body: expected, senderPhoneId: config.phoneNumberId, directMetaCloudApi: true, customerMode: "off" };
+  }
+  async sendOwnerFixture(input) {
+    const control = await currentControl(this.env);
+    const scope = await verifySenderGate(input, control, { customerMode: this.env.WHATSAPP_ORDER_MODE, testEnabled: this.env.WHATSAPP_OWNER_TEST_ENABLED === "true" });
+    const config = getWhatsAppMetaConfig(this.env);
+    if (!config || config.phoneNumberId !== "1393523580503157") throw Error("Verified sender unavailable");
+    return sendTemplate({ phoneNumberId: "1393523580503157", to: scope.recipient, template: { name: scope.template, languageCode: scope.templateLanguage }, order: { id: scope.orderId, customerName: scope.customerName, totalAmount: scope.amount, paymentStatus: scope.paymentStatus } }, { fetcher: fetch, accessToken: config.accessToken, apiVersion: config.apiVersion });
+  }
   async sendReceived(input) {
     if (this.env.WHATSAPP_ORDER_MODE !== "owner-test") throw Error("Customer sending is paused");
     if (input.to !== this.env.WHATSAPP_TEST_RECIPIENT || input.order.id !== this.env.WHATSAPP_TEST_ORDER_ID) throw Error("Outside exact owner-test scope");
