@@ -186,7 +186,7 @@
       products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       products.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     } catch (e) {
-      $('prod-rows').innerHTML = '<tr><td colspan="7" class="muted">Could not load products: ' + e.message + '</td></tr>';
+      $('prod-rows').innerHTML = '<tr><td colspan="7" class="muted">Could not load products: ' + esc(e.message) + '</td></tr>';
       return;
     }
     renderProducts();
