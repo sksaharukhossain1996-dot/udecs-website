@@ -19,7 +19,8 @@
   },
   "vars": {
     "LISTING_AI_FREE_TIER": "confirmed",
-    "WHATSAPP_ORDER_MODE": "off"
+    "WHATSAPP_ORDER_MODE": "off",
+    "WHATSAPP_OWNER_TEST_ENABLED": "false"
   },
   "durable_objects": {
     "bindings": [
