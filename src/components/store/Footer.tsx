@@ -161,7 +161,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
               </li>
             </ul>
 
-            <div className="pt-2">
+            <div className="pt-2 flex flex-wrap items-center gap-[5mm]">
               <button
                 onClick={onOpenAdmin}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/10 hover:bg-[#CC9A2E] hover:text-[#0F1913] text-white font-semibold transition-colors"
@@ -173,7 +173,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
                 href="https://udecs-investor-demo.sksaharukhossain1996.workers.dev/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/10 hover:bg-[#CC9A2E] hover:text-[#0F1913] text-white font-semibold transition-colors"
+                className="investor-login-button inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/10 hover:bg-[#CC9A2E] hover:text-[#0F1913] text-white font-semibold transition-colors"
               >
                 <Lock className="w-3.5 h-3.5" />
                 <span>Investor Login</span>
