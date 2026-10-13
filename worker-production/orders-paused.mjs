@@ -209,10 +209,10 @@ async function prepareFixture(db, control, now = () => Date.now()) {
     const ref = db.collection("whatsappOwnerTests").doc(id), ctrl = db.collection("whatsappOwnerTestControl").doc("once"), [old, prior] = await tx.getAll(ref, ctrl);
     if (old.exists) {
       const d = old.data();
-      if (d.scopeHash !== hash || d.approvalRef !== c.approvalRef || JSON.stringify(d.scope) !== JSON.stringify(c.scope) || d.recipient !== c.scope.recipient) throw Error("Fixture exists with different scope");
+      if (d.scopeHash !== hash || d.approvalRef !== c.approvalRef || await scopeHash(d.scope) !== hash || d.recipient !== c.scope.recipient) throw Error("Fixture exists with different scope");
       if (d.expiresAt !== c.expiresAt) {
         const priorControl = prior.exists ? prior.data() : null;
-        if (d.state !== "pending" || d.attempts !== 0 || d.leaseToken || d.messageId || d.submitStartedAt || !priorControl || priorControl.approvedHash !== hash || priorControl.approvalRef !== c.approvalRef || priorControl.expiresAt !== d.expiresAt || JSON.stringify(priorControl.scope) !== JSON.stringify(c.scope) || priorControl.chargeCapInr !== c.chargeCapInr || priorControl.verifiedMaximumChargeInr !== c.verifiedMaximumChargeInr || Date.parse(c.expiresAt) <= Date.parse(d.expiresAt)) throw Error("Untouched pending fixture required for renewal");
+        if (d.state !== "pending" || d.attempts !== 0 || d.leaseToken || d.messageId || d.submitStartedAt || !priorControl || priorControl.approvedHash !== hash || priorControl.approvalRef !== c.approvalRef || priorControl.expiresAt !== d.expiresAt || await scopeHash(priorControl.scope) !== hash || priorControl.chargeCapInr !== c.chargeCapInr || priorControl.verifiedMaximumChargeInr !== c.verifiedMaximumChargeInr || Date.parse(c.expiresAt) <= Date.parse(d.expiresAt)) throw Error("Untouched pending fixture required for renewal");
         tx.update(ref, { expiresAt: c.expiresAt, gateRenewedAt: new Date(now()).toISOString() });
         tx.update(ctrl, { ...c, enabled: true });
         return { prepared: true, state: "pending", duplicate: true, renewed: true };
