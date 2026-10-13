@@ -1,4 +1,4 @@
-// ../../tmp/udecs-wa-owner-test/owner-test.mjs
+// owner-test.mjs
 var OWNER_PAIRS = {
   "sksaharukhossain1996@gmail.com": "ZAN8rLkaeFNvIKz0WyAN2g2nHOJ2",
   "ecommerceunickdigital@gmail.com": "u2rhAyVJYCMcoWkGfabm2bmaQRv2"
@@ -63,7 +63,7 @@ async function invokeOwnerTest({ principal: principal2, origin, scope, control, 
   return { state: "manual_review" };
 }
 
-// ../../tmp/udecs-wa-owner-test/route.mjs
+// route.mjs
 function ownerTestRouter({ verify, loadCurrent, store, sender, prepare, readiness }) {
   return async function(request, env) {
     const origin = request.headers.get("Origin"), path = new URL(request.url).pathname;
@@ -79,7 +79,7 @@ function ownerTestRouter({ verify, loadCurrent, store, sender, prepare, readines
       if (path.endsWith("/readiness") && request.method === "GET") return reply(200, await readiness(env));
       const current = await loadCurrent(env);
       if (!current) return reply(503, { error: "Owner test not prepared" });
-      if (path.endsWith("/status") && request.method === "GET") return reply(200, { scope: current.scope, state: current.state, approvalRef: current.control.approvalRef });
+      if (path.endsWith("/status") && request.method === "GET") return reply(200, { scope: current.scope, state: current.state, approvalRef: current.control.approvalRef, receipt: current.receipt });
       if (path.endsWith("/status") || request.method !== "POST") return reply(405, { error: "Method not allowed" });
       const text2 = await request.text();
       if (text2.length > 512) return reply(400, { error: "Invalid test request" });
@@ -97,7 +97,7 @@ function ownerTestRouter({ verify, loadCurrent, store, sender, prepare, readines
   };
 }
 
-// ../../tmp/udecs-wa-owner-test/receipt-helpers.mjs
+// receipt-helpers.mjs
 var rank = { sent: 1, delivered: 2, read: 3 };
 function reconcileReceipt(event, receipt) {
   if (!["submitted", "sent", "delivered", "read", "delivery_failed"].includes(event?.state) || event.messageId !== receipt.messageId || event.recipient !== receipt.recipient) return { apply: false, reason: "unmatched" };
@@ -121,7 +121,7 @@ async function receiptKey(id) {
   return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode("udecs-whatsapp-receipt-v1:" + id))), (x) => x.toString(16).padStart(2, "0")).join("");
 }
 
-// ../../tmp/udecs-wa-owner-test/receipts.mjs
+// receipts.mjs
 async function finishTestWithIndex(db, id, lease, update, now = () => (/* @__PURE__ */ new Date()).toISOString()) {
   if (!["held", "submitted", "manual_review"].includes(update.state)) throw Error("Invalid test state");
   return db.runTransaction(async (tx) => {
@@ -156,7 +156,7 @@ async function reconcileIsolatedReceipt(db, receipt, now = () => (/* @__PURE__ *
   });
 }
 
-// ../../tmp/udecs-wa-owner-test/store.mjs
+// store.mjs
 function isolatedStore(db, { now = () => Date.now(), random = () => crypto.randomUUID(), recipientKey } = {}) {
   const fixture = (id) => db.collection("whatsappOwnerTests").doc(id);
   const control = db.collection("whatsappOwnerTestControl").doc("once");
@@ -185,7 +185,7 @@ function isolatedStore(db, { now = () => Date.now(), random = () => crypto.rando
   };
 }
 
-// ../../tmp/udecs-wa-owner-test/adapters.mjs
+// adapters.mjs
 async function currentControl(env) {
   if (env.WHATSAPP_ORDER_MODE !== "off" || env.WHATSAPP_OWNER_TEST_ENABLED !== "true" || !env.WHATSAPP_OWNER_TEST_CONTROL) throw Error("Owner test disabled");
   const c = JSON.parse(env.WHATSAPP_OWNER_TEST_CONTROL);
@@ -196,11 +196,11 @@ async function loadFixture(env, db) {
   const c = await currentControl(env), id = c.scope.testId;
   return db.runTransaction(async (tx) => {
     const d = await tx.get(db.collection("whatsappOwnerTests").doc(id));
-    return { scope: c.scope, control: c, state: d.exists ? d.data().state : "not_prepared" };
+    return { scope: c.scope, control: c, state: d.exists ? d.data().state : "not_prepared", receipt: d.exists ? { attempts: d.data().attempts, messageId: d.data().messageId || null, lastReceiptTimestamp: d.data().lastReceiptTimestamp || null, reason: d.data().reason || null } : null };
   });
 }
 
-// ../../tmp/udecs-wa-owner-test/setup.mjs
+// setup.mjs
 async function prepareFixture(db, control, now = () => Date.now()) {
   const c = await approvedControl(control, now());
   if (control.enabled !== true) throw Error("Disabled test");
@@ -209,7 +209,14 @@ async function prepareFixture(db, control, now = () => Date.now()) {
     const ref = db.collection("whatsappOwnerTests").doc(id), ctrl = db.collection("whatsappOwnerTestControl").doc("once"), [old, prior] = await tx.getAll(ref, ctrl);
     if (old.exists) {
       const d = old.data();
-      if (d.scopeHash !== hash || d.approvalRef !== c.approvalRef || d.expiresAt !== c.expiresAt) throw Error("Fixture exists with different scope");
+      if (d.scopeHash !== hash || d.approvalRef !== c.approvalRef || JSON.stringify(d.scope) !== JSON.stringify(c.scope) || d.recipient !== c.scope.recipient) throw Error("Fixture exists with different scope");
+      if (d.expiresAt !== c.expiresAt) {
+        const priorControl = prior.exists ? prior.data() : null;
+        if (d.state !== "pending" || d.attempts !== 0 || d.leaseToken || d.messageId || d.submitStartedAt || !priorControl || priorControl.approvedHash !== hash || priorControl.approvalRef !== c.approvalRef || priorControl.expiresAt !== d.expiresAt || JSON.stringify(priorControl.scope) !== JSON.stringify(c.scope) || priorControl.chargeCapInr !== c.chargeCapInr || priorControl.verifiedMaximumChargeInr !== c.verifiedMaximumChargeInr || Date.parse(c.expiresAt) <= Date.parse(d.expiresAt)) throw Error("Untouched pending fixture required for renewal");
+        tx.update(ref, { expiresAt: c.expiresAt, gateRenewedAt: new Date(now()).toISOString() });
+        tx.update(ctrl, { ...c, enabled: true });
+        return { prepared: true, state: "pending", duplicate: true, renewed: true };
+      }
       return { prepared: true, state: d.state, duplicate: true };
     }
     if (prior.exists && prior.data().scope?.testId !== id) throw Error("Another test control exists");
@@ -220,7 +227,7 @@ async function prepareFixture(db, control, now = () => Date.now()) {
   });
 }
 
-// ../../tmp/udecs-wa-owner-test/orders-integrated.mjs
+// orders-integrated.mjs
 import { WorkerEntrypoint } from "cloudflare:workers";
 var CONSENT_VERSION = "udecs-order-whatsapp-v1";
 var CONSENT_TEXT = "I agree to receive WhatsApp order, shipping and delivery updates from UDECS at this number. I can opt out by replying STOP. Optional; I can order without selecting this.";
