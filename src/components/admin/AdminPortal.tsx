@@ -2,7 +2,7 @@ import {ListImport} from '../../import-stage/ListImport';
 import "../../import-stage/import.css";
 import {ManagementBackContext, BackButton, type LocalBack} from '../../navigation/ManagementBack';
 import {visit,previous} from '../../navigation/backHistory';
-import {AdminAgentHub} from './AdminAgentHub';
+import {AdminAgentHub,BusinessCommandCenter} from './AdminAgentHub';
 import {AdminSoftwareHealth} from './AdminSoftwareHealth';
 import { googleSignInHelp, requiresExternalGoogleBrowser, STAFF_SIGN_IN_URL } from '../../firebase/googleSignInEnvironment';
 import {AdminERP} from '../../business/AdminERP';
@@ -59,6 +59,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
   } = useStore();
   const [navigation, setNavigation] = useState({current: 'overview' as AdminTab, history: [] as AdminTab[]});
   const currentTab = navigation.current;
+  const [legacyOverviewOpen,setLegacyOverviewOpen]=useState(false);
   const [quotationSeed,setQuotationSeed]=useState<any>(null);
   const [localBack, setLocalBack] = useState<LocalBack[]>([]);
   const dirty = useRef(false);
@@ -253,7 +254,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         {/* Main Content Area */}
         <main className="admin-content flex-1 overflow-y-auto relative"><style>{`.portal-watermark{position:sticky;top:0;height:0;width:100%;z-index:20;pointer-events:none;user-select:none}.portal-watermark img{position:absolute;top:18vh;right:8%;width:min(54vw,520px);height:auto;opacity:.055;pointer-events:none}@media(max-width:640px){.portal-watermark img{top:24vh;right:5%;width:90%;opacity:.045}}@media print{.portal-watermark{display:none}}`}</style><div aria-hidden="true" className="portal-watermark"><img src="/UDECS_Logo_Premium_Transparent.png" alt="" draggable={false}/></div><div className="admin-module" onChangeCapture={e => { const target = e.target as HTMLElement; if(currentTab !== 'b2b_quotation' && target.closest('form')) dirty.current=true; }}>
           <ListImport key={currentTab} tab={currentTab}/>{currentTab === 'overview' && (
-            <AdminOverview onNavigate={(tab) => setCurrentTab(tab)} />
+            <div className="hub"><BusinessCommandCenter/><details onToggle={e=>setLegacyOverviewOpen(e.currentTarget.open)}><summary style={{padding:16,cursor:'pointer'}}>Open legacy overview</summary>{legacyOverviewOpen&&<AdminOverview onNavigate={(tab) => setCurrentTab(tab)} />}</details></div>
           )}
           {currentTab === 'website_control' && <AdminWebsiteControl />}
           {currentTab === 'whatsapp_automation' && <AdminWhatsAppAutomation />}
