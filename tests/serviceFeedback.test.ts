@@ -1,0 +1,5 @@
+import test from'node:test';import assert from'node:assert/strict';import{feedbackDefaults,feedbackDispatchDecision}from'../src/service-leads/feedbackDispatch';
+const event={leadId:'local-only',stage:'Delivered',transitionId:'local-transition',whatsappFeedbackConsent:true};const all={live:true,metaEligible:true,templateApproved:true,ownerTestDelivered:true};
+test('Service feedback defaults OFF with no transport side effect',()=>{assert.equal(feedbackDispatchDecision(event,feedbackDefaults,false).ready,false);});
+test('Every feedback activation gate is required',()=>{for(const k of Object.keys(all))assert.equal(feedbackDispatchDecision(event,{...all,[k]:false},false).ready,false);});
+test('Delivered consent and one-time transition are required',()=>{assert.equal(feedbackDispatchDecision({...event,stage:'Discuss'},all,false).ready,false);assert.equal(feedbackDispatchDecision({...event,whatsappFeedbackConsent:false},all,false).ready,false);assert.equal(feedbackDispatchDecision(event,all,true).ready,false);assert.equal(feedbackDispatchDecision(event,all,false).eventKey,'service-feedback:local-only:local-transition');});
