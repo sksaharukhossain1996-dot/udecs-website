@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Product } from '../../types';
 import { ProductIcon } from '../common/ProductIcon';
-import { X, Check, Star, ShieldCheck, Truck, ArrowRight, Minus, Plus, CreditCard, Box, ExternalLink, Phone } from 'lucide-react';
+import { loadProductVideoManifest, productVideoUrl, type ProductVideoEntry } from '../../lib/productVideos';
+import { X, Check, Star, ShieldCheck, Truck, ArrowRight, Minus, Plus, CreditCard, Box, ExternalLink, Phone, Play } from 'lucide-react';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -20,6 +21,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const { addToCart, formatPrice: formatStorePrice, language, company } = useStore();
   const [photoIndex,setPhotoIndex]=useState(0);
   useEffect(()=>setPhotoIndex(0),[product?.id]);
+  const [videoEntry,setVideoEntry]=useState<ProductVideoEntry|null>(null);
+  const [playingVideo,setPlayingVideo]=useState(false);
+  useEffect(()=>{
+    setVideoEntry(null);
+    setPlayingVideo(false);
+    if(!product?.id) return;
+    let active=true;
+    loadProductVideoManifest().then(m=>{ if(active) setVideoEntry(m.get(product.id) ?? null); });
+    return ()=>{active=false;};
+  },[product?.id]);
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
 
@@ -65,7 +76,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-start">
           {/* Media preview */}
           <div className="sm:col-span-5 min-w-0 bg-[#E4E8D9] rounded-md p-6 flex flex-col items-center justify-center border border-[#CBCFB9] text-[#3C6656] min-h-[220px]">
-            {product.imageUrl && product.id!=='23065_plastic_toothbrush_holder_1pc' ? (
+            {playingVideo && videoEntry ? (
+              <video
+                src={productVideoUrl(videoEntry)}
+                poster={product.photos?.[photoIndex] || product.imageUrl}
+                controls
+                autoPlay
+                playsInline
+                preload="metadata"
+                onError={() => setPlayingVideo(false)}
+                aria-label={customerProductTitle(product, language)}
+                className="max-h-[380px] w-auto max-w-full object-contain rounded"
+              />
+            ) : product.imageUrl && product.id!=='23065_plastic_toothbrush_holder_1pc' ? (
               <img
                 src={product.photos?.[photoIndex] || product.imageUrl}
                 alt={customerProductTitle(product, language)}
@@ -75,6 +98,26 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <ProductIcon name={product.imageIcon} className="w-32 h-32 text-[#3C6656]" />
             )}
             {product.photos && product.photos.length>1 && <div className="flex gap-2 mt-3">{product.photos.map((src,i)=><button key={i} aria-label={'View photo '+(i+1)} onClick={()=>setPhotoIndex(i)} className={'border rounded p-1 '+(photoIndex===i?'border-blue-700':'border-slate-300')}><img src={src} alt="" className="w-12 h-12 object-contain"/></button>)}</div>}
+            {videoEntry && !playingVideo && (
+              <button
+                type="button"
+                onClick={() => setPlayingVideo(true)}
+                aria-label={videoEntry.durationSec ? `Play product video, ${videoEntry.durationSec} seconds` : 'Play product video'}
+                className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-[#0F1913] bg-[#CC9A2E] hover:bg-[#A87C1F] hover:text-white px-3 py-1.5 rounded transition-colors"
+              >
+                <Play className="w-3.5 h-3.5" />
+                <span>{language === 'bn' ? 'ভিডিও দেখুন' : 'Watch video'}{videoEntry.durationSec ? ` · ${videoEntry.durationSec}s` : ''}</span>
+              </button>
+            )}
+            {playingVideo && (
+              <button
+                type="button"
+                onClick={() => setPlayingVideo(false)}
+                className="mt-3 text-[11px] font-semibold text-[#565F52] underline hover:text-[#0F1913]"
+              >
+                {language === 'bn' ? 'ছবিতে ফিরুন' : 'Back to photos'}
+              </button>
+            )}
             <div className="mt-4 text-center w-full min-w-0">
               <span className="text-[11px] font-mono font-bold text-[#A87C1F] block break-all">
                 {product.sku}
