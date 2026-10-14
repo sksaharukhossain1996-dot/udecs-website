@@ -1,3 +1,4 @@
+import {ServiceLeads} from '../../service-leads/ServiceLeads';
 import {ListImport} from '../../import-stage/ListImport';
 import "../../import-stage/import.css";
 import {ManagementBackContext, BackButton, type LocalBack} from '../../navigation/ManagementBack';
@@ -267,6 +268,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
           {currentTab === 'inventory' && <AdminInventory />}
           {currentTab === 'gst' && <AdminGstReports />}
           {currentTab === 'investors' && <AdminInvestors />}
+          {currentTab === 'service_leads' && <ServiceLeads />}
           {currentTab==='erp' && <AdminERP/>}
             {currentTab === 'crm' && <AdminCRM />}
           {currentTab === 'hr' && <AdminHR />}
