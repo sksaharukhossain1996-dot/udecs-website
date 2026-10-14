@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://firestore.googleapis.com https://udecs-services-payu.sksaharukhossain1996.workers.dev; form-action 'self' https://secure.payu.in; frame-ancestors 'self'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://firestore.googleapis.com https://udecs-services-payu.sksaharukhossain1996.workers.dev; form-action 'self' https://secure.payu.in; base-uri 'self'">
+<script>if(window.top!==window.self){document.documentElement.style.display='none';try{window.top.location.replace(window.location.href)}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <meta name="robots" content="noindex">
@@ -305,19 +306,38 @@ function showPay(leadId, lead) {
     } catch (e2) { perr.textContent = e2.message || 'Payment unavailable right now. Try again or pay later.'; btn.disabled = false; }
   });
 }
-(function paymentReturn() {
+(async function paymentReturn() {
   const q = new URLSearchParams(location.search);
   const st = q.get('payment');
   if (!st) return;
   const box = document.getElementById('payResult');
   box.style.display = 'block';
-  if (st === 'success') {
-    document.getElementById('payResultTitle').textContent = 'Payment received';
-    document.getElementById('payResultText').textContent = 'Thank you. Your payment reference ' + (q.get('txn') || '') + ' was received. UDECS will contact you to start the work. If any amount was charged in error, contact UDECS with this reference.';
+  const titleEl = document.getElementById('payResultTitle');
+  const textEl = document.getElementById('payResultText');
+  const txn = (q.get('txn') || '').trim();
+  if (st === 'success' && txn) {
     form.style.display = 'none';
+    titleEl.textContent = 'Confirming your payment';
+    textEl.textContent = 'Please wait while we confirm payment reference ' + txn + ' with the payment gateway.';
+    let ok = false;
+    try {
+      const r = await fetch(WORKER + '/api/payu/service/status?txn=' + encodeURIComponent(txn));
+      if (r.ok) { const d = await r.json(); ok = !!d.verified; }
+    } catch (e) { ok = false; }
+    if (ok) {
+      titleEl.textContent = 'Payment received';
+      textEl.textContent = 'Thank you. Your payment reference ' + txn + ' was received. UDECS will contact you to start the work. If any amount was charged in error, contact UDECS with this reference.';
+    } else {
+      titleEl.textContent = 'Payment confirmation pending';
+      textEl.textContent = 'We could not confirm payment reference ' + txn + ' with the gateway yet. If money was debited, do not worry - UDECS verifies every payment directly with PayU and will contact you. You can also message UDECS with this reference.';
+    }
+  } else if (st === 'success') {
+    form.style.display = 'none';
+    titleEl.textContent = 'Payment confirmation pending';
+    textEl.textContent = 'We could not confirm your payment yet. If money was debited, do not worry - UDECS verifies every payment directly with PayU and will contact you.';
   } else {
-    document.getElementById('payResultTitle').textContent = 'Payment not completed';
-    document.getElementById('payResultText').textContent = 'No confirmed payment was received. You can try again from your request or pay later after UDECS contacts you.';
+    titleEl.textContent = 'Payment not completed';
+    textEl.textContent = 'No confirmed payment was received. You can try again from your request or pay later after UDECS contacts you.';
   }
   box.scrollIntoView({ behavior: 'smooth', block: 'center' });
 })();
