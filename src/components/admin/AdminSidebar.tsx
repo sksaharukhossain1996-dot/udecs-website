@@ -38,6 +38,7 @@ export type AdminTab =
   | 'stock_update'
   | 'gst'
   | 'investors'
+  | 'service_leads'
   | 'hr'
   | 'collaboration'
   | 'notifications'
@@ -84,6 +85,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'stock_update', labelBn: 'স্টক আপডেট', labelEn: 'Stock Update', icon: RefreshCw },
     { id: 'inventory', labelBn: 'অটোমেটেড ইনভেন্টরি', labelEn: 'Automated Inventory', icon: PackageSearch },
     { id: 'gst', labelBn: 'জিএসটি রিপোর্ট ও ট্যাক্স', labelEn: 'GST Reports & Filing', icon: FileSpreadsheet },
+    {id:'service_leads',labelBn:'Digital solutions Service',labelEn:'Digital solutions Service',icon:ContactRound,roleMin:'admin'},
     { id: 'investors', labelBn: 'বিনিয়োগকারী লিড', labelEn: 'Investor Leads', icon: TrendingUp },
     { id: 'hr', labelBn: 'কর্মচারী ও স্যালারি স্লিপ', labelEn: 'HR, Attendance & Payroll', icon: CalendarClock },
     { id: 'collaboration', labelBn: 'টিম কোলাবরেশন নোটস', labelEn: 'Live Collaboration', icon: NotebookPen },
@@ -96,7 +98,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   ];
 
   if(CUSTOMER_SUPPORT_ENABLED) navItems.push({id:'customers',labelBn:'Customer portal',labelEn:'Customer portal',icon:UserCheck});
-  const groups=[{label:'Business',ids:['overview','erp','crm']},{label:'Commerce',ids:['website_control','whatsapp_automation','rfq','b2b_quotation','orders','product_listing','stock_update','inventory']},{label:'Finance & Team',ids:['gst','investors','hr','collaboration']},{label:'Workspace & System',ids:['gmail','notifications','ai_agent_hub','software_health','audit','settings','customers']}];
+  const groups=[{label:'Business',ids:['overview','erp','crm','service_leads']},{label:'Commerce',ids:['website_control','whatsapp_automation','rfq','b2b_quotation','orders','product_listing','stock_update','inventory']},{label:'Finance & Team',ids:['gst','investors','hr','collaboration']},{label:'Workspace & System',ids:['gmail','notifications','ai_agent_hub','software_health','audit','settings','customers']}];
   const findLoaded=()=>{const q=query.trim().toLowerCase();setMatches(q?Array.from(document.querySelectorAll('#udecs-current-view tr, #udecs-current-view article, .admin-content tr, .admin-content article')).filter((el,i,a)=>a.indexOf(el)===i&&(el.textContent||'').toLowerCase().includes(q)).slice(0,20).map(el=>(el.textContent||'').trim().replace(/\s+/g,' ').slice(0,240)):[]);};
   const select=(tab:AdminTab)=>{setMatches([]);onSelectTab(tab);setMobileOpen(false);};
   return (<>
