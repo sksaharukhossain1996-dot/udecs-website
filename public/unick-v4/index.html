@@ -7,12 +7,11 @@
 <meta name="robots" content="noindex">
 <title>UNICK Digital Solutions | Business paperwork, clear next steps</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f4f6fb;--surface:#fff;--ink:#121a3a;--muted:#5a6384;--line:#dde2f0;--brand:#1d2f8f;--brand-ink:#fff;--amber:#f5a524;--save:#0c8a63;--save-bg:#e3f6ee;--shadow:0 1px 2px rgba(18,26,58,.06),0 12px 32px -12px rgba(18,26,58,.18);
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1226;--surface:#161d3a;--ink:#eef1ff;--muted:#a1a9cc;--line:#2a3361;--brand:#7f93ff;--brand-ink:#0d1226;--save:#4fd6a4;--save-bg:#10382d;--shadow:0 12px 32px -12px rgba(0,0,0,.6)}}
-:root[data-theme="dark"]{--bg:#0d1226;--surface:#161d3a;--ink:#eef1ff;--muted:#a1a9cc;--line:#2a3361;--brand:#7f93ff;--brand-ink:#0d1226;--save:#4fd6a4;--save-bg:#10382d;--shadow:0 12px 32px -12px rgba(0,0,0,.6)}
+:root{--bg:#0a1f3d;--surface:#13294e;--ink:#eef2ff;--muted:#9fb0d8;--line:#28406e;--brand:#c9a227;--brand-ink:#0a1f3d;--amber:#e3b93b;--save:#4fd6a4;--save-bg:#0f3a2c;--shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px -12px rgba(0,0,0,.5);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a1f3d;--surface:#13294e;--ink:#eef2ff;--muted:#9fb0d8;--line:#28406e;--brand:#c9a227;--brand-ink:#0a1f3d;--amber:#e3b93b;--save:#4fd6a4;--save-bg:#0f3a2c;--shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px -12px rgba(0,0,0,.5)}}
+:root[data-theme="dark"]{--bg:#0a1f3d;--surface:#13294e;--ink:#eef2ff;--muted:#9fb0d8;--line:#28406e;--brand:#c9a227;--brand-ink:#0a1f3d;--amber:#e3b93b;--save:#4fd6a4;--save-bg:#0f3a2c;--shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px -12px rgba(0,0,0,.5)}
 html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
@@ -107,6 +106,16 @@ footer{padding:36px 0 48px;border-top:1px solid var(--line);font-size:13px;color
 .result{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:var(--shadow);margin-top:16px;display:none}
 .result h3{margin:0 0 8px;font-size:22px;letter-spacing:-.02em}
 .result p{margin:0;color:var(--muted)}
+
+h1,h2.sec,.receipt .name,.logo{font-family:"Playfair Display",Georgia,serif}
+.logo b{color:var(--amber)}
+.back{border:1px solid rgba(227,185,59,.5);padding:8px 16px;border-radius:999px;color:#e8d9a8}
+.back:hover{background:var(--amber);color:#0a1f3d}
+.trust{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.trust span{border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:500;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.04)}
+.trust b{color:var(--amber);font-weight:600}
+.card .pr b{color:var(--amber)}
+.receipt{border-color:#35508a}
 </style>
 </head>
 <body>
@@ -119,6 +128,7 @@ footer{padding:36px 0 48px;border-top:1px solid var(--line);font-size:13px;color
   <p class="lead">Pick a service and see exactly what the government charges and what UDECS charges. Pay online now and save 10%, or pay after we review your request.</p>
   <a class="cta" href="#request">Send a request</a><a class="cta ghost" href="#services">Browse all fees</a>
   <p class="note">UDECS is a private assistance service, not a government portal. Fees checked 14 October 2026.</p>
+  <div class="trust"><span><b>&#10003;</b> GSTIN-registered Indian business</span><span><b>&#10003;</b> Secure payments by PayU</span><span><b>&#10003;</b> Documents stored privately</span><span><b>&#10003;</b> Honest free-portal guidance</span></div>
  </div>
  <aside class="receipt" aria-live="polite">
   <h2>Your fee breakdown</h2>
