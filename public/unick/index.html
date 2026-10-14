@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://firestore.googleapis.com https://udecs-services-payu.sksaharukhossain1996.workers.dev; form-action 'self' https://secure.payu.in; frame-ancestors 'self'; base-uri 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <meta name="robots" content="noindex">
@@ -193,8 +194,8 @@ svc.addEventListener("change",function(){var i=S.findIndex(function(x){return x[
 receipt();draw();
 </script>
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getFirestore, collection, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js';
+import { getFirestore, collection, doc, setDoc } from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js';
 const firebaseConfig = { apiKey: 'AIzaSyANRNCASxjGE-IZSLdCws_6W4VpjemO1aI', authDomain: 'udecs-store.firebaseapp.com', projectId: 'udecs-store', appId: '1:859203239571:web:e541cc2e68f880efa41766' };
 const db = getFirestore(initializeApp(firebaseConfig));
 const WORKER = 'https://udecs-services-payu.sksaharukhossain1996.workers.dev';
