@@ -209,7 +209,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     if (invalidBulkItem) { setLoginError(`Review ${invalidBulkItem.product.sku}: minimum ${wholesaleMinimumQty(invalidBulkItem.product)} pieces per product in full carton multiples. Update your cart before requesting a quote. No request was sent.`); return; }
     if(!quoteShipping&&checkoutItems.length>10){setLoginError("Each order can contain up to 10 different products. Remove extra products before continuing.");return;}
     if(!quoteShipping&&(!identityReady||!isVerifiedGoogleCustomer(customerAuth.currentUser))){setLoginError('Sign in with your verified email before placing an order. No order was placed.');return;}
-    if(!quoteShipping&&paymentMethod==='cod'&&!recoverOnLoad&&!attempt.current){setLoginError('New COD checkout is temporarily paused. Choose PayU online payment.');return;}
     if(!quoteShipping&&!registrationReady){setLoginError('Complete your customer registration first. No order was placed.');return;}
     if(!quoteShipping&&formData.email!==customerAuth.currentUser?.email){setLoginError('Your signed-in account changed. Review your details before ordering.');return;}
     if (!formData.name || !formData.email || !formData.phone || !formData.address) {
@@ -480,17 +479,16 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                       <input
                         type="radio"
                         name="payment"
-                        disabled
-                        checked={false}
-                        onChange={() => {}}
+                        checked={paymentMethod === 'cod'}
+                        onChange={() => setPaymentMethod('cod')}
                         className="accent-[#0F1913]"
                       />
                       <div>
                         <span className="text-xs font-bold text-[#0F1913] block">
-                          Cash on Delivery (temporarily paused)
+                          Cash on Delivery (COD)
                         </span>
                         <span className="text-[11px] text-[#565F52]">
-                          New COD orders are paused while customer confirmation is set up. Existing orders are unchanged.
+                          Pay cash when your order arrives. A COD fee applies (Rs 32 + 1.75% of product total, added to shipping). We confirm every COD order before dispatch.
                         </span>
                       </div>
                     </label>
@@ -568,7 +566,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                     </div>
 
                     {!gatewayVerification&&!quoteShipping&&<>
-                      <div className="flex justify-between"><span>Shopping charge ({paymentMethod==='payu'?'PayU 2.30% of products':'UPI QR: none'}):</span><span className="whitespace-nowrap pl-2">{formatPrice(shoppingCharge)}</span></div>
+                      <div className="flex justify-between"><span>Shopping charge ({paymentMethod==='payu'?'PayU 2.30% of products':paymentMethod==='cod'?'COD - none, COD fee added to shipping':'None'}):</span><span className="whitespace-nowrap pl-2">{formatPrice(shoppingCharge)}</span></div>
                     </>}
 
                     <div className="pt-2 border-t border-[#CBCFB9] flex justify-between items-baseline text-sm font-bold text-[#0F1913]">
@@ -598,7 +596,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   </button>
 
                   <div className="mt-2 text-center text-[10px] text-[#565F52]">
-                    {quoteShipping ? 'Availability and shipping confirmed before payment. No payment or order is completed here.' : gatewayVerification||paymentMethod==='payu'?'Order saved before payment. Review final total on PayU.':'Secure Checkout · Direct UPI to UDECS · Order Summary'}
+                    {quoteShipping ? 'Availability and shipping confirmed before payment. No payment or order is completed here.' : gatewayVerification||paymentMethod==='payu'?'Order saved before payment. Review final total on PayU.':paymentMethod==='cod'?'COD order · We confirm before dispatch · Pay cash on delivery':'Secure Checkout · Direct UPI to UDECS · Order Summary'}
                   </div>
                 </div>
               </div>
