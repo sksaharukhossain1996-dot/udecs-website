@@ -46,8 +46,9 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
     const ids=matchingIndex.slice(0,visibleCount).map(e=>e.id);
     setPageBusy(true);setPageError('');
     setPageProducts(prev=>prev.filter(p=>ids.includes(p.id)));
+    const localIds=new Set(products.map(prod=>prod.id));
     const existing=new Map([...products,...pageProducts].map(p=>[p.id,p]));
-    const missing=ids.filter(id=>!existing.has(id));
+    const missing=ids.filter(id=>!existing.has(id)||localIds.has(id));
     (async()=>{for(let i=0;i<missing.length;i+=PAGE_SIZE){const batch=await readProductsByIds(missing.slice(i,i+PAGE_SIZE));batch.forEach(p=>existing.set(p.id,p));}if(active)setPageProducts(ids.flatMap(id=>existing.has(id)?[existing.get(id)!]:[]));})().catch(()=>{if(active)setPageError('Products could not be loaded. Please try again later.');}).finally(()=>{if(active)setPageBusy(false);});
     return()=>{active=false;};
   },[matchingKey,visibleCount,products,paged]);
@@ -86,8 +87,8 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
             </h2>
             <p className="text-[#565F52] text-sm mt-1.5">
               {selectedCategory === 'rajkot' ? 'For resellers. Minimum 100 pieces per product, rounded up to full cartons. Existing listed wholesale prices; shipping quoted before payment.' : language === 'bn'
-                ? 'ক্যাটাগরি অনুযায়ী বেছে নিন — প্রতিটি পণ্য গুণমান যাচাই করে তালিকাভুক্ত করা হয়েছে।'
-                : 'Select by department — every product is quality inspected with official GST invoices.'}
+                ? 'à¦à§à¦¯à¦¾à¦à¦¾à¦à¦°à¦¿ à¦à¦¨à§à¦¯à¦¾à¦¯à¦¼à§ à¦¬à§à¦à§ à¦¨à¦¿à¦¨ â à¦ªà§à¦°à¦¤à¦¿à¦à¦¿ à¦ªà¦£à§à¦¯ à¦à§à¦£à¦®à¦¾à¦¨ à¦¯à¦¾à¦à¦¾à¦ à¦à¦°à§ à¦¤à¦¾à¦²à¦¿à¦à¦¾à¦­à§à¦à§à¦¤ à¦à¦°à¦¾ à¦¹à¦¯à¦¼à§à¦à§à¥¤'
+                : 'Select by department â every product is quality inspected with official GST invoices.'}
             </p>
           </div>
 
@@ -165,7 +166,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
         {filteredTotal === 0 && !pageBusy && !catalogError && !pageError ? (
           <div className="text-center py-16 bg-[#FBFAF5] border border-dashed border-[#CBCFB9] rounded p-8">
             <p className="text-[#565F52] text-sm">
-              {language === 'bn' ? 'কোনো পণ্য পাওয়া যায়নি।' : 'No products found matching your search criteria.'}
+              {language === 'bn' ? 'à¦à§à¦¨à§ à¦ªà¦£à§à¦¯ à¦ªà¦¾à¦à¦¯à¦¼à¦¾ à¦¯à¦¾à¦¯à¦¼à¦¨à¦¿à¥¤' : 'No products found matching your search criteria.'}
             </p>
             <button
               onClick={() => {
@@ -174,7 +175,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
               }}
               className="mt-3 text-xs text-[#A87C1F] font-semibold underline"
             >
-              {language === 'bn' ? 'সব ফিল্টার সাফ করুন' : 'Clear all filters'}
+              {language === 'bn' ? 'à¦¸à¦¬ à¦«à¦¿à¦²à§à¦à¦¾à¦° à¦¸à¦¾à¦« à¦à¦°à§à¦¨' : 'Clear all filters'}
             </button>
           </div>
         ) : (
@@ -205,7 +206,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                       {/* Low Stock or Wholesale Tag */}
                       {isLowStock && (
                         <span className="absolute top-2 left-2 bg-[#A87C1F] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs">
-                          {language === 'bn' ? 'স্টক সীমিত' : 'Low Stock'}
+                          {language === 'bn' ? 'à¦¸à§à¦à¦ à¦¸à§à¦®à¦¿à¦¤' : 'Low Stock'}
                         </span>
                       )}
                       {product.category === 'wholesale' && (
@@ -248,7 +249,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                   <div className="pt-2 border-t border-[#CBCFB9]/50 flex flex-wrap items-end justify-between gap-1.5 mt-1">
                     <div className="min-w-0 flex-1">
                       <div className="text-[10px] text-[#565F52] leading-none mb-1">
-                        {product.supplier==='rajkot'&&product.gstExtra ? 'Per piece (GST extra):' : language === 'bn' ? 'মূল্য:' : 'Price:'}
+                        {product.supplier==='rajkot'&&product.gstExtra ? 'Per piece (GST extra):' : language === 'bn' ? 'à¦®à§à¦²à§à¦¯:' : 'Price:'}
                       </div>
                       {product.originalPrice && product.originalPrice > product.price && (
                         <span className="text-[11.5px] text-[#8A9184] line-through leading-none block mb-0.5">
@@ -265,7 +266,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                       )}
                       {!(product as any).gatewayVerification&&product.wholesalePrice && (product.supplier==='rajkot'||product.minWholesaleQty>1) && (
                         <div className="text-[10px] text-[#A87C1F] font-medium leading-none mt-1">
-                          {language === 'bn' ? 'পাইকারি:' : 'Wholesale:'} {product.supplier === 'rajkot' ? new Intl.NumberFormat('en-IN', {style:'currency',currency:'INR',minimumFractionDigits:2}).format(product.wholesalePrice) : formatPrice(product.wholesalePrice)} ({product.supplier === 'rajkot' ? `Min ${wholesaleMinimumQty(product)} pcs / product` : product.minimumOrderQty ? `Min ${product.minimumOrderQty} pcs` : `${product.minWholesaleQty}+`})
+                          {language === 'bn' ? 'à¦ªà¦¾à¦à¦à¦¾à¦°à¦¿:' : 'Wholesale:'} {product.supplier === 'rajkot' ? new Intl.NumberFormat('en-IN', {style:'currency',currency:'INR',minimumFractionDigits:2}).format(product.wholesalePrice) : formatPrice(product.wholesalePrice)} ({product.supplier === 'rajkot' ? `Min ${wholesaleMinimumQty(product)} pcs / product` : product.minimumOrderQty ? `Min ${product.minimumOrderQty} pcs` : `${product.minWholesaleQty}+`})
                         </div>
                       )}
                     </div>
@@ -294,14 +295,14 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
           <div className="mt-8 flex flex-col items-center gap-2">
             <p className="text-xs text-[#565F52]">
               {language === 'bn'
-                ? `দেখানো হচ্ছে ${visibleProducts.length} / ${filteredTotal}টি পণ্য`
+                ? `à¦¦à§à¦à¦¾à¦¨à§ à¦¹à¦à§à¦à§ ${visibleProducts.length} / ${filteredTotal}à¦à¦¿ à¦ªà¦£à§à¦¯`
                 : `Showing ${visibleProducts.length} of ${filteredTotal} products`}
             </p>
             <button
               disabled={pageBusy||!!pageError} onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
               className="px-6 py-2.5 rounded-full border border-[#0F1913] text-sm font-semibold text-[#0F1913] hover:bg-[#0F1913] hover:text-white transition-all"
             >
-              {language === 'bn' ? 'আরও পণ্য দেখুন' : 'Show more products'}
+              {language === 'bn' ? 'à¦à¦°à¦ à¦ªà¦£à§à¦¯ à¦¦à§à¦à§à¦¨' : 'Show more products'}
             </button>
           </div>
         )}
