@@ -81,6 +81,51 @@
     display: none !important;
   }
 }
+/* Modern browsers: remove the hidden page from the layout entirely so it
+   cannot create blank pages, and un-trap the invoice from the fixed/scroll
+   checkout modal so it prints as one clean page on Letter and A4. */
+@supports selector(:has(a)) {
+  @media print {
+    body *:not(:has(#printable-area)):not(#printable-area):not(#printable-area *) {
+      display: none !important;
+    }
+    html, body {
+      height: auto !important;
+      overflow: visible !important;
+      background: #fff !important;
+    }
+    body *:has(#printable-area) {
+      display: block !important;
+      position: static !important;
+      overflow: visible !important;
+      max-height: none !important;
+      height: auto !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
+      transform: none !important;
+      backdrop-filter: none !important;
+      background: transparent !important;
+    }
+    #printable-area {
+      position: static !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
+      background: white !important;
+      color: black !important;
+    }
+  }
+}
+@page {
+  margin: 12mm;
+}
 
 
 /* Small usability improvements, without changing layout or brand colors. */
