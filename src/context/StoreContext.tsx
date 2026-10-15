@@ -493,8 +493,14 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   });
 
   // Local storage sync
+  // Cache is optional: the enriched catalog can exceed the browser quota,
+  // so a failed or oversized write must never crash the app.
   useEffect(() => {
-    localStorage.setItem('udecs_products', JSON.stringify(products));
+    try {
+      const payload = JSON.stringify(products);
+      if (payload.length < 3000000) localStorage.setItem('udecs_products', payload);
+      else localStorage.removeItem('udecs_products');
+    } catch { /* storage full or unavailable - live fetch covers reads */ }
   }, [products]);
 
   useEffect(() => {
@@ -502,7 +508,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, [cart]);
 
   useEffect(() => {
-    localStorage.setItem('udecs_orders', JSON.stringify(orders));
+    try { localStorage.setItem('udecs_orders', JSON.stringify(orders)); } catch { /* optional cache */ }
   }, [orders]);
 
   useEffect(() => {
