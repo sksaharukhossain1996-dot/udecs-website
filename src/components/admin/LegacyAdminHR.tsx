@@ -371,7 +371,6 @@ export const LegacyAdminHR: React.FC = () => {
                     <h3 className="font-heading font-black text-xl text-[#0F1913]">
                       {company.name}
                     </h3>
-                    <p className="text-[11px] text-[#565F52] font-medium">{company.legalName}</p>
                     <p className="text-[11px] text-[#565F52]">{company.address}</p>
                     <p className="text-[11px] font-bold text-[#0F1913] mt-1">
                       GSTIN: <span className="font-mono">{company.gstin}</span>
