@@ -55,14 +55,14 @@ export function MayaChat(){
   const orderRows=await readCol('orders',ORDER_CAP+1);
   const orderLimitHit=!!orderRows&&orderRows.length>ORDER_CAP;
   const orders:MayaOrder[]|null=orderRows?orderRows.slice(0,ORDER_CAP).map(r=>({id:String(r.__id||''),createdAt:typeof r.createdAt==='string'?r.createdAt:undefined,totalAmount:Number.isFinite(Number(r.totalAmount))?Number(r.totalAmount):undefined,paymentStatus:typeof r.paymentStatus==='string'?r.paymentStatus:undefined,orderStatus:typeof r.orderStatus==='string'?r.orderStatus:undefined,paymentMethod:typeof r.paymentMethod==='string'?r.paymentMethod:undefined,totalGst:Number.isFinite(Number(r.totalGst))?Number(r.totalGst):undefined})):null;
-  const empRows=await readCol('employees',200);
+  const empRows=await readCol('hrEmployees',200);
   const employees:MayaEmployee[]|null=empRows?empRows.map(r=>({baseSalary:Number.isFinite(Number(r.baseSalary))?Number(r.baseSalary):undefined,status:typeof r.status==='string'?r.status:undefined,name:typeof r.name==='string'?r.name:undefined})):null;
-  const expRows=await readCol('expenses',500);
+  const expRows=await readCol('erpExpenses',500);
   let expensesMonth:number|null=null;
   if(expRows&&expRows.length){
    const month=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'}).slice(0,7);
    let sum=0,seen=false;
-   for(const r of expRows){const when=typeof r.date==='string'?r.date:typeof r.createdAt==='string'?r.createdAt:'';const amount=Number(r.amount);if(when.startsWith(month)&&Number.isFinite(amount)&&amount>=0){sum+=amount;seen=true;}}
+   for(const r of expRows){const when=typeof r.date==='string'?r.date:typeof r.createdAt==='string'?r.createdAt:'';const amount=Number.isFinite(Number(r.amountPaise))?Number(r.amountPaise)/100:Number(r.amount);if(when.startsWith(month)&&Number.isFinite(amount)&&amount>=0){sum+=amount;seen=true;}}
    if(seen)expensesMonth=sum;
   }
   const data:MayaData={orders,orderLimitHit,employees,expensesMonth,loadedAt:Date.now()};
