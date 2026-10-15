@@ -1,6 +1,5 @@
 import React,{useEffect,useRef,useState} from 'react';
-import {collection,getDocsFromServer,limit,query} from 'firebase/firestore';
-import {auth,db} from '../firebase/config';
+import {auth} from '../firebase/config';
 import {mayaAnswer,mayaIntent,type MayaData,type MayaEmployee,type MayaOrder} from './mayaBrain';
 
 type Msg={q:string;a:string;at:number};
@@ -39,32 +38,37 @@ export function MayaChat(){
 
  async function loadData():Promise<MayaData>{
   if(cache.current&&Date.now()-cache.current.loadedAt<CACHE_MS)return cache.current;
-  const errors:string[]=[];
-  let orders:MayaOrder[]|null=null,orderLimitHit=false,employees:MayaEmployee[]|null=null,expensesMonth:number|null=null;
-  try{
-   const snap=await getDocsFromServer(query(collection(db,'orders'),limit(ORDER_CAP+1)));
-   orderLimitHit=snap.size>ORDER_CAP;
-   orders=snap.docs.slice(0,ORDER_CAP).map(d=>({id:d.id,...d.data()} as MayaOrder));
-  }catch{errors.push('orders');}
-  try{
-   const snap=await getDocsFromServer(query(collection(db,'employees'),limit(200)));
-   employees=snap.docs.map(d=>d.data() as MayaEmployee);
-  }catch{errors.push('employees');}
-  try{
-   const snap=await getDocsFromServer(query(collection(db,'expenses'),limit(500)));
-   const month=new Date().toLocaleString('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit'}).replace('/','-');
+  const u=auth.currentUser;
+  if(!u)throw Error('Sign in required.');
+  const token=await u.getIdToken();
+  const base='https://firestore.googleapis.com/v1/projects/udecs-store/databases/(default)/documents/';
+  const val=(v:any):any=>v?('stringValue'in v?v.stringValue:'integerValue'in v?Number(v.integerValue):'doubleValue'in v?v.doubleValue:'timestampValue'in v?v.timestampValue:'booleanValue'in v?v.booleanValue:null):null;
+  async function readCol(name:string,pageSize:number):Promise<Record<string,any>[]|null>{
+   try{
+    const res=await fetch(base+name+'?pageSize='+pageSize,{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(12000)});
+    if(!res.ok)return null;
+    const j=await res.json();
+    const docs=Array.isArray(j.documents)?j.documents:[];
+    return docs.map((d:any)=>({__id:String(d.name||'').split('/').pop(),...Object.fromEntries(Object.entries(d.fields||{}).map(([k,v])=>[k,val(v)]))}));
+   }catch{return null;}
+  }
+  const orderRows=await readCol('orders',ORDER_CAP+1);
+  const orderLimitHit=!!orderRows&&orderRows.length>ORDER_CAP;
+  const orders:MayaOrder[]|null=orderRows?orderRows.slice(0,ORDER_CAP).map(r=>({id:String(r.__id||''),createdAt:typeof r.createdAt==='string'?r.createdAt:undefined,totalAmount:Number.isFinite(Number(r.totalAmount))?Number(r.totalAmount):undefined,paymentStatus:typeof r.paymentStatus==='string'?r.paymentStatus:undefined,orderStatus:typeof r.orderStatus==='string'?r.orderStatus:undefined,paymentMethod:typeof r.paymentMethod==='string'?r.paymentMethod:undefined,totalGst:Number.isFinite(Number(r.totalGst))?Number(r.totalGst):undefined})):null;
+  const empRows=await readCol('employees',200);
+  const employees:MayaEmployee[]|null=empRows?empRows.map(r=>({baseSalary:Number.isFinite(Number(r.baseSalary))?Number(r.baseSalary):undefined,status:typeof r.status==='string'?r.status:undefined,name:typeof r.name==='string'?r.name:undefined})):null;
+  const expRows=await readCol('expenses',500);
+  let expensesMonth:number|null=null;
+  if(expRows&&expRows.length){
+   const month=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'}).slice(0,7);
    let sum=0,seen=false;
-   for(const doc of snap.docs){const row=doc.data() as Record<string,unknown>;
-    const when=typeof row.date==='string'?row.date:typeof row.createdAt==='string'?row.createdAt:'';
-    const amount=Number(row.amount);
-    if(when.startsWith(month)&&Number.isFinite(amount)&&amount>=0){sum+=amount;seen=true;}}
-   if(seen||snap.size===0)expensesMonth=sum;
-  }catch{/* expenses not connected */}
+   for(const r of expRows){const when=typeof r.date==='string'?r.date:typeof r.createdAt==='string'?r.createdAt:'';const amount=Number(r.amount);if(when.startsWith(month)&&Number.isFinite(amount)&&amount>=0){sum+=amount;seen=true;}}
+   if(seen)expensesMonth=sum;
+  }
   const data:MayaData={orders,orderLimitHit,employees,expensesMonth,loadedAt:Date.now()};
   cache.current=data;
   return data;
  }
-
  async function send(text:string){
   const q=text.trim();
   if(!q||busy)return;
