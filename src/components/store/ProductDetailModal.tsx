@@ -125,19 +125,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <span className="text-[11px] text-[#565F52]">
                 HSN: {product.hsn} · GST {product.gstRate}%
               </span>
-              {product.supplier !== 'rajkot' && product.productLink && (
-                <div className="mt-2">
-                  <a
-                    href={product.productLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-[11px] text-[#3C6656] hover:underline font-semibold"
-                  >
-                    <span>View Sourced Link</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-              )}
             </div>
           </div>
 
