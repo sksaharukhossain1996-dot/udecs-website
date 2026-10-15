@@ -90,7 +90,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 return (
                   <div key={product.id} className="py-4 flex gap-3.5 items-center">
                     <div className="w-16 h-16 rounded bg-[#E4E8D9] flex items-center justify-center text-[#3C6656] shrink-0 border border-[#CBCFB9] overflow-hidden">
-                      {product.imageUrl && product.id!=='23065_plastic_toothbrush_holder_1pc' ? (
+                      {product.imageUrl ? (
                         <img
                           src={product.imageUrl}
                           alt={customerProductTitle(product, language)}
