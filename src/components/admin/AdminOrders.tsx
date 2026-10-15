@@ -372,7 +372,7 @@ export const AdminOrders: React.FC = () => {
             <div className="grid grid-cols-2 gap-3 text-xs font-mono border-b border-black pb-3">
               <div>
                 <span className="font-bold block text-[10px] text-gray-500">FROM (ORIGIN):</span>
-                <p className="font-bold text-[11px]">{company.legalName}</p>
+                <p className="font-bold text-[11px]">{company.name}</p>
                 <p className="text-[10px] text-gray-600">Dispatch address not verified. Set and review ship-from details before shipping.</p>
                 <p className="text-[10px]">GST: {company.gstin}</p>
               </div>
@@ -435,7 +435,6 @@ export const AdminOrders: React.FC = () => {
               <div className="flex justify-between items-start border-b border-[#CBCFB9] pb-3">
                 <div>
                   <h4 className="font-black text-base text-[#0F1913]">{company.name}</h4>
-                  <p className="text-[11px] text-[#565F52]">{company.legalName}</p>
                   <p className="text-[11px] text-[#565F52]">{company.address}</p>
                   <p className="text-[11px] font-bold text-[#0F1913]">GSTIN: {company.gstin}</p>
                 </div>
