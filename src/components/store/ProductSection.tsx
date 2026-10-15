@@ -192,7 +192,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                   <div>
                     {/* Media container with custom SVG or custom Image URL */}
                     <div className="aspect-square bg-[#F4F5EF] rounded-lg flex items-center justify-center text-[#3C6656] mb-2.5 relative overflow-hidden group-hover:bg-[#E4E8D9] transition-colors">
-                      {product.imageUrl && product.id!=='23065_plastic_toothbrush_holder_1pc' ? (
+                      {product.imageUrl ? (
                         <img
                           src={product.imageUrl}
                           alt={customerProductTitle(product, language)}
