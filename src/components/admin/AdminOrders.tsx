@@ -344,7 +344,7 @@ export const AdminOrders: React.FC = () => {
       {/* Shipping Label Modal */}
       {showShippingLabel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white border-2 border-black rounded p-6 max-w-md w-full shadow-2xl space-y-4">
+          <div id="printable-area" className="bg-white border-2 border-black rounded p-6 max-w-md w-full shadow-2xl space-y-4">
             <div className="border-b-2 border-black pb-3 flex justify-between items-start">
               <div>
                 <h3 className="font-mono font-black text-base uppercase tracking-tight">
@@ -394,7 +394,7 @@ export const AdminOrders: React.FC = () => {
               <span className="font-bold">Total: {formatPrice(showShippingLabel.totalAmount)}</span>
             </div>
 
-            <div className="pt-2 flex gap-2">
+            <div className="pt-2 flex gap-2 no-print">
               <button
                 onClick={() => void printExport().catch(e=>alert(e.message))}
                 className="flex-1 bg-black text-white py-2 rounded text-xs font-bold flex items-center justify-center gap-1.5"
@@ -431,7 +431,7 @@ export const AdminOrders: React.FC = () => {
 
             <p role="status" className="border rounded p-3 bg-amber-50 text-sm">Internal draft from recorded order fields. Test/verification orders are not commercial invoices. Invoice number/date, HSN, place of supply, tax basis and totals need review before issuing a GST invoice. This view does not create or file an invoice.</p>
             {/* Invoice Container */}
-            <div className="border border-[#CBCFB9] p-5 rounded text-xs space-y-3 font-sans">
+            <div id="printable-area" className="border border-[#CBCFB9] p-5 rounded text-xs space-y-3 font-sans">
               <div className="flex justify-between items-start border-b border-[#CBCFB9] pb-3">
                 <div>
                   <h4 className="font-black text-base text-[#0F1913]">{company.name}</h4>
@@ -506,7 +506,7 @@ export const AdminOrders: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 no-print">
               <button
                 onClick={() => void printExport().catch(e=>alert(e.message))}
                 className="flex-1 bg-[#182620] hover:bg-[#0F1913] text-white py-2.5 rounded text-xs font-bold flex items-center justify-center gap-1.5"
