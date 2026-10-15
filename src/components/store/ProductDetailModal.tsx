@@ -88,7 +88,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 aria-label={customerProductTitle(product, language)}
                 className="max-h-[380px] w-auto max-w-full object-contain rounded"
               />
-            ) : product.imageUrl && product.id!=='23065_plastic_toothbrush_holder_1pc' ? (
+            ) : product.imageUrl ? (
               <img
                 src={product.photos?.[photoIndex] || product.imageUrl}
                 alt={customerProductTitle(product, language)}
