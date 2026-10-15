@@ -62,12 +62,8 @@ const deliveryCharge = (pincode: string, items: { product: any; quantity: number
   const zone = zoneForPincode(pincode);
   const rawWeight = items.reduce((w, item) => w + (item.product.weightKg || 0.5) * item.quantity, 0);
   const weightKg = Math.max(0.5, Math.round(rawWeight * 10) / 10); // 0.5 kg per unit default
-  const base = weightKg <= 0.5
-    ? RATE_FWD_05KG[zone]
-    : RATE_FWD_2KG[zone] + RATE_ADDL_KG[zone] * Math.max(0, Math.ceil(weightKg - 2));
-  let fee = base * (1 + FUEL_SURCHARGE_PCT);
-  if (isCod) fee += COD_FLAT_FEE + orderSubtotal * COD_PERCENT_FEE;
-  return { zone, weightKg, fee: Math.ceil(fee) };
+  const fee = orderSubtotal >= 1000 && !isCod ? 0 : isCod ? 55 : 45;
+  return { zone, weightKg, fee };
 };
 
 const UPI_ID = '7319190514@upi'; // Owner-confirmed QR destination, 1 Oct 2026
@@ -176,9 +172,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const sgst = isWestBengal ? roundMoney(totalGst - cgst) : 0;
   const igst = !isWestBengal ? totalGst : 0;
   const delivery = quoteShipping ? { zone: zoneForPincode(formData.pincode), weightKg: 0, fee: 0 } : deliveryCharge(formData.pincode, checkoutItems, paymentMethod === 'cod', subtotal);
-  const shippingFee = gatewayVerification||roundMoney(subtotal)>=1000?0:delivery.fee;
+  const shippingFee = gatewayVerification||(roundMoney(subtotal)>=1000&&paymentMethod!=='cod')?0:delivery.fee;
   const smallOrderDeliveryFee = 0;
-  const shoppingCharge = gatewayVerification||quoteShipping||paymentMethod!=='payu'?0:roundMoney(roundMoney(subtotal)*0.023);
+  const shoppingCharge = gatewayVerification||quoteShipping?0:paymentMethod==='cod'?(roundMoney(subtotal)>=1000?119:45):roundMoney(subtotal)>=1000?(paymentMethod==='payu'?roundMoney(roundMoney(subtotal)*0.023):0):7;
   const totalAmount = gatewayVerification?50:roundMoney(taxableAmount + totalGst + shippingFee + smallOrderDeliveryFee + shoppingCharge);
 
   // UPI deep link + QR (amount-encoded, order ref in the note)
@@ -488,7 +484,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                           Cash on Delivery (COD)
                         </span>
                         <span className="text-[11px] text-[#565F52]">
-                          Pay cash when your order arrives. A COD fee applies (Rs 32 + 1.75% of product total, added to shipping). We confirm every COD order before dispatch.
+                          Pay cash when your order arrives. COD orders carry Rs 55 delivery + Rs 45 shopping charge (Rs 119 shopping above Rs 1,000). We confirm every COD order before dispatch.
                         </span>
                       </div>
                     </label>
@@ -559,14 +555,14 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                     ))}
 
                     <div className="flex justify-between">
-                      <span>{gatewayVerification?'No delivery:':quoteShipping ? 'Shipping:' : roundMoney(subtotal)>=1000?'Shipping (free on products INR 1,000+):':`Shipping (${delivery.weightKg} kg, ${ZONE_LABELS[delivery.zone]}):`}</span>
+                      <span>{gatewayVerification?'No delivery:':quoteShipping ? 'Shipping:' : roundMoney(subtotal)>=1000&&paymentMethod!=='cod'?'Shipping (free on products INR 1,000+):':paymentMethod==='cod'?'Shipping (COD flat):':'Shipping (flat):'}</span>
                       <span className="text-[#3C6656] font-semibold whitespace-nowrap pl-2">
                         {quoteShipping ? 'Quoted separately, not included' : formatPrice(shippingFee)}
                       </span>
                     </div>
 
                     {!gatewayVerification&&!quoteShipping&&<>
-                      <div className="flex justify-between"><span>Shopping charge ({paymentMethod==='payu'?'PayU 2.30% of products':paymentMethod==='cod'?'COD - none, COD fee added to shipping':'None'}):</span><span className="whitespace-nowrap pl-2">{formatPrice(shoppingCharge)}</span></div>
+                      <div className="flex justify-between"><span>Shopping charge ({paymentMethod==='payu'&&roundMoney(subtotal)>=1000?'PayU 2.30% of products':paymentMethod==='cod'?'COD flat':'flat'}):</span><span className="whitespace-nowrap pl-2">{formatPrice(shoppingCharge)}</span></div>
                     </>}
 
                     <div className="pt-2 border-t border-[#CBCFB9] flex justify-between items-baseline text-sm font-bold text-[#0F1913]">
@@ -800,7 +796,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                     </div>
                   )}
                   {completedOrder.smallOrderDeliveryFee!==undefined&&<>
-                    <div className="flex justify-between"><span>Weight shipping:</span><span>{formatPrice(completedOrder.shippingFee||0)}</span></div>
+                    <div className="flex justify-between"><span>Delivery:</span><span>{formatPrice(completedOrder.shippingFee||0)}</span></div>
                     {completedOrder.smallOrderDeliveryFee>0&&<div className="flex justify-between"><span>Delivery charge:</span><span>{formatPrice(completedOrder.smallOrderDeliveryFee)}</span></div>}
                     <div className="flex justify-between"><span>Shopping charge:</span><span>{formatPrice(completedOrder.shoppingCharge||0)}</span></div>
                   </>}
