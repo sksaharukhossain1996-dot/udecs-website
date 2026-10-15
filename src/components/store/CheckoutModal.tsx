@@ -703,7 +703,6 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   <h5 className="font-black text-sm text-[#0F1913] tracking-tight">
                     {company.name}
                   </h5>
-                  <p className="text-[11px] text-[#565F52]">{company.legalName}</p>
                   <p className="text-[11px] text-[#565F52]">{company.address}</p>
                   <p className="text-[11px] text-[#565F52]">
                     Email: {company.emailGmail} · WhatsApp: {company.whatsapp}
