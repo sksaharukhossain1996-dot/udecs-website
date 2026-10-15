@@ -37,8 +37,9 @@ export const SearchModal: React.FC<SearchModalProps> = ({
   useEffect(()=>{
     if(!isOpen||!paged)return;let active=true;
     const ids=matches.slice(0,visibleCount).map(e=>e.id);
+    const localIds=new Set(products.map(prod=>prod.id));
     const existing=new Map([...products,...resultProducts].map(p=>[p.id,p]));
-    const missing=ids.filter(id=>!existing.has(id));setBusy(true);setError('');setResultProducts(prev=>prev.filter(p=>ids.includes(p.id)));
+    const missing=ids.filter(id=>!existing.has(id)||localIds.has(id));setBusy(true);setError('');setResultProducts(prev=>prev.filter(p=>ids.includes(p.id)));
     const timer=setTimeout(()=>{(async()=>{for(let i=0;i<missing.length;i+=24){const batch=await readProductsByIds(missing.slice(i,i+24));batch.forEach(p=>existing.set(p.id,p));}if(active)setResultProducts(ids.flatMap(id=>existing.has(id)?[existing.get(id)!]:[]));})().catch(()=>{if(active)setError('Search products could not be loaded. Please try later.');}).finally(()=>{if(active)setBusy(false);});},300);
     return()=>{active=false;clearTimeout(timer);};
   },[key,visibleCount,isOpen,products,paged]);
@@ -59,7 +60,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             type="text"
             placeholder={
               language === 'bn'
-                ? 'পণ্য, SKU, ক্যাটাগরি বা HSN দিয়ে খুঁজুন...'
+                ? 'à¦ªà¦£à§à¦¯, SKU, à¦à§à¦¯à¦¾à¦à¦¾à¦à¦°à¦¿ à¦¬à¦¾ HSN à¦¦à¦¿à¦¯à¦¼à§ à¦à§à¦à¦à§à¦¨...'
                 : 'Search products, SKU, category, or HSN code...'
             }
             value={query}
@@ -104,7 +105,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                       {language === 'bn' ? product.nameBn : product.name}
                     </h4>
                     <span className="text-[10px] text-[#565F52]">
-                      HSN: {product.hsn} · {product.stockManaged === false ? 'Supplier availability confirmed on order' : `Stock: ${product.stock} units`}
+                      HSN: {product.hsn} Â· {product.stockManaged === false ? 'Supplier availability confirmed on order' : `Stock: ${product.stock} units`}
                     </span>
                   </div>
                 </div>
