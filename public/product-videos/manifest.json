@@ -1,125 +1,165 @@
 {
-  "version": 1,
-  "videos": {
-    "0131_rechargeable_juiceblender": {
-      "file": "0131_rechargeable_juiceblender.mp4",
-      "durationSec": 16
-    },
-    "0262_lazy_neck_phone_holder": {
-      "file": "0262_lazy_neck_phone_holder.mp4",
-      "durationSec": 16
-    },
-    "0312_mini_steam_iron_1pc": {
-      "file": "0312_mini_steam_iron_1pc.mp4",
-      "durationSec": 16
-    },
-    "0329_camera_tripod_140cm": {
-      "file": "0329_camera_tripod_140cm.mp4",
-      "durationSec": 16
-    },
-    "0390_2in1_vaccum_cleaner": {
-      "file": "10-0390_2in1_vaccum_cleaner.mp4",
-      "durationSec": 16
-    },
-    "0740_simple_puri_press": {
-      "file": "0740_simple_puri_press.mp4",
-      "durationSec": 16
-    },
-    "10072_smoothies_maker_cup_1pc": {
-      "file": "10072_smoothies_maker_cup_1pc.mp4",
-      "durationSec": 16
-    },
-    "10553_supermom_power_blender": {
-      "file": "10553_supermom_power_blender.mp4",
-      "durationSec": 16
-    },
-    "10557_supermom_little_juicer_650ml": {
-      "file": "10557_supermom_little_juicer_650ml.mp4",
-      "durationSec": 16
-    },
-    "10575_supermom_big_ss_carrot_grater": {
-      "file": "29-10575_supermom_big_ss_carrot_grater.mp4",
-      "durationSec": 16
-    },
-    "10577_supermom_adrak_grater_n_peeler": {
-      "file": "30-10577_supermom_adrak_grater_n_peeler.mp4",
-      "durationSec": 16
-    },
-    "10583_supermom_swiss_slicer_n_peeler": {
-      "file": "10583_supermom_swiss_slicer_n_peeler.mp4",
-      "durationSec": 16
-    },
-    "10597_supermom_spring_o_masher": {
-      "file": "10597_supermom_spring_o_masher.mp4",
-      "durationSec": 16
-    },
-    "10932_supermom_duroto_veg_grater_1pc": {
-      "file": "10932_supermom_duroto_veg_grater_1pc.mp4",
-      "durationSec": 16
-    },
-    "11492_apex_plastic_smart_basket_sb": {
-      "file": "11492_apex_plastic_smart_basket_sb.mp4",
-      "durationSec": 16
-    },
-    "11552_apex_2in1_slicer_n_grater_21sg": {
-      "file": "21-11552_apex_2in1_slicer_n_grater_21sg.mp4",
-      "durationSec": 16
-    },
-    "11696_apex_ss_colander_no10_ssc10": {
-      "file": "31-11696_apex_ss_colander_no10_ssc10.mp4",
-      "durationSec": 16
-    },
-    "11714_apex_mix_n_measure_prep_bowl_3pc": {
-      "file": "11714_apex_mix_n_measure_prep_bowl_3pc.mp4",
-      "durationSec": 16
-    },
-    "11940_ritu_khal_batta_with_ss_base_j239": {
-      "file": "11940_ritu_khal_batta_with_ss_base_j239.mp4",
-      "durationSec": 16
-    },
-    "11942_ritu_ice_snow_maker_j258": {
-      "file": "11942_ritu_ice_snow_maker_j258.mp4",
-      "durationSec": 16
-    },
-    "12026_frying_pot_n_strainer_basket_2pc": {
-      "file": "12026_frying_pot_n_strainer_basket_2pc.mp4",
-      "durationSec": 16
-    },
-    "12221_4_stage_knife_sharpener_1pc": {
-      "file": "12221_4_stage_knife_sharpener_1pc.mp4",
-      "durationSec": 16
-    },
-    "12266_3in1_kitchen_tools_kit": {
-      "file": "12266_3in1_kitchen_tools_kit.mp4",
-      "durationSec": 16
-    },
-    "12497_ss_clothes_pegs_with_rope": {
-      "file": "12497_ss_clothes_pegs_with_rope.mp4",
-      "durationSec": 16
-    },
-    "1224p_purple_face_ice_roller": {
-      "file": "1224p_purple_face_ice_roller.mp4",
-      "durationSec": 16
-    },
-    "12908_20in1_multi_cleaner_kit": {
-      "file": "12908_20in1_multi_cleaner_kit.mp4",
-      "durationSec": 16
-    },
-    "13070_desk_vacuum_cleaner": {
-      "file": "13070_desk_vacuum_cleaner.mp4",
-      "durationSec": 16
-    },
-    "13365_lcd_drawing_pen_case_1pc": {
-      "file": "13365_lcd_drawing_pen_case_1pc.mp4",
-      "durationSec": 16
-    },
-    "13554_portable_21_grid_pill_box_1pc": {
-      "file": "13554_portable_21_grid_pill_box_1pc.mp4",
-      "durationSec": 16
-    },
-    "13572_manicure_kit_with_travel_case_8pc": {
-      "file": "13572_manicure_kit_with_travel_case_8pc.mp4",
-      "durationSec": 16
-    }
+ "version": 1,
+ "videos": {
+  "0131_rechargeable_juiceblender": {
+   "file": "0131_rechargeable_juiceblender.mp4",
+   "durationSec": 16
+  },
+  "0262_lazy_neck_phone_holder": {
+   "file": "0262_lazy_neck_phone_holder.mp4",
+   "durationSec": 16
+  },
+  "0312_mini_steam_iron_1pc": {
+   "file": "0312_mini_steam_iron_1pc.mp4",
+   "durationSec": 16
+  },
+  "0329_camera_tripod_140cm": {
+   "file": "0329_camera_tripod_140cm.mp4",
+   "durationSec": 16
+  },
+  "0390_2in1_vaccum_cleaner": {
+   "file": "0390_2in1_vaccum_cleaner.mp4",
+   "durationSec": 16
+  },
+  "0740_simple_puri_press": {
+   "file": "0740_simple_puri_press.mp4",
+   "durationSec": 16
+  },
+  "10072_smoothies_maker_cup_1pc": {
+   "file": "10072_smoothies_maker_cup_1pc.mp4",
+   "durationSec": 16
+  },
+  "10553_supermom_power_blender": {
+   "file": "10553_supermom_power_blender.mp4",
+   "durationSec": 16
+  },
+  "10557_supermom_little_juicer_650ml": {
+   "file": "10557_supermom_little_juicer_650ml.mp4",
+   "durationSec": 16
+  },
+  "10575_supermom_big_ss_carrot_grater": {
+   "file": "14-fix-10575_supermom_big_ss_carrot_grater.mp4",
+   "durationSec": 16
+  },
+  "10577_supermom_adrak_grater_n_peeler": {
+   "file": "15-fix-10577_supermom_adrak_grater_n_peeler.mp4",
+   "durationSec": 16
+  },
+  "10583_supermom_swiss_slicer_n_peeler": {
+   "file": "10583_supermom_swiss_slicer_n_peeler.mp4",
+   "durationSec": 16
+  },
+  "10597_supermom_spring_o_masher": {
+   "file": "10597_supermom_spring_o_masher.mp4",
+   "durationSec": 16
+  },
+  "10932_supermom_duroto_veg_grater_1pc": {
+   "file": "10932_supermom_duroto_veg_grater_1pc.mp4",
+   "durationSec": 16
+  },
+  "11492_apex_plastic_smart_basket_sb": {
+   "file": "11492_apex_plastic_smart_basket_sb.mp4",
+   "durationSec": 16
+  },
+  "11552_apex_2in1_slicer_n_grater_21sg": {
+   "file": "11552_apex_2in1_slicer_n_grater_21sg.mp4",
+   "durationSec": 16
+  },
+  "11696_apex_ss_colander_no10_ssc10": {
+   "file": "16-fix-11696_apex_ss_colander_no10_ssc10.mp4",
+   "durationSec": 16
+  },
+  "11714_apex_mix_n_measure_prep_bowl_3pc": {
+   "file": "11714_apex_mix_n_measure_prep_bowl_3pc.mp4",
+   "durationSec": 16
+  },
+  "11940_ritu_khal_batta_with_ss_base_j239": {
+   "file": "11940_ritu_khal_batta_with_ss_base_j239.mp4",
+   "durationSec": 16
+  },
+  "11942_ritu_ice_snow_maker_j258": {
+   "file": "11942_ritu_ice_snow_maker_j258.mp4",
+   "durationSec": 16
+  },
+  "12026_frying_pot_n_strainer_basket_2pc": {
+   "file": "12026_frying_pot_n_strainer_basket_2pc.mp4",
+   "durationSec": 16
+  },
+  "12221_4_stage_knife_sharpener_1pc": {
+   "file": "12221_4_stage_knife_sharpener_1pc.mp4",
+   "durationSec": 16
+  },
+  "1224p_purple_face_ice_roller": {
+   "file": "1224p_purple_face_ice_roller.mp4",
+   "durationSec": 16
+  },
+  "12266_3in1_kitchen_tools_kit": {
+   "file": "12266_3in1_kitchen_tools_kit.mp4",
+   "durationSec": 16
+  },
+  "12497_ss_clothes_pegs_with_rope": {
+   "file": "12497_ss_clothes_pegs_with_rope.mp4",
+   "durationSec": 16
+  },
+  "12908_20in1_multi_cleaner_kit": {
+   "file": "12908_20in1_multi_cleaner_kit.mp4",
+   "durationSec": 16
+  },
+  "13070_desk_vacuum_cleaner": {
+   "file": "13070_desk_vacuum_cleaner.mp4",
+   "durationSec": 16
+  },
+  "13365_lcd_drawing_pen_case_1pc": {
+   "file": "13365_lcd_drawing_pen_case_1pc.mp4",
+   "durationSec": 16
+  },
+  "13554_portable_21_grid_pill_box_1pc": {
+   "file": "13-13554_portable_21_grid_pill_box_1pc.mp4",
+   "durationSec": 16
+  },
+  "13572_manicure_kit_with_travel_case_8pc": {
+   "file": "13572_manicure_kit_with_travel_case_8pc.mp4",
+   "durationSec": 16
+  },
+  "13582_colorful_keyboard_n_mouse_set": {
+   "file": "13582_colorful_keyboard_n_mouse_set.mp4",
+   "durationSec": 16
+  },
+  "13583_wired_keyboard_n_mouse_set": {
+   "file": "13583_wired_keyboard_n_mouse_set.mp4",
+   "durationSec": 16
+  },
+  "13946_ele_automatic_water_dispenser": {
+   "file": "13946_ele_automatic_water_dispenser.mp4",
+   "durationSec": 16
+  },
+  "14130_protective_arm_sleeves_1pair": {
+   "file": "14130_protective_arm_sleeves_1pair.mp4",
+   "durationSec": 16
+  },
+  "14388_plastic_hair_massage_brush": {
+   "file": "14388_plastic_hair_massage_brush.mp4",
+   "durationSec": 16
+  },
+  "14412_metal_tank_crafts_home_decor": {
+   "file": "14412_metal_tank_crafts_home_decor.mp4",
+   "durationSec": 16
+  },
+  "14434_bear_hand_massager": {
+   "file": "14434_bear_hand_massager.mp4",
+   "durationSec": 16
+  },
+  "1445_kids_hat_umbrella": {
+   "file": "1445_kids_hat_umbrella.mp4",
+   "durationSec": 16
+  },
+  "15236_heavy_duty_metal_cloth_clips_5pc": {
+   "file": "15236_heavy_duty_metal_cloth_clips_5pc.mp4",
+   "durationSec": 16
+  },
+  "15238_ss_cloth_drying_clips_10pc": {
+   "file": "15238_ss_cloth_drying_clips_10pc.mp4",
+   "durationSec": 16
   }
+ }
 }
