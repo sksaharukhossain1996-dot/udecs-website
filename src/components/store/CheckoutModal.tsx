@@ -132,7 +132,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [orderError,setOrderError]=useState('');
   const [wasRecovered,setWasRecovered]=useState(false);
   const [recoverOnLoad,setRecoverOnLoad]=useState(false);
-  useEffect(()=>{if(customer?.uid){setRecoverOnLoad(!!localStorage.getItem('udecs-order-retry-'+customer.uid));}else{setRecoverOnLoad(false);attempt.current=null;}},[customer?.uid]);
+  useEffect(()=>{if(!isOpen){attempt.current=null;return;}if(customer?.uid){setRecoverOnLoad(!!localStorage.getItem('udecs-order-retry-'+customer.uid));}else{setRecoverOnLoad(false);attempt.current=null;}},[customer?.uid,isOpen]);
   useEffect(()=>watchCustomerIdentity(user=>{setCustomer(user);setIdentityReady(true);setFormData(old=>({...old,email:isVerifiedGoogleCustomer(user)?user!.email!:''}));}),[]);
   const signInForOrder=async()=>{setLoginBusy(true);setLoginError('');try{await customerSignIn();}catch{setLoginError('Google sign-in did not finish. Please try again. No order was placed.');}finally{setLoginBusy(false);}};
 
@@ -437,7 +437,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   />
                 </div>
 
-                {!gatewayVerification&&!quoteShipping&&<OrderWhatsAppPreferences language={whatsappLanguage} accepted={whatsappUpdates} disabled={isProcessing||!!attempt.current||recoverOnLoad} onLanguageChange={setWhatsappLanguage} onAcceptedChange={setWhatsappUpdates}/>}
+                {!gatewayVerification&&!quoteShipping&&<OrderWhatsAppPreferences language={whatsappLanguage} accepted={whatsappUpdates} disabled={isProcessing||!!attempt.current} onLanguageChange={setWhatsappLanguage} onAcceptedChange={setWhatsappUpdates}/>}
 
                 {/* Payment Selection */}
                 <div className="pt-2" hidden={quoteShipping}>
