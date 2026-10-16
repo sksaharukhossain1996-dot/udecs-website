@@ -1,4 +1,4 @@
-export type Language = 'bn' | 'en' | 'hi';
+export type Language = 'bn' | 'en' | 'hi' | 'ar' | 'es' | 'fr' | 'de' | 'pt' | 'ru' | 'zh' | 'ja' | 'id';
 export type Currency = 'INR' | 'USD' | 'EUR' | 'AED';
 export type UserRole = 'customer' | 'admin' | 'manager' | 'inventory' | 'accountant';
 
