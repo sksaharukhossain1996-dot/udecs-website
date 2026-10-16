@@ -57,6 +57,13 @@ export const Hero: React.FC<HeroProps> = ({ onOpenTracking, onOpenVoice }) => {
                 <Truck className="w-3.5 h-3.5 text-[#A87C1F]" />
                 <span>{t('quickTrack')}</span>
               </button>
+
+              <a
+                href="/partner-store-setup.html"
+                className="inline-flex items-center gap-2 text-xs font-semibold text-[#565F52] hover:text-[#0F1913] px-3 py-3 underline decoration-[#A87C1F] decoration-2 underline-offset-4"
+              >
+                <span>Partner Store</span>
+              </a>
             </div>
 
 
