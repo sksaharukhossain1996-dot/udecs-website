@@ -227,6 +227,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
           <a className="hover:underline" href="/return-refund-policy.html">Return and refund policy</a>
           <a className="hover:underline" href="/shipping-policy.html">Shipping policy</a>
           <a className="hover:underline" href="/terms-and-conditions.html">Terms and conditions</a>
+          <a className="hover:underline" href="/partner-store-setup.html">Partner Store</a>
         </nav>
 
         {/* Bottom Bar */}
