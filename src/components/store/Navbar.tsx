@@ -9,7 +9,7 @@ import {
   X,
   Truck,
   Globe,
-  LayoutDashboard,
+  User,
   Phone,
   ShieldCheck,
   Mic,
@@ -94,9 +94,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-3">
             <a href="#top" className="flex items-center gap-2 group">
               <BrandLogo size="md" />
-              <span className="hidden sm:inline-block text-[11px] font-mono px-1.5 py-0.5 rounded bg-[#E4E8D9] text-[#565F52] border border-[#CBCFB9]">
-                {company.domain}
-              </span>
             </a>
           </div>
 
@@ -233,14 +230,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="hidden sm:inline">Live Voice</span>
             </button>
 
-            {/* Admin & Staff Portal Button */}
-            <button
-              onClick={onOpenAdmin}
+            {/* Customer Login / Sign up (management access lives in the footer) */}
+            <a
+              href="/?customer-portal=1"
               className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold bg-[#182620] hover:bg-[#0F1913] text-white px-3 py-1.5 rounded transition-all shadow-xs"
             >
-              <LayoutDashboard className="w-3.5 h-3.5 text-[#CC9A2E]" />
-              <span>{t('dashboardNav')}</span>
-            </button>
+              <User className="w-3.5 h-3.5 text-[#CC9A2E]" />
+              <span>Customer Login / Sign up</span>
+            </a>
 
             {/* Mobile Menu Toggle */}
             <button
@@ -309,16 +306,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Mic className="w-4 h-4 text-amber-200 animate-pulse" />
               <span>Live Voice AI</span>
             </button>
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onOpenAdmin();
-              }}
+            <a
+              href="/?customer-portal=1"
+              onClick={() => setMobileMenuOpen(false)}
               className="w-full flex items-center justify-center gap-2 bg-[#182620] text-white py-2.5 rounded font-semibold text-sm"
             >
-              <LayoutDashboard className="w-4 h-4 text-[#CC9A2E]" />
-              <span>{t('dashboardNav')}</span>
-            </button>
+              <User className="w-4 h-4 text-[#CC9A2E]" />
+              <span>Customer Login / Sign up</span>
+            </a>
             <div className="pt-3 border-t border-[#E4E8D9] text-xs text-[#565F52] flex flex-col gap-1">
               <p className="flex items-center gap-1.5">
                 <Phone className="w-3.5 h-3.5 text-[#3C6656]" />
