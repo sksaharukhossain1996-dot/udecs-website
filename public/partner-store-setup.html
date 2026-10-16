@@ -1,0 +1,46 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Partner Store Setup | UDECS</title><style>
+*{box-sizing:border-box}body{margin:0;background:#eef0e7;color:#0f1913;font:16px/1.6 system-ui,sans-serif}
+header,main,footer{max-width:820px;margin:auto;padding:24px}header{display:flex;align-items:center;gap:18px}header img{width:72px;height:70px;object-fit:contain;background:#fff;border-radius:12px;padding:8px}a{color:#204d3c}
+main{background:#fff;border-radius:16px}h1{font-size:30px;line-height:1.25;margin:0 0 8px}.lead{color:#35473c;margin:0 0 20px}
+.price{display:flex;align-items:baseline;gap:10px;background:#e6f2ea;border-radius:12px;padding:14px 18px;margin-bottom:22px}.price b{font-size:34px;color:#204d3c}
+ul{padding-left:20px;margin:0 0 22px}li{margin-bottom:6px}
+label{display:block;font-weight:600;font-size:14px;margin:14px 0 6px}input{width:100%;padding:12px 14px;border:1px solid #b9c5bc;border-radius:10px;font:inherit}
+.chk{display:flex;gap:10px;align-items:flex-start;font-weight:400;margin-top:18px}.chk input{width:20px;height:20px;margin-top:3px}
+button{margin-top:20px;width:100%;padding:15px;border:0;border-radius:12px;background:#204d3c;color:#fff;font:600 17px system-ui;cursor:pointer}
+.note{font-size:13px;color:#4b5a50;margin-top:14px}footer{font-size:14px}
+@media(max-width:600px){header,main,footer{padding:18px}main{border-radius:0}h1{font-size:26px}}</style></head><body>
+<header><a href="/"><img src="/UDECS_Logo_Premium_Transparent.png" alt="UDECS"></a><div><strong>UNICK DIGITAL E-COMMERCE SOLUTIONS</strong><br><a href="/">Back to storefront</a></div></header>
+<main><h1>Partner Store Setup</h1>
+<p class="lead">Get your own store on UDECS and sell products to your customers.</p>
+<div class="price"><b>&#8377;499</b><span>one-time store setup fee</span></div>
+<ul><li>Your own store page on UDECS</li><li>Add and sell products to your customers</li><li>One-time fee. Pay securely online through PayU</li></ul>
+<div id="st" role="status" style="display:none;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-weight:600"></div>
+<form id="f" onsubmit="return false" novalidate><label for="n">Full name</label><input id="n" autocomplete="name" maxlength="60"><label for="p">Phone (WhatsApp)</label><input id="p" type="tel" autocomplete="tel" maxlength="16" inputmode="tel"><label for="e">Email</label><input id="e" type="email" autocomplete="email"><label for="c">City</label><input id="c" autocomplete="address-level2" maxlength="40">
+<label class="chk"><input id="ok" type="checkbox"><span>I agree to the <a href="/terms-and-conditions.html">Terms</a>, <a href="/payment-policy.html">Payment policy</a> and <a href="/return-refund-policy.html">Refund policy</a>.</span></label>
+<button id="pay" type="button">Pay &#8377;499 with PayU</button><div id="er" style="color:#a12a1b;font-size:14px;margin-top:10px;display:none"></div>
+<p class="note">Payment is processed securely by PayU. The fee is for store setup only. Sales results depend on your own effort and no earnings are promised. A tax invoice is available on request at ecommerceunickdigital@gmail.com.</p></form></main>
+<footer>UNICK DIGITAL E-COMMERCE SOLUTIONS &middot; +91 9845485437 &middot; ecommerceunickdigital@gmail.com</footer><script>
+(function(){
+var API="https://udecs-payu-api.sksaharukhossain1996.workers.dev/api/payu/partner/start";
+var $=function(i){return document.getElementById(i)};
+var q=new URLSearchParams(location.search).get("status"),st=$("st");
+var M={paid:["Payment received. Thank you! Our team will contact you on WhatsApp shortly to set up your store.","#e6f2ea","#204d3c"],pending:["Your payment is being confirmed. Please do not pay again. We will contact you once it is confirmed.","#fff6dd","#6b4e00"],failed:["Payment was not completed. You have not been charged. You can try again below.","#fdeaea","#a12a1b"],error:["We could not confirm this payment. If money was deducted, please contact us at +91 9845485437.","#fdeaea","#a12a1b"]};
+if(M[q]){st.textContent=M[q][0];st.style.cssText+=";display:block;background:"+M[q][1]+";color:"+M[q][2]}
+function err(t){var e=$("er");e.textContent=t;e.style.display="block"}
+$("pay").addEventListener("click",function(){
+ $("er").style.display="none";
+ var d={name:$("n").value.trim(),phone:$("p").value.trim(),email:$("e").value.trim(),city:$("c").value.trim()};
+ if(d.name.length<2)return err("Please enter your full name.");
+ if(!/^[6-9]\d{9}$/.test(d.phone.replace(/[\s-]/g,"").replace(/^\+?91/,"")))return err("Please enter a valid 10-digit Indian mobile number.");
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email))return err("Please enter a valid email address.");
+ if(d.city.length<2)return err("Please enter your city.");
+ if(!$("ok").checked)return err("Please accept the Terms, Payment policy and Refund policy.");
+ var b=$("pay");b.disabled=true;b.textContent="Please wait...";
+ fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}).then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||"Error");return j})}).then(function(j){
+  var f=document.createElement("form");f.method="POST";f.action=j.action;
+  Object.keys(j.fields).forEach(function(k){var i=document.createElement("input");i.type="hidden";i.name=k;i.value=j.fields[k];f.appendChild(i)});
+  document.body.appendChild(f);f.submit();
+ }).catch(function(e){b.disabled=false;b.innerHTML="Pay &#8377;499 with PayU";err(e.message&&e.message!=="Failed to fetch"?e.message:"Could not start the payment. Please try again.")});
+});
+})();
+</script></body></html>
