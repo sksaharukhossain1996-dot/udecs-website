@@ -3,3 +3,15 @@
 .premium-admin .vision-center aside.vision-sidebar{background:#0b0e17!important;background-image:none!important;width:auto!important;color:#e7ecf5!important;padding:30px 18px!important;border-right:1px solid #202634!important;display:block!important}.premium-admin .vision-center .vision-sidebar nav{display:flex!important;flex-direction:column!important;padding:0!important;max-height:none!important}.premium-admin .vision-center .vision-sidebar nav a{background:transparent!important;color:#9aa6b9!important}.premium-admin .vision-center .vision-sidebar nav a:first-child{background:#26161f!important;color:#f3c6cb!important}@media(max-width:720px){.premium-admin .vision-center aside.vision-sidebar{display:none!important}}
 /* Keep the approved home clear of the legacy watermark and its mobile sections in reach. */
 .premium-admin:has(.vision-center) .portal-watermark{display:none}@media(max-width:720px){.vision-content{padding-bottom:88px}.vision-mobile-nav{position:fixed;left:12px;right:12px;bottom:0;border-radius:12px 12px 0 0;z-index:60;padding-bottom:max(7px,env(safe-area-inset-bottom))}}
+/* Command center panel: light mint look (owner choice B, 2026-10-17). Scoped to .vision-center only. */
+html body section.vision-center,html body section.vision-center .vision-layout.vision-layout{background:#EEF9F2 !important;background-image:none !important}
+html body section.vision-center .vision-layout aside.vision-sidebar.vision-sidebar{background:#DDF2E5 !important;background-image:none !important;border-color:#BFE3CC !important}
+html body section.vision-center .vision-hero.vision-hero{background:radial-gradient(at 70% 50%,#1E9E5A22,transparent 60%) !important}
+html body section.vision-center :is(h1,h2,h3,h4,p,span,div,a,li,strong,small,label,button,td,th){color:#0F3D24 !important}
+html body section.vision-center :is([class*=eyebrow],small,.vision-sidebar a){color:#1E9E5A !important}
+html body section.vision-center .vision-sidebar nav a:first-child{background:#1E9E5A22 !important;border:1px solid #1E9E5A88 !important}
+html body section.vision-center :is(article,.bc-panel,.bc-report,.bc-bottom,.launcher){background:#FFFFFF !important;border-color:#BFE3CC !important;box-shadow:none !important}
+html body section.vision-center .vision-sidebar.vision-sidebar nav a,html body section.vision-center .vision-sidebar.vision-sidebar nav button{background:transparent !important;color:#0F3D24 !important;opacity:1 !important}
+html body section.vision-center .vision-sidebar.vision-sidebar nav a:first-child{background:#1E9E5A26 !important;border:1px solid #1E9E5A99 !important;color:#0F3D24 !important}
+html body section.vision-center .vision-hero *{background-color:transparent !important}
+html body nav.vision-mobile-nav.vision-mobile-nav{background:#DDF2E5 !important}html body nav.vision-mobile-nav.vision-mobile-nav *{color:#0F3D24 !important;background:transparent !important}
