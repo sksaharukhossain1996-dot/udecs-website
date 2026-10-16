@@ -605,6 +605,10 @@ export const TRANSLATIONS = {
     searchPlaceholder: 'পণ্য, SKU বা ক্যাটাগরি খুঁজুন...',
     allDistrictsCovered: '৬৪ জেলা ও সর্বভারতীয় ডেলিভারি',
     gstInvoiceIncluded: 'প্রতিটি অর্ডারে বিস্তারিত বিল',
+    myOrders: 'আমার অর্ডার',
+    myCart: 'আমার কার্ট',
+    customerLogin: 'গ্রাহক লগইন / সাইন আপ',
+    englishBinding: 'দাম, নীতি ও আইনি শর্তের জন্য ইংরেজি সংস্করণই চূড়ান্ত।',
   },
   en: {
     brandSubtitle: 'Everything for Home, Sports & Trade in One Place',
@@ -643,6 +647,10 @@ export const TRANSLATIONS = {
     searchPlaceholder: 'Search products, SKU or category...',
     allDistrictsCovered: 'Pan-India Doorstep Delivery & 64 Districts',
     gstInvoiceIncluded: 'Detailed invoice included with every order',
+    myOrders: 'My Orders',
+    myCart: 'My Cart',
+    customerLogin: 'Customer Login / Sign up',
+    englishBinding: 'English is the binding version for prices, policies and legal terms.',
   },
   hi: {
     brandSubtitle: 'घर, खेल और व्यापार की हर जरूरत, एक ही स्थान पर',
@@ -681,5 +689,9 @@ export const TRANSLATIONS = {
     searchPlaceholder: 'उत्पाद, SKU या श्रेणी खोजें...',
     allDistrictsCovered: 'अखिल भारतीय डिलीवरी नेटवर्क',
     gstInvoiceIncluded: 'हर ऑर्डर के साथ विस्तृत बिल',
+    myOrders: 'मेरे ऑर्डर',
+    myCart: 'मेरा कार्ट',
+    customerLogin: 'ग्राहक लॉगिन / साइन अप',
+    englishBinding: 'कीमतों, नीतियों और कानूनी शर्तों के लिए अंग्रेज़ी संस्करण मान्य है।',
   },
 };
