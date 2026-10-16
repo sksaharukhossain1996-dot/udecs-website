@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStore, CURRENCY_INFO } from '../../context/StoreContext';
 import { Language, Currency } from '../../types';
+import { LANGUAGES } from '../../i18n/languages';
 import { BrandLogo } from '../common/BrandLogo';
 import {
   Search,
@@ -66,6 +67,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
+      {language !== 'en' && (
+        <div className="bg-[#E4E8D9] text-[#182620] text-[11px] py-1 px-4 text-center">{LANGUAGES.find((l) => l.code === language)?.beta ? 'Beta translation · ' : ''}{t('englishBinding')}</div>
+      )}
       {/* Top Announcement Bar */}
       {siteContent?.announcement && (
         <div className="bg-[#182620] text-[#FBFAF5] text-[11px] sm:text-xs py-1.5 px-4 text-center border-b border-black/20 flex items-center justify-center gap-2 font-medium">
@@ -124,8 +128,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               {t('industrialNav')}
             </a>
-            <a href="/?customer-portal=1" className="hover:text-[#0F1913] py-1 whitespace-nowrap text-xs font-semibold">My Orders</a>
-            <button onClick={onOpenCart} className="hover:text-[#0F1913] py-1 whitespace-nowrap text-xs font-semibold">My Cart</button>
+            <a href="/?customer-portal=1" className="hover:text-[#0F1913] py-1 whitespace-nowrap text-xs font-semibold">{t('myOrders')}</a>
+            <button onClick={onOpenCart} className="hover:text-[#0F1913] py-1 whitespace-nowrap text-xs font-semibold">{t('myCart')}</button>
             <button
               onClick={onOpenTracking}
               className="hover:text-[#0F1913] py-1 transition-colors flex items-center gap-1.5 text-xs bg-[#FBFAF5] border border-[#CBCFB9] px-2.5 py-1 rounded hover:border-[#9CA48A]"
@@ -164,71 +168,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             {/* Language Selector */}
-            <div className="flex items-center text-xs bg-[#FBFAF5] border border-[#CBCFB9] rounded p-0.5">
-              <button
-                onClick={() => setLanguage('bn')}
-                aria-label="বাংলা"
-                aria-pressed={language === 'bn'}
-                className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
-                  language === 'bn'
-                    ? 'bg-[#182620] text-white'
-                    : 'text-[#565F52] hover:text-[#182620]'
-                }`}
-                title="বাংলা"
-              >
-                বাং
-              </button>
-              <button
-                onClick={() => setLanguage('en')}
-                aria-label="English"
-                aria-pressed={language === 'en'}
-                className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
-                  language === 'en'
-                    ? 'bg-[#182620] text-white'
-                    : 'text-[#565F52] hover:text-[#182620]'
-                }`}
-                title="English"
-              >
-                EN
-              </button>
-              <button
-                onClick={() => setLanguage('hi')}
-                aria-label="हिन्दी"
-                aria-pressed={language === 'hi'}
-                className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${
-                  language === 'hi'
-                    ? 'bg-[#182620] text-white'
-                    : 'text-[#565F52] hover:text-[#182620]'
-                }`}
-                title="हिन्दी"
-              >
-                हि
-              </button>
-            </div>
-
-            {/* Cart Button */}
-            <button
-              onClick={onOpenCart}
-              aria-label="View shopping cart"
-              className="relative p-2 text-[#182620] hover:bg-[#E4E8D9] rounded transition-colors"
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as Language)}
+              aria-label="Language"
+              title="Language"
+              className="text-xs font-semibold bg-[#FBFAF5] border border-[#CBCFB9] rounded px-2 py-1 text-[#182620] focus:outline-none focus:border-[#A87C1F] cursor-pointer max-w-[110px]"
             >
-              <ShoppingBag className="w-5 h-5" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#A87C1F] text-white text-[10px] font-bold min-w-4 h-4 px-1 rounded-full flex items-center justify-center animate-scaleIn">
-                  {cartCount}
-                </span>
-              )}
-            </button>
+              {LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
 
-            {/* Live Voice Assistant */}
-            <button
-              onClick={onOpenVoice}
-              className="flex items-center gap-1.5 text-xs font-semibold bg-[#E8730A] hover:bg-[#D06505] text-white px-2.5 py-1.5 rounded transition-all shadow-xs"
-              title="Live Voice AI"
-            >
-              <Mic className="w-3.5 h-3.5 text-amber-200 animate-pulse" />
-              <span className="hidden sm:inline">Live Voice</span>
-            </button>
 
             {/* Customer Login / Sign up (management access lives in the footer) */}
             <a
@@ -236,7 +189,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold bg-[#182620] hover:bg-[#0F1913] text-white px-3 py-1.5 rounded transition-all shadow-xs"
             >
               <User className="w-3.5 h-3.5 text-[#CC9A2E]" />
-              <span>Customer Login / Sign up</span>
+              <span>{t('customerLogin')}</span>
             </a>
 
             {/* Mobile Menu Toggle */}
@@ -284,8 +237,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               {t('industrialNav')}
             </a>
-            <a href="/?customer-portal=1" onClick={() => setMobileMenuOpen(false)} className="py-2 border-b border-[#E4E8D9] text-[#182620] font-medium">My Orders</a>
-            <button onClick={() => { setMobileMenuOpen(false); onOpenCart(); }} className="py-2 text-left border-b border-[#E4E8D9] text-[#182620] font-medium">My Cart</button>
+            <a href="/?customer-portal=1" onClick={() => setMobileMenuOpen(false)} className="py-2 border-b border-[#E4E8D9] text-[#182620] font-medium">{t('myOrders')}</a>
+            <button onClick={() => { setMobileMenuOpen(false); onOpenCart(); }} className="py-2 text-left border-b border-[#E4E8D9] text-[#182620] font-medium">{t('myCart')}</button>
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
@@ -296,23 +249,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Truck className="w-4 h-4 text-[#A87C1F]" />
               <span>{t('trackNav')}</span>
             </button>
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onOpenVoice();
-              }}
-              className="mt-2 w-full flex items-center justify-center gap-2 bg-[#E8730A] text-white py-2.5 rounded font-semibold text-sm shadow-xs"
-            >
-              <Mic className="w-4 h-4 text-amber-200 animate-pulse" />
-              <span>Live Voice AI</span>
-            </button>
             <a
               href="/?customer-portal=1"
               onClick={() => setMobileMenuOpen(false)}
               className="w-full flex items-center justify-center gap-2 bg-[#182620] text-white py-2.5 rounded font-semibold text-sm"
             >
               <User className="w-4 h-4 text-[#CC9A2E]" />
-              <span>Customer Login / Sign up</span>
+              <span>{t('customerLogin')}</span>
             </a>
             <div className="pt-3 border-t border-[#E4E8D9] text-xs text-[#565F52] flex flex-col gap-1">
               <p className="flex items-center gap-1.5">
