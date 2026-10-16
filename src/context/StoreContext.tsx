@@ -1,3 +1,4 @@
+import { LANGUAGES, loadExtraLanguage } from '../i18n/languages';
 import {readBrowseSnapshot} from '../firebase/catalogBrowseFallback';
 import {readSearchIndex,readProductsByIds,readCatalogCount,type SearchEntry} from '../firebase/catalogIndex';
 import { normalizeWholesaleQty, wholesaleAvailability } from '../lib/wholesale';
@@ -109,7 +110,7 @@ interface StoreContextType {
   updateCollabTaskStatus: (taskId: string, status: any) => void;
   payuConfig: PayUConfig;
   isOffline: boolean;
-  t: (key: keyof typeof TRANSLATIONS['bn']) => string;
+  t: (key: keyof typeof TRANSLATIONS['en']) => string;
 
   cartValidation: "checking" | "ready" | "error";
   refreshCart: () => Promise<boolean>;
@@ -174,8 +175,19 @@ const StoreContext = createContext<StoreContextType | undefined>(undefined);
 export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguageState] = useState<Language>(() => {
     const saved = localStorage.getItem('udecs_language');
-    return (saved as Language) || 'en';
+    if (saved) return saved as Language;
+    const nav = (navigator.language || 'en').slice(0, 2).toLowerCase();
+    return (LANGUAGES.some((l) => l.code === nav) ? nav : 'en') as Language;
   });
+  const [extraDict, setExtraDict] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const info = LANGUAGES.find((l) => l.code === language);
+    document.documentElement.lang = language;
+    document.documentElement.dir = info?.rtl ? 'rtl' : 'ltr';
+    let alive = true;
+    loadExtraLanguage(language).then((d) => { if (alive) setExtraDict(d || {}); }).catch(() => { if (alive) setExtraDict({}); });
+    return () => { alive = false; };
+  }, [language]);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
@@ -612,9 +624,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, []);
 
   // Translation helper
-  const t = (key: keyof typeof TRANSLATIONS['bn']): string => {
-    const dict = TRANSLATIONS[language] || TRANSLATIONS.bn;
-    return dict[key] || TRANSLATIONS.en[key] || key;
+  const t = (key: keyof typeof TRANSLATIONS['en']): string => {
+    const base = (TRANSLATIONS as Record<string, Record<string, string>>)[language];
+    const en = TRANSLATIONS.en as Record<string, string>;
+    return extraDict[key] || base?.[key] || en[key] || key;
   };
 
   // Price formatting helper
