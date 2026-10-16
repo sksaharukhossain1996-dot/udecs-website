@@ -41,16 +41,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenTracking, onOpenVoice }) => {
                 <ArrowRight className="w-4 h-4 text-[#CC9A2E]" />
               </a>
 
-              {onOpenVoice && (
-                <button
-                  onClick={onOpenVoice}
-                  className="inline-flex items-center gap-2 bg-[#E8730A] hover:bg-[#D06505] text-white px-5 py-3.5 rounded text-sm font-semibold transition-all shadow-sm active:scale-[0.98]"
-                  title="Talk directly with the Gemini Live voice assistant"
-                >
-                  <Mic className="w-4 h-4 text-amber-200 animate-pulse" />
-                  <span>Talk with Voice AI</span>
-                </button>
-              )}
 
               <a
                 href="#wholesale"
@@ -71,7 +61,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenTracking, onOpenVoice }) => {
 
 
           </div>
-          <div className="glossy-brand-feature"><img src="/6-udecs-app-logo.jpg" alt="UDECS glossy cart and globe icon" width="320" height="320" /></div>
+          <div className="glossy-brand-feature"><a href="/customer-app.html" aria-label="Open the UDECS for You shopping app" title="Open UDECS for You app" style={{display:'block'}}><img src="/6-udecs-app-logo.jpg" alt="UDECS for You app icon" width="320" height="320" /></a></div>
         </div>
       </div>
     </section>
