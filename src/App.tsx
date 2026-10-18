@@ -6,6 +6,7 @@ import {PublicCustomerPortal} from './customer-stage/PublicCustomerPortal';
  */
 
 import React, { useState, useEffect } from 'react';
+import { readSearchIndex, readProductsByIds } from './firebase/catalogIndex';
 import './visual-redesign.css';
 import { StoreProvider, useStore } from './context/StoreContext';
 import { Navbar } from './components/store/Navbar';
@@ -42,6 +43,7 @@ const StoreContent: React.FC = () => {
     'all' | 'kitchen' | 'sports' | 'wholesale' | 'industrial' | 'rajkot'
   >(isB2bPage ? 'rajkot' : 'all');
 
+  useEffect(()=>{let live=true;const openLinked=async()=>{const code=new URLSearchParams(window.location.hash.split('?')[1]||'').get('product')||(window.location.hash.match(/^#product=([^&?]+)/)||[])[1];if(!code)return;try{const key=decodeURIComponent(code).trim().toLowerCase();const idx=await readSearchIndex(true);const hit=idx.find(e=>String(e.sku).toLowerCase()===key||String(e.id).toLowerCase()===key||String(e.id).toLowerCase().startsWith(key+"_")||String(e.id).toLowerCase()==="rajkot-"+key);if(!hit){console.log("PL-NOHIT",idx.length,idx.slice(0,4).map(e=>e.id+"|"+e.sku).join(";"),idx.filter(e=>(e.id+e.sku).includes("8838")||(e.id+e.sku).includes("740")).map(e=>e.id+"|"+e.sku).slice(0,4).join(";"));return;}const [p]=await readProductsByIds([hit.id]);if(live&&p)setSelectedProductModal(p);}catch{}};openLinked();window.addEventListener('hashchange',openLinked);return()=>{live=false;window.removeEventListener('hashchange',openLinked);};},[]);
   useEffect(()=>{const route=()=>{const raw=new URLSearchParams(window.location.hash.split('?')[1]||'').get('category');const cat=raw==='b2b'?'rajkot':raw;if(cat&&['kitchen','sports','industrial','wholesale','rajkot','verification'].includes(cat)){setSelectedCategory(cat as 'kitchen'|'sports'|'industrial'|'wholesale'|'rajkot');document.getElementById('products')?.scrollIntoView({behavior:'smooth'});}};route();window.addEventListener('hashchange',route);return()=>window.removeEventListener('hashchange',route);},[]);
 
   const handleQuickCheckout = (
