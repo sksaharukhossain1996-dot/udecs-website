@@ -272,15 +272,17 @@
     try {
       const snap = await getDocs(collection(db, 'orders'));
       const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      const tsOf = o => o.createdAt?.seconds ? o.createdAt.seconds * 1000 : (typeof o.createdAt === 'string' ? (Date.parse(o.createdAt) || 0) : 0);
+      orders.sort((a, b) => tsOf(b) - tsOf(a));
+      $('orders-note').textContent = '';
       $('ov-orders').textContent = orders.length;
       $('ov-orders-s').textContent = 'Total in database';
       if (!orders.length) { $('order-rows').innerHTML = '<tr><td colspan="5" class="muted">No orders yet.</td></tr>'; return; }
       $('order-rows').innerHTML = orders.map(o => {
-        const when = o.createdAt?.seconds ? new Date(o.createdAt.seconds * 1000).toLocaleString('en-IN') : '-';
+        const when = tsOf(o) ? new Date(tsOf(o)).toLocaleString('en-IN') : '-';
         const amt = o.totalAmount ?? o.total ?? o.amount ?? '-';
         const cust = o.customerName || o.customerEmail || o.phone || '-';
-        return '<tr><td><b>' + esc(o.id) + '</b></td><td>' + esc(cust) + '</td><td>₹' + esc(amt) + '</td><td><span class="status warn">' + esc(o.status || 'new') + '</span></td><td class="muted">' + when + '</td></tr>';
+        return '<tr><td><b>' + esc(o.id) + '</b></td><td>' + esc(cust) + '</td><td>₹' + esc(amt) + '</td><td><span class="status warn">' + esc(o.orderStatus || o.status || 'new') + '</span></td><td class="muted">' + when + '</td></tr>';
       }).join('');
     } catch (e) {
       $('order-rows').innerHTML = '<tr><td colspan="5" class="muted">Could not load orders: ' + esc(e.message) + '</td></tr>';
