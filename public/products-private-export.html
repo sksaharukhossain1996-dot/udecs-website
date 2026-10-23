@@ -1,0 +1,70 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>UDECS private baseline export</title></head><body><div id="root"></div><script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { getFirestore, collection, getDocsFromServer, Timestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+var cfg = { projectId: "udecs-store", appId: "1:859203239571:web:9ebdafe1c6a28ad2a41766", apiKey: "AIzaSyANRNCASxjGE-IZSLdCws_6W4VpjemO1aI", authDomain: "udecs-store.firebaseapp.com", storageBucket: "udecs-store.firebasestorage.app", messagingSenderId: "859203239571" };
+var OWNERS = ["ecommerceunickdigital@gmail.com", "sksaharukhossain1996@gmail.com"];
+
+// === EXPORTER LOGIC START (verbatim-extracted by tests/baselineRoundtrip.test.mjs) ===
+// Fields the supplier-sync baseline needs per product (spec: post-split-mapping-requirements).
+// Identity + public supplier fields come from products; confidential fields from productsPrivate.
+var EXPORT_PUBLIC_FIELDS = ["sku", "name", "supplier", "supplierInStock"];
+var EXPORT_PRIVATE_FIELDS = ["supplierSource", "supplierStatusCheckedAt", "supplierStatusSource", "supplierCheckedAt", "sourceRate", "productLink", "supplierSKUConfidence", "supplierSKUProvenance", "sourceCheckedAt"];
+// Serialize Firestore SDK values EXACTLY: Timestamp -> {seconds, nanoseconds}; maps/arrays intact.
+// (Timestamp.toJSON() would give an ISO string - that is NOT the SDK shape, do not use JSON.stringify default.)
+function serializeSdkValue(v) {
+  if (v === null || v === undefined) return null;
+  if (v instanceof Timestamp) return { seconds: v.seconds, nanoseconds: v.nanoseconds };
+  if (Array.isArray(v)) return v.map(serializeSdkValue);
+  if (typeof v === "object") { var o = {}; for (var k of Object.keys(v)) o[k] = serializeSdkValue(v[k]); return o; }
+  return v;
+}
+// Build the baseline object keyed by product id (same shape as baselines-wukusy.json).
+function buildBaseline(pubDocs, privDocs) {
+  var out = {};
+  for (var [id, pub] of Object.entries(pubDocs)) {
+    var rec = {};
+    for (var f of EXPORT_PUBLIC_FIELDS) if (pub[f] !== undefined) rec[f] = serializeSdkValue(pub[f]);
+    var priv = privDocs[id] || {};
+    for (var f2 of EXPORT_PRIVATE_FIELDS) if (priv[f2] !== undefined) rec[f2] = serializeSdkValue(priv[f2]);
+    out[id] = rec;
+  }
+  return out;
+}
+// === EXPORTER LOGIC END ===
+
+var app = initializeApp(cfg), auth = getAuth(app), db = getFirestore(app);
+var R = document.getElementById("root");
+R.innerHTML = '<style>body{font:16px system-ui;background:#f7f7f2;color:#14291d;max-width:900px;margin:30px auto;padding:20px}button{padding:12px;margin:8px 8px 8px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:20px}</style>'
++ '<h1>UDECS private baseline export</h1>'
++ '<p>Owner-only. Exports supplier mapping fields (public products + admin-only productsPrivate) as baselines-wukusy.json for the supplier-sync pipeline. Firestore types preserved exactly as the SDK returns them. Nothing is written - read-only export.</p>'
++ '<p id="identity">Checking sign-in...</p><button id="signin">Sign in with Google</button>'
++ '<button id="export" disabled>Export baseline JSON</button><pre id="out"></pre>';
+var $ = (i) => document.getElementById(i);
+$("signin").onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
+onAuthStateChanged(auth, (u) => {
+  if (!u) { $("identity").textContent = "Not signed in."; return; }
+  if (!OWNERS.includes(u.email)) { $("identity").textContent = "Signed in as " + u.email + " - NOT an owner account. Export disabled."; return; }
+  $("identity").textContent = "Signed in as " + u.email + " (owner).";
+  $("export").disabled = false;
+});
+$("export").onclick = async () => {
+  $("export").disabled = true; $("out").textContent = "Reading products + productsPrivate from server...";
+  try {
+    var pub = {}, priv = {};
+    (await getDocsFromServer(collection(db, "products"))).forEach((d) => pub[d.id] = d.data());
+    (await getDocsFromServer(collection(db, "productsPrivate"))).forEach((d) => priv[d.id] = d.data());
+    var baseline = buildBaseline(pub, priv);
+    var json = JSON.stringify(baseline, null, 2);
+    var blob = new Blob([json], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "baselines-wukusy.json";
+    a.click();
+    $("out").textContent = "Exported " + Object.keys(baseline).length + " products (" + Object.keys(priv).length + " with private fields). Download started.";
+  } catch (e) {
+    $("out").textContent = "Export FAILED: " + (e && e.message || e);
+  }
+  $("export").disabled = false;
+};
+</script></body></html>
