@@ -90,7 +90,11 @@ service cloud.firestore {
     }
 
     match /productsPrivate/{productId} {
-      allow read, write: if isValidId(productId) && isAdmin();
+      // get vs list split: on collection LIST the productId var is unbound, so isValidId()
+      // would null-error and deny even admins (exporter page + AdminERP id-batches list).
+      allow get: if isValidId(productId) && isAdmin();
+      allow list: if isAdmin();
+      allow write: if isValidId(productId) && isAdmin();
     }
 
     match /products/{productId} {
