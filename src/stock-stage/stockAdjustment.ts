@@ -19,4 +19,4 @@ export function planStockChange(current:StockState,input:StockChangeInput){const
  const after=current.stock+v.delta;if(!Number.isSafeInteger(after)||after<0||after>10000000)throw Error('Adjustment would make available stock invalid or negative.');
  return {input:v,beforeStock:current.stock,afterStock:after,sku:current.sku};
 }
-export function sameStockRequest(a:StockChangeInput,b:StockChangeInput){return JSON.stringify(validateStockChange(a))===JSON.stringify(validateStockChange(b));}
+export function sameStockRequest(a:StockChangeInput,b:StockChangeInput){const pick=(o:StockChangeInput):StockChangeInput=>({productId:o.productId,expectedStock:o.expectedStock,delta:o.delta,reason:o.reason,sourceReference:o.sourceReference,stockDate:o.stockDate});return JSON.stringify(validateStockChange(pick(a)))===JSON.stringify(validateStockChange(pick(b)));}
