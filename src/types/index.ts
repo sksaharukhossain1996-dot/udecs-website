@@ -22,6 +22,7 @@ export interface Product {
   imageUrl?: string;
   photos?: string[];
   productLink?: string; // external or direct online selling link
+  hasOnlineLink?: boolean; // public badge flag; raw productLink lives in productsPrivate
   description: string;
   descriptionBn: string;
   gstRate: number; // 5, 12, 18, 28%

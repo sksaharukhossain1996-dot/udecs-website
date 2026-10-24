@@ -214,7 +214,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                           B2B BULK
                         </span>
                       )}
-                      {product.supplier !== 'rajkot' && product.productLink && (
+                      {product.supplier !== 'rajkot' && ((product as any).hasOnlineLink ?? (product as any).productLink) && (
                         <span className="absolute bottom-2 left-2 bg-[#182620]/90 text-[#25D366] text-[9px] font-mono px-1.5 py-0.5 rounded flex items-center gap-1 shadow-xs border border-white/20">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse"></span>
                           Online Link

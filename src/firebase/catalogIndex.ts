@@ -25,6 +25,16 @@ export async function readProductsByIds(ids:string[]):Promise<Product[]>{
  const byId=new Map(snapshot.docs.map(d=>[d.id,{...d.data(),id:d.id} as Product]));
  return ids.flatMap(id=>{const p=byId.get(id);return p&&!(p as any).hidden&&!(p as any).gatewayVerification?[p]:[];});
 }
+// Admin-only: merge supplier cost/source fields from productsPrivate. Rules deny
+// this collection to non-admins; callers must be owner-verified admin views.
+export async function readProductsPrivateByIds(ids:string[]):Promise<Map<string,Record<string,any>>>{
+ const out=new Map<string,Record<string,any>>();
+ for(let i=0;i<ids.length;i+=10){
+  const snap=await getDocsFromServer(query(collection(db,'productsPrivate'),where(documentId(),'in',ids.slice(i,i+10))));
+  snap.docs.forEach(d=>out.set(d.id,d.data()));
+ }
+ return out;
+}
 export async function readProductPage(cursor?:DocumentSnapshot){
  const constraints:any[]=[orderBy(documentId()),limit(CATALOG_PAGE_SIZE)];if(cursor)constraints.push(startAfter(cursor));
  const snapshot=await getDocsFromServer(query(collection(db,'products'),...constraints));

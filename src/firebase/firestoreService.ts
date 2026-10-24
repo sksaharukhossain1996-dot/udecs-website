@@ -110,6 +110,9 @@ export function subscribeToProducts(
   );
 }
 
+
+import { PRODUCT_PRIVATE_FIELDS, splitProductFields } from '../lib/productPrivacy';
+
 export async function saveProductToFirestore(product: Product): Promise<void> {
   const path = `products/${product.id}`;
   try {
@@ -139,8 +142,11 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
     };
     await runTransaction(db, async tx => {
       const ref=doc(db,'products',product.id), before=await tx.get(ref);
-      const indexWrite=await prepareIndexMutation(tx,db,doc,product.id,before.exists()?before.data():null,fields);
-      tx.set(ref,fields);indexWrite();
+      const { pub, priv } = splitProductFields(fields);
+      const indexWrite=await prepareIndexMutation(tx,db,doc,product.id,before.exists()?before.data():null,pub);
+      tx.set(ref,pub);
+      tx.set(doc(db,'productsPrivate',product.id),priv,{merge:true});
+      indexWrite();
     });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
@@ -150,7 +156,7 @@ export async function saveProductToFirestore(product: Product): Promise<void> {
 export async function deleteProductFromFirestore(productId: string): Promise<void> {
   const path = `products/${productId}`;
   try {
-    await runTransaction(db,async tx=>{const ref=doc(db,'products',productId);const before=await tx.get(ref);if(!before.exists())return;const indexWrite=await prepareIndexMutation(tx,db,doc,productId,before.data(),null);tx.delete(ref);indexWrite();});
+    await runTransaction(db,async tx=>{const ref=doc(db,'products',productId);const before=await tx.get(ref);if(!before.exists())return;const indexWrite=await prepareIndexMutation(tx,db,doc,productId,before.data(),null);tx.delete(ref);tx.delete(doc(db,'productsPrivate',productId));indexWrite();});
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }

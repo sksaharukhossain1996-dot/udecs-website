@@ -1,0 +1,69 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>UDECS product privacy split</title></head><body><div id="root"></div><script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+import { getFirestore, collection, getDocsFromServer, doc, writeBatch, deleteField, getDocFromServer } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+var cfg = { projectId: "udecs-store", appId: "1:859203239571:web:9ebdafe1c6a28ad2a41766", apiKey: "AIzaSyANRNCASxjGE-IZSLdCws_6W4VpjemO1aI", authDomain: "udecs-store.firebaseapp.com", storageBucket: "udecs-store.firebasestorage.app", messagingSenderId: "859203239571" };
+var OWNERS = ["ecommerceunickdigital@gmail.com", "sksaharukhossain1996@gmail.com"];
+// Fields moved from public products/{id} to admin-only productsPrivate/{id}.
+// Verified: none are read by storefront/customer code (CheckoutModal, CartDrawer,
+// ProductSection, ProductDetailModal, StoreContext, CustomerApp, catalogIndex).
+// wholesalePrice, minWholesaleQty, supplierInStock, supplier, price, stock STAY public:
+// buyer totals and B2B wholesale UI depend on them. Do not add them here.
+var SENSITIVE = ["sourceRate","supplierSource","supplierStatusSource","supplierSKUConfidence","supplierSKUProvenance","supplierCheckedAt","supplierStatusCheckedAt","sourceCheckedAt","productLink","hsnBasis","hsnProvenance"];
+var app = initializeApp(cfg), auth = getAuth(app), db = getFirestore(app);
+var R = document.getElementById("root");
+R.innerHTML = '<style>body{font:16px system-ui;background:#f7f7f2;color:#14291d;max-width:900px;margin:30px auto;padding:20px}button{padding:12px;margin:8px 8px 8px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:20px}.warn{background:#fff3f0;border:1px solid #c33;padding:12px}</style>'
++ '<h1>UDECS product privacy split</h1>'
++ '<p>Moves supplier cost rates, supplier source URLs, supplier provenance and Amazon source links from public <code>products</code> docs into admin-only <code>productsPrivate</code>. Customer prices, wholesale selling price, stock and availability are NOT touched. Storefront checkout is unaffected.</p>'
++ '<p id="identity">Checking sign-in...</p><button id="signin">Sign in with Google</button>'
++ '<button id="dry" disabled>1. Dry run (count only, no writes)</button>'
++ '<div id="splitbox" style="display:none"><p>To apply the split, type SPLIT: <input id="confirm1"></p><button id="apply" disabled>2. Apply split (writes both collections)</button></div>'
++ '<pre id="status">No changes made.</pre>';
+var $ = (i) => document.getElementById(i), say = (t) => { $("status").textContent = t; };
+var isOwner = () => !!auth.currentUser?.emailVerified && OWNERS.includes(auth.currentUser.email.toLowerCase());
+onAuthStateChanged(auth, (u) => {
+  $("identity").textContent = u ? `Signed in: ${u.email}${isOwner() ? " (admin)" : " - not authorized"}` : "Signed out";
+  $("dry").disabled = !isOwner();
+});
+$("signin").onclick = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (e) { say(String(e)); } };
+function pickSensitive(data) {
+  var out = {}, found = false;
+  for (var k of SENSITIVE) if (k in data) { out[k] = data[k]; found = true; }
+  return found ? out : null;
+}
+$("dry").onclick = async () => {
+  say("Reading products (server)...");
+  try {
+    var snap = await getDocsFromServer(collection(db, "products"));
+    var counts = {}, docsWith = 0;
+    snap.forEach((d) => { var p = pickSensitive(d.data()); if (p) { docsWith++; for (var k in p) counts[k] = (counts[k] || 0) + 1; } });
+    say(`DRY RUN ONLY - no writes.\nProducts read: ${snap.size}\nDocs carrying sensitive fields: ${docsWith}\nPer-field counts:\n` + SENSITIVE.map((k) => `  ${k}: ${counts[k] || 0}`).join("\n") + `\n\nPlanned writes per affected doc: create/update productsPrivate/{id} with these fields, set public hasOnlineLink = (productLink present), then delete the sensitive fields from products/{id}.\nIf counts look right, the split box is now open.`);
+    $("splitbox").style.display = "block";
+  } catch (e) { say("Dry run failed: " + e); }
+};
+$("confirm1").oninput = () => { $("apply").disabled = $("confirm1").value !== "SPLIT"; };
+async function runBatches(direction) {
+  var snap = await getDocsFromServer(collection(db, "products"));
+  var batch = writeBatch(db), n = 0, touched = 0;
+  async function flush() { if (n > 0) { await batch.commit(); batch = writeBatch(db); n = 0; } }
+  for (var d of snap.docs) {
+    var data = d.data(), priv = pickSensitive(data);
+    if (direction === "split") {
+      if (!priv) continue;
+      var pubClear = {}; for (var k in priv) pubClear[k] = deleteField();
+      pubClear.hasOnlineLink = typeof priv.productLink === "string" && priv.productLink.length > 0;
+      batch.set(doc(db, "productsPrivate", d.id), priv, { merge: true });
+      batch.update(doc(db, "products", d.id), pubClear);
+        }
+    n += 2; touched++;
+    if (n >= 400) { say(`...${direction} in progress: ${touched} products`); await flush(); }
+  }
+  await flush();
+  return { total: snap.size, touched };
+}
+$("apply").onclick = async () => {
+  $("apply").disabled = true;
+  try { var r = await runBatches("split"); say(`SPLIT APPLIED.\nProducts scanned: ${r.total}\nProducts split: ${r.touched}\nPublic docs no longer carry supplier cost/source fields. Verify storefront + admin, then run the unauthenticated privacy check.`); }
+  catch (e) { say("Split failed partway: " + e + "\nSafe to re-run: it is idempotent (docs already split are skipped)."); }
+};
+</script></body></html>
