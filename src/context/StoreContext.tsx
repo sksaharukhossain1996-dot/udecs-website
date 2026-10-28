@@ -614,14 +614,25 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     // Server catalog is canonical, including an intentionally empty catalog.
     // Never resurrect deleted products by seeding demo records on a read.
-    let active=true;let unsubscribeProducts=()=>{};
-    if ((window as any).__UDECS_STAFF_ENTRY__) {
-      unsubscribeProducts=subscribeToProducts(items=>{setProducts(items);setCatalogStatus('ready');},err=>{setCatalogStatus('error');console.warn('Firestore product subscription failed:',err);});
-    } else {
+    let active=true;
+    if (!(window as any).__UDECS_STAFF_ENTRY__) {
       Promise.all([readSearchIndex(true),readCatalogCount(true)]).then(([entries,total])=>{if(active){setProducts(old=>old.filter(p=>(p as any).browseOnly!==true));setCatalogIndex(entries);setCatalogTotal(total);setCatalogError('');setCatalogStatus('ready');}}).catch(async()=>{try{const cached=await readBrowseSnapshot();if(active){setProducts(cached.products);setCatalogIndex(cached.entries);setCatalogTotal(cached.entries.length);setCatalogError('Temporary database limit: showing a saved catalog from '+cached.checkedAt+'. Prices and availability are not live. Ordering is paused in this view.');setCatalogStatus('ready');}}catch{if(active){setCatalogError('Catalog could not be loaded. Please try again later.');setCatalogStatus('error');}}});
     }
-    return()=>{active=false;unsubscribeAuth();unsubscribeProducts();};
+    return()=>{active=false;unsubscribeAuth();};
   }, []);
+
+  // Staff catalog subscription follows the existing verified owner session.
+  // Do not start a full query on the signed-out login screen. Auth changes and
+  // unmount always release this consumer, while other active consumers stay live.
+  useEffect(() => {
+    if (!(window as any).__UDECS_STAFF_ENTRY__) return;
+    setProducts([]);
+    setCatalogStatus('loading');
+    if (!firebaseUser?.emailVerified || !ADMIN_EMAILS.includes(firebaseUser.email?.toLowerCase() || '')) return;
+    let active=true;
+    const stop=subscribeToProducts(items=>{if(active){setProducts(items);setCatalogStatus('ready');}},err=>{if(active){setCatalogStatus('error');console.warn('Firestore product subscription failed:',err);}});
+    return()=>{active=false;stop();};
+  },[firebaseUser?.uid,firebaseUser?.emailVerified,firebaseUser?.email]);
 
   // Translation helper
   const t = (key: keyof typeof TRANSLATIONS['en']): string => {
