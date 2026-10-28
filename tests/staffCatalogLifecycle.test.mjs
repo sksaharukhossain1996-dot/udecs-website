@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync}from'node:fs';
+const s=readFileSync(new URL('../src/context/StoreContext.tsx',import.meta.url),'utf8');
+const block=s.slice(s.indexOf('// Staff catalog subscription'),s.indexOf('// Translation helper'));
+test('staff guard precedes full subscription and cleanup guards late snapshots',()=>{assert.match(block,/__UDECS_STAFF_ENTRY__/);assert.ok(block.indexOf('emailVerified')<block.indexOf('subscribeToProducts'));assert.match(block,/ADMIN_EMAILS.includes/);assert.match(block,/setProducts\(\[\]\)/);assert.match(block,/active=false;stop\(\)/);assert.match(block,/firebaseUser\?\.uid,firebaseUser\?\.emailVerified,firebaseUser\?\.email/);});
+test('signed-out bootstrap has no eager full catalog listener; public cache remains',()=>{const b=s.slice(s.indexOf('// Firebase Firestore & Authentication Bootstrapper'),s.indexOf('// Staff catalog subscription'));assert.doesNotMatch(b,/subscribeToProducts\(/);assert.match(b,/readSearchIndex\(true\),readCatalogCount\(true\)/);});
+test('full realtime query unchanged',()=>{const q=readFileSync(new URL('../src/firebase/firestoreService.ts',import.meta.url),'utf8');const b=q.slice(q.indexOf('export function subscribeToProducts'),q.indexOf('export function subscribeToOrders'));assert.match(b,/onSnapshot/);assert.doesNotMatch(b,/limit\(/);});
