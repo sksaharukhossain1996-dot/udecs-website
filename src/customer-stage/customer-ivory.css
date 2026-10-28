@@ -1,0 +1,36 @@
+/* Approved Ivory B. Every rule is confined to the public customer portal. */
+.udecs-customer-portal.ivory-customer{--ivory:#f7f4ee;--ink:#172641;--line:#e8e0d3;background:var(--ivory)!important;color:var(--ink)!important;font-family:Arial,sans-serif}
+.udecs-customer-portal.ivory-customer>header{background:#f7f4eef5!important;border-color:var(--line)!important;position:relative}
+.udecs-customer-portal.ivory-customer>header>div{max-width:1160px;padding:18px 24px}
+.udecs-customer-portal.ivory-customer>header a{color:var(--ink)!important}
+.udecs-customer-portal.ivory-customer .portal-layout{width:100%;max-width:1160px;margin:28px auto 0;display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);align-items:start;flex:1;padding:0 24px;gap:48px;box-sizing:border-box}
+.udecs-customer-portal.ivory-customer .portal-intro{background:linear-gradient(135deg,#fff7e8,#f1e6cd);border:1px solid #f1e6d3;border-radius:24px;padding:52px 32px;position:sticky;top:28px;min-width:0}
+.udecs-customer-portal.ivory-customer .portal-intro h1{font-size:32px;line-height:1.15;letter-spacing:-.8px;margin:28px 0 12px;color:var(--ink)}
+.udecs-customer-portal.ivory-customer .portal-intro p{line-height:1.65;color:#647086;font-size:14px}
+.udecs-customer-portal.ivory-customer .portal-intro .portal-eyebrow{font-size:10px;letter-spacing:1.6px;font-weight:700;margin:32px 0 -14px;color:#806139}
+.udecs-customer-portal.ivory-customer .portal-intro .portal-separation{font-size:12px;margin-top:24px}
+.udecs-customer-portal.ivory-customer .portal-content{min-width:0}
+.udecs-customer-portal.ivory-customer .customer-stage{background:#fff;border:1px solid var(--line);border-radius:20px;padding:26px;margin:0 0 20px;box-shadow:0 6px 18px #17264107}
+.udecs-customer-portal.ivory-customer .customer-stage h2{font-size:18px;line-height:1.35;color:var(--ink);margin-bottom:12px;letter-spacing:-.25px}
+.udecs-customer-portal.ivory-customer .customer-stage p,.udecs-customer-portal.ivory-customer .customer-stage small{font-size:13px;line-height:1.65;color:#647086;margin:10px 0}
+.udecs-customer-portal.ivory-customer .customer-stage label{font-size:13px;font-weight:600;color:#31405a;margin:16px 0}
+.udecs-customer-portal.ivory-customer .customer-stage input:not([type=checkbox]),.udecs-customer-portal.ivory-customer .customer-stage textarea,.udecs-customer-portal.ivory-customer .customer-stage select{border:1px solid var(--line);border-radius:12px;color:var(--ink);background:#fff;min-height:46px;font-size:16px;font-weight:400;margin-top:7px;padding:12px}
+.udecs-customer-portal.ivory-customer .customer-stage input:read-only{background:#f7f4ee}
+.udecs-customer-portal.ivory-customer .customer-stage button{background:linear-gradient(110deg,#fa9e2d,#f08409);color:#172641;border-radius:12px;min-height:46px;font-size:13px;font-weight:700;line-height:1.4;padding:13px 18px;cursor:pointer;transition:box-shadow .15s}
+.udecs-customer-portal.ivory-customer .customer-stage button:disabled{cursor:not-allowed;opacity:.5}
+.udecs-customer-portal.ivory-customer .customer-stage button:not(:disabled):hover{box-shadow:0 3px 10px #b1762526}
+.udecs-customer-portal.ivory-customer .customer-entry-buttons{gap:10px;margin-top:18px}
+.udecs-customer-portal.ivory-customer .customer-entry-buttons button{background:#fff;color:var(--ink);border:1px solid var(--line);flex:1;white-space:nowrap}
+.udecs-customer-portal.ivory-customer :is(button,a,input,select,textarea):focus-visible{outline:3px solid #ac7830;outline-offset:3px}
+.udecs-customer-portal.ivory-customer .customer-stage [role=alert]{color:#a52222;background:#fff5f3;padding:12px;border-radius:10px}
+.udecs-customer-portal.ivory-customer .customer-card{border-color:var(--line);border-radius:14px}
+.udecs-customer-portal.ivory-customer .customer-stage :is(td,th){border-color:var(--line);font-size:13px}
+.udecs-customer-portal.ivory-customer>footer{max-width:1160px;margin:20px auto;padding:20px}
+.udecs-customer-portal.ivory-customer>footer a{color:#647086!important}
+@media(max-width:760px){.udecs-customer-portal.ivory-customer>header>div{padding:14px 18px}.udecs-customer-portal.ivory-customer .portal-layout{display:block;padding:0 16px;margin:12px auto 0}.udecs-customer-portal.ivory-customer .portal-intro{position:static;text-align:center;min-height:0;background:none;border:0;padding:20px 12px 26px}.udecs-customer-portal.ivory-customer .portal-intro>div{justify-content:center}.udecs-customer-portal.ivory-customer .portal-intro h1{font-size:27px;margin:18px 0 10px}.udecs-customer-portal.ivory-customer .portal-intro .portal-eyebrow{margin:24px 0 -8px}.udecs-customer-portal.ivory-customer .portal-intro .portal-separation{margin-top:12px}.udecs-customer-portal.ivory-customer .customer-stage{padding:20px;border-radius:18px}.udecs-customer-portal.ivory-customer .customer-entry-buttons{flex-direction:column}.udecs-customer-portal.ivory-customer .customer-entry-buttons button{width:100%}}
+
+.udecs-customer-portal.ivory-customer .customer-stage{border-top:1px solid #e8e0d3!important}
+.udecs-customer-portal.ivory-customer .customer-stage button{background:linear-gradient(110deg,#fa9e2d,#f08409)!important;color:#172641!important}
+.udecs-customer-portal.ivory-customer .customer-entry-buttons button{background:#fff!important;color:#172641!important}
+.udecs-customer-portal.ivory-customer .portal-brand{display:block;width:140px;height:140px;object-fit:contain;margin-bottom:26px}
+@media(max-width:760px){.udecs-customer-portal.ivory-customer .portal-brand{margin:0 auto 18px;width:110px;height:110px}}
