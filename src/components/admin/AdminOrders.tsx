@@ -50,6 +50,8 @@ export const AdminOrders: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [evidenceOrder,setEvidenceOrder]=useState<Order|null>(null);
+  const openEvidence=async(order:Order)=>{try{const latest=await getServerOrder(order.id);if(!latest||isDemoOrTestOrder(latest))throw Error('Real server order required');setEvidenceOrder(latest)}catch{alert('Reload the server order before recording evidence.')}};
   const [showShippingLabel, setShowShippingLabel] = useState<Order | null>(null);
 
   // Email state
@@ -145,6 +147,7 @@ export const AdminOrders: React.FC = () => {
   return (
     <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto">
       <OperationsRegisters/><UnifiedOrderRegister/>
+      {evidenceOrder&&<div role="dialog" aria-modal="true" aria-label="Record fulfilment evidence" className="fixed inset-0 z-50 bg-black/40 overflow-y-auto p-4"><div className="max-w-xl mx-auto bg-white rounded-lg p-4"><button onClick={()=>setEvidenceOrder(null)} className="mb-3 border rounded px-3 py-2">Close</button><CourierDetails key={'courier-'+evidenceOrder.id} order={evidenceOrder} save={saveCourierDetails} reload={async()=>{const latest=await getServerOrder(evidenceOrder.id);if(!latest)throw Error('Order unavailable');setEvidenceOrder(latest)}}/><FulfilmentEvidence key={evidenceOrder.id} order={evidenceOrder} recordEvidence={recordWhatsAppEvidence}/></div></div>}
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#CBCFB9]">
         <div>
@@ -291,6 +294,7 @@ export const AdminOrders: React.FC = () => {
                     </td>
 
                     <td className="p-3 text-right space-x-1.5 whitespace-nowrap">
+                      {!isDemoOrTestOrder(order)&&<button onClick={()=>openEvidence(order)} className="p-1.5 text-xs rounded border border-[#CBCFB9]" title="Record verified fulfilment evidence only">Proof</button>}
                       {!isDemoOrTestOrder(order) ? <a
                         href={generateWhatsAppLink(
                           order.customerPhone,
@@ -682,3 +686,25 @@ export const AdminOrders: React.FC = () => {
     </div>
   );
 };
+
+type EvidenceOrder={id:string;orderStatus:string;paymentStatus:string;paymentMethod:string;courierName?:string;trackingNumber?:string};
+type Props={order:EvidenceOrder;recordEvidence:(body:Record<string,unknown>)=>Promise<{queued:boolean;duplicate?:boolean}>};
+export function FulfilmentEvidence({order,recordEvidence}:Props){
+ const [kind,setKind]=useState<'shipped'|'delivered'>('shipped'),[proof,setProof]=useState(''),[confirmed,setConfirmed]=useState(false),[busy,setBusy]=useState(false),[notice,setNotice]=useState('');
+ const statusOK=kind==='shipped'?['shipped','delivered'].includes(order.orderStatus):order.orderStatus==='delivered';
+ const ready=statusOK&&!!order.courierName?.trim()&&!!order.trackingNumber?.trim()&&(order.paymentMethod==='cod'||order.paymentStatus==='paid');
+ async function submit(e:React.FormEvent){e.preventDefault();if(!ready||!confirmed||!proof.trim()||busy)return;setBusy(true);setNotice('');try{const r=await recordEvidence({orderId:order.id,kind,courierName:order.courierName,trackingNumber:order.trackingNumber,...kind==='shipped'?{handoverConfirmed:true,handoverReference:proof.trim()}:{deliveredConfirmed:true,deliveryProofReference:proof.trim()}});setNotice(r.duplicate?'This update was already recorded.':r.queued?'Evidence recorded. Customer delivery is not yet confirmed.':'No eligible WhatsApp update was queued.');setConfirmed(false);setProof('')}catch{setNotice('Not recorded. Reload the order and check staff access, courier details and proof.')}finally{setBusy(false)}}
+ return <section aria-labelledby="evidence-title" className="rounded-lg border border-[#CBCFB9] p-4 space-y-3"><h3 id="evidence-title" className="font-bold">Record fulfilment evidence</h3><p className="text-sm">This does not change order status, confirm payment or track the courier automatically.</p><p className="text-sm">Recorded courier: {order.courierName||'Not entered'} · Tracking: {order.trackingNumber||'Not entered'}</p><form onSubmit={submit} className="space-y-3"><label className="block text-sm">Update type<select value={kind} onChange={e=>{setKind(e.target.value as typeof kind);setConfirmed(false);setProof('');setNotice('')}} className="block border p-2 w-full"><option value="shipped">Actual carrier handover</option><option value="delivered">Recorded delivery</option></select></label>{!ready&&<p role="status" className="text-sm">Record the matching order status and courier/tracking details first. Non-COD payment must already be verified.</p>}<label className="block text-sm">{kind==='shipped'?'Handover receipt/reference':'Delivery proof/reference'}<input value={proof} onChange={e=>setProof(e.target.value)} maxLength={250} required disabled={!ready||busy} className="block border p-2 w-full" placeholder="Existing receipt, carrier reference or proof record"/></label><label className="flex gap-2 text-sm"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)} disabled={!ready||busy}/>{kind==='shipped'?'I checked that this parcel was actually handed to the recorded courier. A label alone is not proof.':'I checked the delivery proof for this order. I am not assuming delivery from a shipment label.'}</label><button disabled={!ready||!confirmed||!proof.trim()||busy} className="rounded bg-[#183C2F] text-white px-4 py-2 disabled:opacity-40">{busy?'Recording...':'Record evidence'}</button><p className="text-xs">Optional WhatsApp updates only. STOP, consent, new-order limits, duplicate checks and spending limits still apply.</p></form>{notice&&<p role="status" className="text-sm">{notice}</p>}</section>
+}
+
+
+type CourierOrder={id:string;orderStatus:'pending'|'processing'|'packed'|'shipped'|'delivered'|'cancelled';courierName?:string;trackingNumber?:string};
+export function CourierDetails({order,save,reload}:{order:CourierOrder;save:(id:string,status:CourierOrder['orderStatus'],tracking:string,courier:string)=>Promise<void>;reload:()=>Promise<void>}){const[courier,setCourier]=useState(order.courierName||''),[tracking,setTracking]=useState(order.trackingNumber||''),[confirmed,setConfirmed]=useState(false),[busy,setBusy]=useState(false),[notice,setNotice]=useState('');const valid=(s:string)=>!!s.trim()&&s.length<=100&&!/[\u0000-\u001f\u007f]/.test(s);async function submit(e:React.FormEvent){e.preventDefault();if(!valid(courier)||!valid(tracking)||!confirmed||busy||order.orderStatus==='cancelled')return;setBusy(true);try{await save(order.id,order.orderStatus,tracking.trim(),courier.trim());await reload();setNotice('Recorded courier details reloaded from server. This is not shipping or delivery proof.');setConfirmed(false)}catch{setNotice('Not confirmed. Reload the order and check staff access.')}finally{setBusy(false)}}return<section className="rounded-lg border border-[#CBCFB9] p-4 mb-4"><h3 className="font-bold">Record courier details</h3><p className="text-sm">Use the actual carrier and tracking number for this order. Saving these fields does not change order status or send a WhatsApp update.</p><form onSubmit={submit}><label className="block text-sm mt-3">Courier name<input value={courier} maxLength={100} onChange={e=>setCourier(e.target.value)} disabled={busy} className="block w-full border p-2"/></label><label className="block text-sm mt-3">Tracking number<input value={tracking} maxLength={100} onChange={e=>setTracking(e.target.value)} disabled={busy} className="block w-full border p-2"/></label><label className="flex gap-2 text-sm my-3"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)} disabled={busy}/>I checked these carrier details against the order's actual courier record.</label><button className="rounded border px-4 py-2 disabled:opacity-40" disabled={!valid(courier)||!valid(tracking)||!confirmed||busy||order.orderStatus==='cancelled'}>{busy?'Saving...':'Save courier details only'}</button></form>{notice&&<p role="status" className="text-sm">{notice}</p>}</section>}
+
+// Candidate uses existing staff Firestore rules. Courier fields only, never status/payment.
+import{db}from'../../firebase/config';import{doc,runTransaction}from'firebase/firestore';
+export async function saveCourierDetails(id:string,_status:unknown,tracking:string,courier:string){if(!/^UDECS-ORD-[a-f0-9-]{36}$/.test(id)||[tracking,courier].some(s=>typeof s!=='string'||!s.trim()||s.length>100||/[\u0000-\u001f\u007f]/.test(s)))throw Error('Invalid recorded courier details');await runTransaction(db,async tx=>{const ref=doc(db,'orders',id),r=await tx.get(ref);if(!r.exists())throw Error('Order unavailable');const o={id:r.id,...r.data()};if(isDemoOrTestOrder(o as any)||(o as any).orderStatus==='cancelled')throw Error('Real active order required');tx.update(ref,{courierName:courier.trim(),trackingNumber:tracking.trim(),updatedAt:new Date().toISOString()})})}
+
+// Candidate uses the same existing Firebase identity and order-service origin.
+import {ORDER_SERVICE_ORIGIN}from'../../customer-stage/orderRuntime';
+export async function recordWhatsAppEvidence(body:Record<string,unknown>){if(!ORDER_SERVICE_ORIGIN)throw Error('Order service unavailable');const user=auth.currentUser;if(!user||!user.emailVerified||!['sksaharukhossain1996@gmail.com','ecommerceunickdigital@gmail.com'].includes(user.email||''))throw Error('Verified staff sign-in required');const r=await fetch(ORDER_SERVICE_ORIGIN+'/api/orders/whatsapp-evidence',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+await user.getIdToken()},body:JSON.stringify(body),cache:'no-store'});const data=await r.json();if(auth.currentUser?.uid!==user.uid)throw Error('Staff account changed. Reload the order.');if(!r.ok)throw Error(data.error||'Evidence not recorded');return data;}
