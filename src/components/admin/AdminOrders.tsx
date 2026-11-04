@@ -146,7 +146,7 @@ export const AdminOrders: React.FC = () => {
 
   return (
     <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto">
-      <OperationsRegisters/><UnifiedOrderRegister/>
+      <OperationsRegisters/><IThinkConnection/><UnifiedOrderRegister/>
       {evidenceOrder&&<div role="dialog" aria-modal="true" aria-label="Record fulfilment evidence" className="fixed inset-0 z-50 bg-black/40 overflow-y-auto p-4"><div className="max-w-xl mx-auto bg-white rounded-lg p-4"><button onClick={()=>setEvidenceOrder(null)} className="mb-3 border rounded px-3 py-2">Close</button><CourierDetails key={'courier-'+evidenceOrder.id} order={evidenceOrder} save={saveCourierDetails} reload={async()=>{const latest=await getServerOrder(evidenceOrder.id);if(!latest)throw Error('Order unavailable');setEvidenceOrder(latest)}}/><FulfilmentEvidence key={evidenceOrder.id} order={evidenceOrder} recordEvidence={recordWhatsAppEvidence}/></div></div>}
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#CBCFB9]">
@@ -708,3 +708,12 @@ export async function saveCourierDetails(id:string,_status:unknown,tracking:stri
 // Candidate uses the same existing Firebase identity and order-service origin.
 import {ORDER_SERVICE_ORIGIN}from'../../customer-stage/orderRuntime';
 export async function recordWhatsAppEvidence(body:Record<string,unknown>){if(!ORDER_SERVICE_ORIGIN)throw Error('Order service unavailable');const user=auth.currentUser;if(!user||!user.emailVerified||!['sksaharukhossain1996@gmail.com','ecommerceunickdigital@gmail.com'].includes(user.email||''))throw Error('Verified staff sign-in required');const r=await fetch(ORDER_SERVICE_ORIGIN+'/api/orders/whatsapp-evidence',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+await user.getIdToken()},body:JSON.stringify(body),cache:'no-store'});const data=await r.json();if(auth.currentUser?.uid!==user.uid)throw Error('Staff account changed. Reload the order.');if(!r.ok)throw Error(data.error||'Evidence not recorded');return data;}
+
+const deliveryOwners=['ecommerceunickdigital@gmail.com','sksaharukhossain1996@gmail.com'];
+function IThinkConnection(){
+ const[owner,setOwner]=useState(false),[busy,setBusy]=useState(false),[status,setStatus]=useState('Not checked in this session.'),[time,setTime]=useState('');
+ useEffect(()=>onAuthStateChanged(auth,u=>{setOwner(!!u?.emailVerified&&deliveryOwners.includes((u.email||'').toLowerCase()));setStatus('Not checked in this session.');setTime('')}),[]);
+ async function check(){const u=auth.currentUser;if(!u||!u.emailVerified||!deliveryOwners.includes((u.email||'').toLowerCase()))return;setBusy(true);setStatus('Checking connection...');setTime('');try{const r=await fetch(ORDER_SERVICE_ORIGIN+'/api/delivery/owner/store-check',{headers:{Authorization:'Bearer '+await u.getIdToken()},cache:'no-store'});const d=await r.json();if(auth.currentUser?.uid!==u.uid)return;if(!r.ok||d.storeId!=='33659'||d.readVerified!==true||d.shipmentEnabled!==false)throw Error('Connection not verified. Please try later.');setStatus('Connection verified: UDECS STORE 33659.');setTime(new Date(d.checkedAt).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})+' IST')}catch{if(auth.currentUser?.uid===u.uid)setStatus('Connection not verified. Please try later.')}finally{setBusy(false)}}
+ if(!owner)return null;
+ return <section className="bg-white rounded-xl border border-slate-200 p-4 mb-5" aria-label="iThink connection"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-bold text-slate-800">iThink Logistics connection</h3><p className="text-sm text-slate-600 mt-1">Owner-only store-read check. No order sync, shipment, pickup or payment.</p></div><button type="button" onClick={check} disabled={busy} className="px-4 py-2 rounded-lg bg-blue-950 text-white text-sm font-semibold disabled:opacity-50">{busy?'Checking...':'Check connection'}</button></div><p role="status" className="text-sm text-slate-700 mt-3">{status}</p>{time&&<p className="text-xs text-slate-500 mt-1">Checked {time}</p>}</section>
+   }
