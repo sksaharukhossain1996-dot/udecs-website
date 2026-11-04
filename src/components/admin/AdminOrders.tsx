@@ -1,3 +1,4 @@
+import{orderArchive}from'../../order-register-stage/1-orderArchive';
 import { formatRecordedTax } from '../../lib/orderDisplay';
 import{OperationsRegisters}from'../../operations-stage/OperationsRegisters';
 import{UnifiedOrderRegister}from'../../order-register-stage/UnifiedOrderRegister';
@@ -47,6 +48,9 @@ export const AdminOrders: React.FC = () => {
     });
     return () => { unsubscribeAuth(); unsubscribeOrders(); };
   }, []);
+  const [archiveIds,setArchiveIds]=useState<string[]>([]),[archiveReady,setArchiveReady]=useState(false),[archiveError,setArchiveError]=useState(''),[archiveBusy,setArchiveBusy]=useState(false),[archiveView,setArchiveView]=useState(false);
+  useEffect(()=>{let generation=0;const off=onAuthStateChanged(auth,()=>{const g=++generation;setArchiveIds([]);setArchiveReady(false);setArchiveError('');setArchiveView(false);void orderArchive().then(d=>{if(g===generation){setArchiveIds(d.archivedIds);setArchiveReady(true)}}).catch(e=>{if(g===generation)setArchiveError(e.message)});});return()=>{generation++;off()};},[]);
+  const changeArchive=async(archived:boolean)=>{setArchiveBusy(true);setArchiveError('');try{const state=await orderArchive();const ids=archived?state.supportedIds:state.archivedIds;if(ids.length){const result=await orderArchive(archived,ids);setArchiveIds(result.archivedIds)}else setArchiveIds(state.archivedIds);setArchiveReady(true);}catch(e){setArchiveError((e as Error).message);setArchiveReady(false)}finally{setArchiveBusy(false)}};
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -125,7 +129,7 @@ export const AdminOrders: React.FC = () => {
       (ord.customerPhone || '').includes(searchTerm) ||
       (ord.trackingNumber && ord.trackingNumber.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || ord.orderStatus === statusFilter;
-    return matchesSearch && matchesStatus;
+    return archiveReady && (archiveView?archiveIds.includes(ord.id):!archiveIds.includes(ord.id)) && matchesSearch && matchesStatus;
   });
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
@@ -146,8 +150,9 @@ export const AdminOrders: React.FC = () => {
 
   return (
     <div className="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto">
-      <OperationsRegisters/><IThinkConnection/><UnifiedOrderRegister/>
+      <OperationsRegisters/><IThinkConnection/><UnifiedOrderRegister hiddenOwnStoreIds={archiveView?orders.filter(o=>!archiveIds.includes(o.id)).map(o=>o.id):archiveIds} visibilityReady={archiveReady} archiveView={archiveView}/>
       {evidenceOrder&&<div role="dialog" aria-modal="true" aria-label="Record fulfilment evidence" className="fixed inset-0 z-50 bg-black/40 overflow-y-auto p-4"><div className="max-w-xl mx-auto bg-white rounded-lg p-4"><button onClick={()=>setEvidenceOrder(null)} className="mb-3 border rounded px-3 py-2">Close</button><CourierDetails key={'courier-'+evidenceOrder.id} order={evidenceOrder} save={saveCourierDetails} reload={async()=>{const latest=await getServerOrder(evidenceOrder.id);if(!latest)throw Error('Order unavailable');setEvidenceOrder(latest)}}/><FulfilmentEvidence key={evidenceOrder.id} order={evidenceOrder} recordEvidence={recordWhatsAppEvidence}/></div></div>}
+      <section aria-label="Order archive" className="rounded-xl border border-[#CBCFB9] bg-white p-4 space-y-3"><h2 className="text-xl font-bold">Order archive</h2><p className="text-sm">Only the eight reviewed old own-store orders can be archived. Original history, payments, tax and stock records stay unchanged. Imported references are separate.</p><p>Active: {archiveReady?orders.filter(o=>!archiveIds.includes(o.id)).length:'not verified'} · Archived: {archiveReady?archiveIds.length:'not verified'} · Total saved: {orders.length}</p><div className="flex flex-wrap gap-2"><button className="border rounded px-3 py-2" disabled={!archiveReady||archiveBusy} onClick={()=>setArchiveView(false)}>Active orders</button><button className="border rounded px-3 py-2" disabled={!archiveReady||archiveBusy} onClick={()=>setArchiveView(true)}>Archived orders</button><button className="border rounded px-3 py-2" disabled={!archiveReady||archiveBusy||archiveIds.length===8} onClick={()=>changeArchive(true)}>Archive reviewed old orders</button><button className="border rounded px-3 py-2" disabled={!archiveReady||archiveBusy||!archiveIds.length} onClick={()=>changeArchive(false)}>Restore archived orders</button></div><p role="status">{archiveBusy?'Saving visibility only...':archiveReady?(archiveView?'Showing archived history.':'Showing active orders.'):'Archive state not verified. Orders are not shown as active until checked.'}</p>{archiveError&&<p role="alert" className="text-red-700">{archiveError}</p>}</section>
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#CBCFB9]">
         <div>
@@ -161,7 +166,7 @@ export const AdminOrders: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono bg-[#E4E8D9] text-[#182620] px-2.5 py-1 rounded font-bold">
-            Total Orders: {orders.length}
+            Total saved orders: {orders.length}
           </span>
         </div>
       </div>
@@ -716,4 +721,4 @@ function IThinkConnection(){
  async function check(){const u=auth.currentUser;if(!u||!u.emailVerified||!deliveryOwners.includes((u.email||'').toLowerCase()))return;setBusy(true);setStatus('Checking connection...');setTime('');try{const r=await fetch(ORDER_SERVICE_ORIGIN+'/api/delivery/owner/store-check',{headers:{Authorization:'Bearer '+await u.getIdToken()},cache:'no-store'});const d=await r.json();if(auth.currentUser?.uid!==u.uid)return;if(!r.ok||d.storeId!=='33659'||d.readVerified!==true||d.shipmentEnabled!==false)throw Error('Connection not verified. Please try later.');setStatus('Connection verified: UDECS STORE 33659.');setTime(new Date(d.checkedAt).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'})+' IST')}catch{if(auth.currentUser?.uid===u.uid)setStatus('Connection not verified. Please try later.')}finally{setBusy(false)}}
  if(!owner)return null;
  return <section className="bg-white rounded-xl border border-slate-200 p-4 mb-5" aria-label="iThink connection"><div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-bold text-slate-800">iThink Logistics connection</h3><p className="text-sm text-slate-600 mt-1">Owner-only store-read check. No order sync, shipment, pickup or payment.</p></div><button type="button" onClick={check} disabled={busy} className="px-4 py-2 rounded-lg bg-blue-950 text-white text-sm font-semibold disabled:opacity-50">{busy?'Checking...':'Check connection'}</button></div><p role="status" className="text-sm text-slate-700 mt-3">{status}</p>{time&&<p className="text-xs text-slate-500 mt-1">Checked {time}</p>}</section>
-   }
+}
