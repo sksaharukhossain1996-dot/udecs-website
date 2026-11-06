@@ -238,6 +238,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
   };
 
   const executeOrderPlacement = async (method: 'upi'|'cod'|'payu') => {
+    if(method==='cod'){setOrderError('Cash on Delivery is temporarily paused. Choose PayU or direct UPI QR. No request was sent.');return;}
     if(requestBusy.current)return;
     const user=customerAuth.currentUser;
     if(!isVerifiedGoogleCustomer(user)||formData.email!==user?.email){setLoginError('Sign in again and review your details. No order was placed.');return;}
@@ -471,23 +472,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                       </div>
                     </label>
 
-                    <label className={gatewayVerification?"hidden":"flex items-center gap-3 p-3 bg-white border border-[#CBCFB9] hover:border-[#0F1913] rounded cursor-pointer"}>
-                      <input
-                        type="radio"
-                        name="payment"
-                        checked={paymentMethod === 'cod'}
-                        onChange={() => setPaymentMethod('cod')}
-                        className="accent-[#0F1913]"
-                      />
-                      <div>
-                        <span className="text-xs font-bold text-[#0F1913] block">
-                          Cash on Delivery (COD)
-                        </span>
-                        <span className="text-[11px] text-[#565F52]">
-                          Pay cash when your order arrives. COD orders carry Rs 55 delivery + Rs 45 shopping charge (Rs 119 shopping above Rs 1,000). We confirm every COD order before dispatch.
-                        </span>
-                      </div>
-                    </label>
+                    {!gatewayVerification && <p className="text-xs text-[#565F52]" role="status">Cash on Delivery is temporarily paused for new orders. Choose PayU or direct UPI QR. Existing orders are unchanged.</p>}
                   </div>
                 </div>
               </div>
