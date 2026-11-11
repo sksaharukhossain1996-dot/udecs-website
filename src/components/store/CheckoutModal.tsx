@@ -27,8 +27,6 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { generateWhatsAppLink, buildOrderPlacedMessage } from '../../services/whatsappService';
-// @ts-ignore - vendored MIT QR generator, no types
-import qrcode from '../../lib/qrcode-generator';
 
 // ---- Delivery rate card: iThink Logistics (Xpressbees Surface) from origin 721152 (Panskura, WB)
 // Card captured from the owner's iThink panel on 28 Sep 2026; +7.5% fuel surcharge; COD extra.
@@ -66,8 +64,9 @@ const deliveryCharge = (pincode: string, items: { product: any; quantity: number
   return { zone, weightKg, fee };
 };
 
-const UPI_ID = '7319190514@upi'; // Owner-confirmed QR destination, 1 Oct 2026
-const UPI_PAYEE_NAME = 'SK SAHARUK HOSSAIN';
+const UPI_ID = 'unickdigitaleqr.payu@indus'; // Official PayU QR selected by owner, 11 Nov 2026.
+const UPI_PAYEE_NAME = 'UNICK DIGITAL';
+const PAYU_MERCHANT_QR_IMAGE = '/1-payu-official-merchant-qr.png';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -177,17 +176,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const shoppingCharge = gatewayVerification||quoteShipping?0:paymentMethod==='cod'?(roundMoney(subtotal)>=1000?119:45):roundMoney(subtotal)>=1000?(paymentMethod==='payu'?roundMoney(roundMoney(subtotal)*0.023):0):7;
   const totalAmount = gatewayVerification?50:roundMoney(taxableAmount + totalGst + shippingFee + smallOrderDeliveryFee + shoppingCharge);
 
-  // UPI deep link + QR (amount-encoded, order ref in the note)
-  const upiDeepLink = completedOrder
-    ? `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_PAYEE_NAME)}&am=${completedOrder.totalAmount}&cu=INR&tn=${encodeURIComponent(`UDECS Order ${completedOrder.id}`)}`
-    : '';
-  const upiQrDataUrl = React.useMemo(() => {
-    if (!upiDeepLink) return '';
-    const qr = qrcode(0, 'M');
-    qr.addData(upiDeepLink);
-    qr.make();
-    return qr.createDataURL(6, 2);
-  }, [upiDeepLink]);
+  // Original issuer QR payload is preserved. It carries no amount or order reference.
+  // Order status and confirmed total remain separate; scanning cannot mark paid.
 
   if (!isOpen) return null;
 
@@ -238,7 +228,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
   };
 
   const executeOrderPlacement = async (method: 'upi'|'cod'|'payu') => {
-    if(method==='cod'){setOrderError('Cash on Delivery is temporarily paused. Choose PayU or direct UPI QR. No request was sent.');return;}
+    if(method==='cod'){setOrderError('Cash on Delivery is temporarily paused. Choose the PayU gateway or PayU merchant QR. No request was sent.');return;}
     if(requestBusy.current)return;
     const user=customerAuth.currentUser;
     if(!isVerifiedGoogleCustomer(user)||formData.email!==user?.email){setLoginError('Sign in again and review your details. No order was placed.');return;}
@@ -458,21 +448,21 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                         className="accent-[#CC9A2E]"
                       />
                       <div className="flex-1">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="text-xs font-bold text-[#0F1913]">
-                            UPI QR - Direct Bank Payment (Recommended)
+                            PayU merchant QR - manual verification
                           </span>
                           <span className="text-[10px] bg-[#CC9A2E]/20 text-[#A87C1F] font-semibold px-2 py-0.5 rounded">
-0% Fee · Instant
+Verification required
                           </span>
                         </div>
                         <p className="text-[11px] text-[#565F52]">
-                          Scan a QR with GPay, PhonePe or Paytm - money goes straight to our bank account
+                          Scan the PayU merchant QR after saving your order. Payment stays pending until verified.
                         </p>
                       </div>
                     </label>
 
-                    {!gatewayVerification && <p className="text-xs text-[#565F52]" role="status">Cash on Delivery is temporarily paused for new orders. Choose PayU or direct UPI QR. Existing orders are unchanged.</p>}
+                    {!gatewayVerification && <p className="text-xs text-[#565F52]" role="status">Cash on Delivery is temporarily paused for new orders. Choose the PayU gateway or PayU merchant QR. Existing orders are unchanged.</p>}
                   </div>
                 </div>
               </div>
@@ -577,7 +567,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   </button>
 
                   <div className="mt-2 text-center text-[10px] text-[#565F52]">
-                    {quoteShipping ? 'Availability and shipping confirmed before payment. No payment or order is completed here.' : gatewayVerification||paymentMethod==='payu'?'Order saved before payment. Review final total on PayU.':paymentMethod==='cod'?'COD order · We confirm before dispatch · Pay cash on delivery':'Secure Checkout · Direct UPI to UDECS · Order Summary'}
+                    {quoteShipping ? 'Availability and shipping confirmed before payment. No payment or order is completed here.' : gatewayVerification||paymentMethod==='payu'?'Order saved before payment. Review final total on PayU.':paymentMethod==='cod'?'COD order · We confirm before dispatch · Pay cash on delivery':'PayU merchant QR · Payment pending verification · Order summary'}
                   </div>
                 </div>
               </div>
@@ -589,8 +579,8 @@ GSTIN: ${formData.gstin || 'not provided'}`;
         {checkoutStep === 'upi_pay' && completedOrder && (
           <div className="space-y-6">
             <div className="bg-[#182620] text-white p-5 rounded-lg border border-[#CC9A2E]/40 space-y-4">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <span className="text-xs font-mono text-[#B9BFAE]">UPI DIRECT PAYMENT</span>
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+                <span className="text-xs font-mono text-[#B9BFAE]">PAYU MERCHANT QR PAYMENT</span>
                 <div className="text-right">
                   <span className="text-xs text-[#B9BFAE] block">Payable:</span>
                   <span className="text-lg font-black text-[#CC9A2E]">
@@ -601,7 +591,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
 
               <div className="text-center">
                 <div className="bg-white p-4 rounded-lg inline-block">
-                  <img src={upiQrDataUrl} alt="UPI QR Code" className="w-52 h-52" />
+                  <img src={PAYU_MERCHANT_QR_IMAGE} alt="PayU merchant QR. Payment pending verification." className="w-64 h-auto" />
                 </div>
               </div>
 
@@ -616,19 +606,14 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                 </p>
               </div>
 
-              <div className="text-center">
-                <a
-                  href={upiDeepLink}
-                  className="inline-flex items-center gap-2 bg-[#CC9A2E] text-[#0F1913] font-bold px-5 py-2.5 rounded text-sm hover:brightness-110 transition-all"
-                >
-                  <Smartphone className="w-4 h-4" />
-                  Tap to pay in your UPI app
-                </a>
-              </div>
+              <p className="text-xs text-[#B9BFAE] text-center">
+                This QR does not include an amount or order number. Enter the exact payable
+                total shown above in your UPI app. Keep your order reference for verification.
+              </p>
 
               <p className="text-[11px] text-[#B9BFAE] text-center">
-                Payment remains pending until UDECS verifies it. You can contact UDECS
-                on WhatsApp with your payment screenshot.
+                Payment remains pending until UDECS verifies it against payment records.
+                A screenshot or UPI reference alone is not proof of payment.
               </p>
             </div>
 
