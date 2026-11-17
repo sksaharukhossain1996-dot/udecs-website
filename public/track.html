@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="bn">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -26,6 +26,7 @@
   nav a:hover{color:#fff}
   .hsearch{background:#fff;border-radius:8px;display:flex;align-items:center;padding:8px 14px;gap:8px;width:230px}
   .hsearch input{border:0;outline:0;font-size:13.5px;width:100%;color:#334155}
+  .langsel{background:#fff;border:0;border-radius:8px;padding:9px 10px;font-size:13px;font-weight:600;color:#1e293b;cursor:pointer;outline:0}
   .cart{position:relative;color:#fff;font-size:22px}
   .cart i{position:absolute;top:-7px;right:-9px;background:#ef4444;color:#fff;font-style:normal;font-size:10.5px;font-weight:700;min-width:17px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center}
   /* hero */
@@ -112,6 +113,7 @@
       <a href="https://udecs.store/#about">About</a>
       <a href="https://udecs.store/#contact">Contact</a>
     </nav>
+    <select class="langsel" id="langSel" aria-label="Language"><option value="en">English</option><option value="hi">&#2361;&#2367;&#2344;&#2381;&#2342;&#2368;</option><option value="bn">&#2476;&#2494;&#2434;&#2482;&#2494;</option></select>
     <div class="hsearch"><input placeholder="Search products..."><span><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span></div>
     <div class="cart"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><i>2</i></div>
   </div>
@@ -120,8 +122,8 @@
 <section class="hero">
   <div class="heroin">
     <div>
-      <h1>Order Tracking</h1>
-      <p>&#2438;&#2474;&#2472;&#2494;&#2480; &#2433;&#2480;&#2509;&#2465;&#2494;&#2480;&#2503;&#2480; &#2476;&#2480;&#2509;&#2468;&#2478;&#2494;&#2472; &#2433;&#2476;&#2488;&#2509;&#2469;&#2494; &#2447;&#2454;&#2472;&#2439; &#2460;&#2494;&#2472;&#2497;&#2472;!</p>
+      <h1 id="t_heroTitle">Order Tracking</h1>
+      <p id="t_heroSub"></p>
     </div>
     <div class="art"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
   </div>
@@ -129,14 +131,14 @@
 
 <div class="wrap">
   <div class="card">
-    <h2><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Track Your Order</h2>
-    <p class="sub">Order ID &#2447;&#2476;&#2434; Mobile Number &#2470;&#2479;&#2472;, &#2438;&#2474;&#2472;&#2494;&#2480; &#2433;&#2480;&#2509;&#2465;&#2494;&#2480;&#2503;&#2480; &#2433;&#2476;&#2488;&#2509;&#2469;&#2494; &#2470;&#2503;&#2454;&#2497;&#2472;&#2404;</p>
+    <h2><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> <span id="t_cardTitle">Track Your Order</span></h2>
+    <p class="sub" id="t_cardSub"></p>
     <form id="f" autocomplete="off">
       <div class="frow">
-        <label class="field"><span class="ic"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><input id="oid" placeholder="Order ID (&#2455;&#2503;&#2478;&#2472;: UDECS-ORD-4607)" maxlength="70"></label>
-        <label class="field"><span class="ic"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></span><input id="mob" inputmode="numeric" placeholder="Mobile Number (&#2455;&#2503;&#2478;&#2472;: 9876543210)" maxlength="16"></label>
+        <label class="field"><span class="ic"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><input id="oid" placeholder="Order ID (e.g.: UDECS-ORD-4607)" maxlength="70"></label>
+        <label class="field"><span class="ic"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></span><input id="mob" inputmode="numeric" placeholder="Mobile Number (e.g.: 9876543210)" maxlength="16"></label>
       </div>
-      <button class="trackbtn" type="submit"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Track Order</button>
+      <button class="trackbtn" type="submit"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> <span id="t_trackBtn">Track Order</span></button>
     </form>
     <div class="err" id="err"></div>
 
@@ -149,23 +151,55 @@
       <div class="meta" id="rMeta"></div>
       <div class="tl" id="rTl"></div>
       <div class="note" id="rNote"></div>
-      <a class="courierbtn" id="rCourier" target="_blank" rel="noopener" style="display:none"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> Track on Courier <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
+      <a class="courierbtn" id="rCourier" target="_blank" rel="noopener" style="display:none"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> <span id="t_courierBtn">Track on Courier</span> <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></a>
     </div>
   </div>
 </div>
 
 <footer class="strip">
   <div class="stripin">
-    <div class="feat"><span class="fi"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span><span><b>Secure &amp; Reliable</b><small>Order Tracking</small></span></div>
-    <div class="feat"><span class="fi"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span><b>Real-Time</b><small>Updates</small></span></div>
-    <div class="feat"><span class="fi"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span><span><b>24x7</b><small>Support</small></span></div>
-    <div class="striplogo"><img class="markimg" src="/6-udecs-app-logo.jpg" alt="UDECS.STORE logo" style="width:38px;height:38px;border-radius:9px;object-fit:cover"><span><b>UDECS<span>.STORE</span></b><small>Your Trusted Online Store</small></span></div>
+    <div class="feat"><span class="fi"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span><span><b id="t_f1b">Secure &amp; Reliable</b><small id="t_f1s">Order Tracking</small></span></div>
+    <div class="feat"><span class="fi"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span><b id="t_f2b">Real-Time</b><small id="t_f2s">Updates</small></span></div>
+    <div class="feat"><span class="fi"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span><span><b id="t_f3b">24x7</b><small id="t_f3s">Support</small></span></div>
+    <div class="striplogo"><img class="markimg" src="/6-udecs-app-logo.jpg" alt="UDECS.STORE logo" style="width:38px;height:38px;border-radius:9px;object-fit:cover"><span><b>UDECS<span>.STORE</span></b><small id="t_storeTag">Your Trusted Online Store</small></span></div>
   </div>
-  <div style="max-width:1200px;margin:auto;padding:0 28px 20px"><div class="conf"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Shop with Confidence &mdash; Track Your Order Easily!</div></div>
+  <div style="max-width:1200px;margin:auto;padding:0 28px 20px"><div class="conf"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> <span id="t_conf">Shop with Confidence - Track Your Order Easily!</span></div></div>
 </footer>
 
 <script>
 const API_BASE = 'https://udecs-orders-api.sksaharukhossain1996.workers.dev';
+const I18N = {};
+I18N.en = {locale:'en-IN',heroTitle:'Order Tracking',heroSub:'Know your order status right now!',cardTitle:'Track Your Order',cardSub:'Enter your Order ID and Mobile Number to see your order status.',oidPh:'Order ID (e.g.: UDECS-ORD-4607)',mobPh:'Mobile Number (e.g.: 9876543210)',trackBtn:'Track Order',checking:'Checking\u2026',notFound:'Order not found. Check the Order ID and registered mobile number.',tooMany:'Too many attempts. Please try again in a minute.',unavailable:'Tracking is temporarily unavailable. Please try again shortly.',errId:'Enter a valid Order ID (e.g.: UDECS-ORD-4607).',errMob:'Enter a valid 10-digit mobile number.',orderPrefix:'Order #',dateLabel:'Order Date: ',courierLabel:'Courier: ',trackingLabel:'Tracking No: ',notAssigned:'Not assigned yet',pendingTag:'Pending',currentStatus:'Current Status',courierBtn:'Track on Courier',f1b:'Secure & Reliable',f1s:'Order Tracking',f2b:'Real-Time',f2s:'Updates',f3b:'24x7',f3s:'Support',conf:'Shop with Confidence - Track Your Order Easily!',storeTag:'Your Trusted Online Store',stages:{placed:'Order Placed',confirmed:'Order Confirmed',processing:'Processing',shipped:'Shipped',delivered:'Delivered'},status:{pending:'Pending',processing:'Processing',packed:'Packed',shipped:'Shipped',delivered:'Delivered',cancelled:'Cancelled'},notes:{pending:'Your order is being packed. It will be handed to the courier soon.',processing:'Your order is being processed. It will be handed to the courier soon.',packed:'Your order is packed and ready for courier pickup.',shipped:'Your order has been shipped via courier. It will be delivered soon.',delivered:'Your order has been delivered successfully. Thank you for shopping with UDECS.STORE!',cancelled:'This order has been cancelled. Please contact support if needed.'}};
+I18N.hi = {locale:'hi-IN',heroTitle:'ऑर्डर ट्रैकिंग',heroSub:'अपने ऑर्डर की स्थिति अभी जानें!',cardTitle:'अपना ऑर्डर ट्रैक करें',cardSub:'अपना Order ID और Mobile Number दें, अपने ऑर्डर की स्थिति देखें।',oidPh:'Order ID (जैसे: UDECS-ORD-4607)',mobPh:'Mobile Number (जैसे: 9876543210)',trackBtn:'ऑर्डर ट्रैक करें',checking:'चेक हो रहा है\u2026',notFound:'ऑर्डर नहीं मिला। Order ID और registered mobile number जाँचें।',tooMany:'बहुत अधिक प्रयास। एक मिनट बाद फिर कोशिश करें।',unavailable:'ट्रैकिंग अभी उपलब्ध नहीं है। थोड़ी देर बाद कोशिश करें।',errId:'सही Order ID लिखें (जैसे: UDECS-ORD-4607)।',errMob:'सही 10 अंकों का mobile number लिखें।',orderPrefix:'ऑर्डर #',dateLabel:'ऑर्डर तारीख: ',courierLabel:'Courier: ',trackingLabel:'Tracking No: ',notAssigned:'अभी नहीं दिया गया',pendingTag:'बाकी',currentStatus:'वर्तमान स्थिति',courierBtn:'Courier पर ट्रैक करें',f1b:'सुरक्षित और भरोसेमंद',f1s:'ऑर्डर ट्रैकिंग',f2b:'रियल-टाइम',f2s:'अपडेट',f3b:'24x7',f3s:'सपोर्ट',conf:'भरोसे के साथ खरीदें - अपना ऑर्डर आसानी से ट्रैक करें!',storeTag:'आपका भरोसेमंद ऑनलाइन स्टोर',stages:{placed:'ऑर्डर प्लेस्ड',confirmed:'ऑर्डर कन्फर्म्ड',processing:'प्रोसेसिंग',shipped:'शिप्ड',delivered:'डिलीवर्ड'},status:{pending:'पेंडिंग',processing:'प्रोसेसिंग',packed:'पैक्ड',shipped:'शिप्ड',delivered:'डिलीवर्ड',cancelled:'रद्द'},notes:{pending:'आपका ऑर्डर पैक किया जा रहा है। जल्द ही courier को सौंपा जाएगा।',processing:'आपका ऑर्डर प्रोसेस किया जा रहा है। जल्द ही courier को सौंपा जाएगा।',packed:'आपका ऑर्डर पैक हो गया है, courier के लिए तैयार है।',shipped:'आपका ऑर्डर courier के माध्यम से भेज दिया गया है। जल्द ही डिलीवरी होगी।',delivered:'आपका ऑर्डर सफलतापूर्वक डिलीवर हो गया है। धन्यवाद, UDECS.STORE के साथ बने रहें!',cancelled:'यह ऑर्डर रद्द कर दिया गया है। जरूरत हो तो सपोर्ट से संपर्क करें।'}};
+I18N.bn = {locale:'bn-IN',heroTitle:'অর্ডার ট্র্যাকিং',heroSub:'আপনার অর্ডারের বর্তমান অবস্থা এখনই জানুন!',cardTitle:'আপনার অর্ডার ট্র্যাক করুন',cardSub:'Order ID এবং Mobile Number দিয়ে, আপনার অর্ডারের অবস্থা দেখুন।',oidPh:'Order ID (যেমন: UDECS-ORD-4607)',mobPh:'Mobile Number (যেমন: 9876543210)',trackBtn:'অর্ডার ট্র্যাক করুন',checking:'চেক করা হচ্ছে\u2026',notFound:'অর্ডার পাওয়া যায়নি। Order ID এবং mobile number মিলিয়ে আবার দেখুন।',tooMany:'অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পর আবার দেখুন।',unavailable:'ট্র্যাকিং সাময়িক অনুপলব্ধ। কিছুক্ষণ পর চেষ্টা করুন।',errId:'সঠিক Order ID লিখুন (যেমন: UDECS-ORD-4607)।',errMob:'সঠিক ১০ সংখ্যার mobile number লিখুন।',orderPrefix:'অর্ডার #',dateLabel:'অর্ডার তারিখ: ',courierLabel:'Courier: ',trackingLabel:'Tracking No: ',notAssigned:'এখনও দেওয়া হয়নি',pendingTag:'অপেক্ষমাণ',currentStatus:'বর্তমান অবস্থা',courierBtn:'Courier-এ ট্র্যাক করুন',f1b:'নিরাপদ ও নির্ভরযোগ্য',f1s:'অর্ডার ট্র্যাকিং',f2b:'রিয়েল-টাইম',f2s:'আপডেট',f3b:'24x7',f3s:'সাপোর্ট',conf:'আত্মবিশ্বাসের সাথে কেনাকাটা করুন - আপনার অর্ডার সহজেই ট্র্যাক করুন!',storeTag:'আপনার বিশ্বস্ত অনলাইন স্টোর',stages:{placed:'অর্ডার প্লেসড',confirmed:'অর্ডার কনফার্মড',processing:'প্রসেসিং',shipped:'শিপড',delivered:'ডেলিভারড'},status:{pending:'পেন্ডিং',processing:'প্রসেসিং',packed:'প্যাকড',shipped:'শিপড',delivered:'ডেলিভারড',cancelled:'বাতিল'},notes:{pending:'আপনার অর্ডার প্যাকেজ করা হচ্ছে। শীঘ্রই কুরিয়ারের হাতে দেওয়া হবে।',processing:'আপনার অর্ডার প্রসেস করা হচ্ছে। শীঘ্রই কুরিয়ারের হাতে দেওয়া হবে।',packed:'আপনার অর্ডার প্যাক হয়ে গেছে, কুরিয়ারের জন্য প্রস্তুত।',shipped:'আপনার অর্ডার কুরিয়ারের মাধ্যমে পাঠানো হয়েছে। শীঘ্রই ডেলিভারি সম্পন্ন হবে।',delivered:'আপনার অর্ডার সফলভাবে ডেলিভারি হয়েছে। ধন্যবাদ, UDECS.STORE-এর সাথে থাকার জন্য!',cancelled:'এই অর্ডারটি বাতিল করা হয়েছে। প্রয়োজন হলে সহায়তার জন্য যোগাযোগ করুন।'}};
+let lang = new URLSearchParams(location.search).get('lang') || localStorage.getItem('udecs-lang') || 'en';
+if (!I18N[lang]) lang = 'en';
+let T = I18N[lang];
+let lastOrder = null;
+function applyLang(){
+  T = I18N[lang];
+  document.documentElement.lang = lang;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('t_heroTitle', T.heroTitle); set('t_heroSub', T.heroSub);
+  set('t_cardTitle', T.cardTitle); set('t_cardSub', T.cardSub);
+  set('t_trackBtn', T.trackBtn); set('t_courierBtn', T.courierBtn);
+  set('t_f1b', T.f1b); set('t_f1s', T.f1s);
+  set('t_f2b', T.f2b); set('t_f2s', T.f2s);
+  set('t_f3b', T.f3b); set('t_f3s', T.f3s);
+  set('t_conf', T.conf); set('t_storeTag', T.storeTag);
+  document.getElementById('oid').placeholder = T.oidPh;
+  document.getElementById('mob').placeholder = T.mobPh;
+  document.getElementById('langSel').value = lang;
+}
+const fmtD = d => d.toLocaleDateString(T.locale, {day:'numeric', month:'long', year:'numeric'});
+document.getElementById('langSel').addEventListener('change', ev => {
+  lang = ev.target.value;
+  localStorage.setItem('udecs-lang', lang);
+  applyLang();
+  if (lastOrder) render(lastOrder);
+});
+applyLang();
+
 const STAGES = [
   {key:'placed',    label:'Order Placed',    icon:'<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>'},
   {key:'confirmed', label:'Order Confirmed', icon:'<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><polyline points="20 6 9 17 4 12"/></svg>'},
@@ -181,7 +215,6 @@ const COURIER_LINKS = [
   [/ekart/i, tn => 'https://ekartlogistics.com/shipmenttrack/' + tn],
   [/xpressbees/i, tn => 'https://www.xpressbees.com/shipment/tracking?awbno=' + tn]
 ];
-const bnD = d => d.toLocaleDateString('bn-IN', {day:'numeric', month:'long', year:'numeric'});
 
 function stageIndex(o){
   if (o.orderStatus === 'cancelled') return -1;
@@ -195,20 +228,21 @@ function showError(msg){
   document.getElementById('res').style.display = 'none';
 }
 function render(o){
+  lastOrder = o;
   document.getElementById('err').style.display = 'none';
   const res = document.getElementById('res');
-  document.getElementById('rTitle').textContent = 'Order #' + o.orderId;
+  document.getElementById('rTitle').textContent = T.orderPrefix + o.orderId;
   const pill = document.getElementById('rPill');
   const st = o.orderStatus;
   pill.className = 'pill ' + st;
-  pill.innerHTML = st === 'cancelled' ? '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancelled' : st.charAt(0).toUpperCase() + st.slice(1);
+  pill.innerHTML = (st === 'cancelled' ? '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> ' : '') + (T.status[st] || st);
   const placed = new Date(o.createdAt), updated = new Date(o.updatedAt || o.createdAt);
   const meta = document.getElementById('rMeta');
   meta.innerHTML = '';
   const items = [
-    ['<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', '\u0985\u09B0\u09CD\u09A1\u09BE\u09B0 \u09A4\u09BE\u09B0\u09BF\u0996: ' + bnD(placed)],
-    ['<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>', 'Courier: ', o.courierName || 'Not assigned yet'],
-    ['<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', 'Tracking No: ', o.trackingNumber || 'Not assigned yet']
+    ['<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', T.dateLabel + fmtD(placed)],
+    ['<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>', T.courierLabel, o.courierName || T.notAssigned],
+    ['<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', T.trackingLabel, o.trackingNumber || T.notAssigned]
   ];
   items.forEach(([ic, label, val]) => {
     const s = document.createElement('span');
@@ -227,24 +261,17 @@ function render(o){
     div.className = cls;
     let dateTxt = '';
     if (cur !== -1) {
-      if (i === 0) dateTxt = bnD(placed);
-      else if (i === cur) dateTxt = bnD(updated);
+      if (i === 0) dateTxt = fmtD(placed);
+      else if (i === cur) dateTxt = fmtD(updated);
     }
     div.innerHTML = '<div class="dot">' + (i < cur || (i === cur && st === 'delivered') ? '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><polyline points="20 6 9 17 4 12"/></svg>' : sg.icon) + '</div>' +
-      '<h4>' + sg.label + '</h4>' +
-      (dateTxt ? '<small>' + dateTxt + '</small>' : (i > cur && cur !== -1 ? '<small>Pending</small>' : '')) +
-      (i === cur && st !== 'delivered' && cur !== -1 ? '<span class="cur">Current Status</span>' : '');
+      '<h4>' + T.stages[sg.key] + '</h4>' +
+      (dateTxt ? '<small>' + dateTxt + '</small>' : (i > cur && cur !== -1 ? '<small>' + T.pendingTag + '</small>' : '')) +
+      (i === cur && st !== 'delivered' && cur !== -1 ? '<span class="cur">' + T.currentStatus + '</span>' : '');
     tl.appendChild(div);
   });
   const note = document.getElementById('rNote');
-  const notes = {
-    pending:   '\u0986\u09AA\u09A8\u09BE\u09B0 \u0985\u09B0\u09CD\u09A1\u09BE\u09B0 \u09AA\u09CD\u09AF\u09BE\u0995\u09C7\u099C \u0995\u09B0\u09BE \u09B9\u099A\u09CD\u099B\u09C7\u0964 \u09B6\u09C0\u0998\u09CD\u09B0\u0987 \u0995\u09C1\u09B0\u09BF\u09DF\u09BC\u09BE\u09B0\u09C7\u09B0 \u09B9\u09A5\u09C7 \u09A6\u09C7\u0993\u09DF\u09BC\u09BE \u09B9\u09AC\u09C7\u0964',
-    processing:'\u0986\u09AA\u09A8\u09BE\u09B0 \u0985\u09B0\u09CD\u09A1\u09BE\u09B0 \u09AA\u09CD\u09B0\u09B8\u09C7\u09B8 \u0995\u09B0\u09BE \u09B9\u099A\u09CD\u099B\u09C7\u0964 \u09B6\u09C0\u0998\u09CD\u09B0\u0987 \u0995\u09C1\u09B0\u09BF\u09DF\u09BC\u09BE\u09B0\u09C7\u09B0 \u09B9\u09A5\u09C7 \u09A6\u09C7\u0993\u09DF\u09BC\u09BE \u09B9\u09AC\u09C7\u0964',
-    packed:    '\u0986\u09AA\u09A8\u09BE\u09B0 \u0985\u09B0\u09CD\u09A1\u09BE\u09B0 \u09AA\u09CD\u09AF\u09BE\u0995 \u09B9\u09DF\u09C7 \u0997\u09C7\u099B\u09C7, \u0995\u09C1\u09B0\u09BF\u09DF\u09BC\u09BE\u09B0\u09C7\u09B0 \u099C\u09A8\u09CD\u09AF \u09AA\u09CD\u09B0\u09B8\u09CD\u09A4\u09C1\u09A4\u0964',
-    shipped:   '\u0986\u09AA\u09A8\u09BE\u09B0 \u0985\u09B0\u09CD\u09A1\u09BE\u09B0 \u0995\u09C1\u09B0\u09BF\u09DF\u09BC\u09BE\u09B0\u09C7\u09B0 \u09AE\u09BE\u09A7\u09CD\u09AF\u09AE\u09C7 \u09AA\u09BE\u09A0\u09BE\u09A8\u09CB \u09B9\u09DF\u09BC\u09C7\u099B\u09C7 \u0964 \u09B6\u09C0\u0998\u09CD\u09B0\u0987 \u09A1\u09C7\u09B2\u09BF\u09AD\u09BE\u09B0\u09BF \u09B8\u09AE\u09CD\u09AA\u09A8\u09CD\u09A8 \u09B9\u09AC\u09C7 \u0964',
-    delivered: '\u0986\u09AA\u09A8\u09BE\u09B0 \u0985\u09B0\u09CD\u09A1\u09BE\u09B0 \u09B8\u09AB\u09B2\u09AD\u09BE\u09AD\u09C7 \u09A1\u09C7\u09B2\u09BF\u09AD\u09BE\u09B0\u09BF \u09B9\u09DF\u09BC\u09C7\u099B\u09C7\u0964 \u09A7\u09A8\u09CD\u09AF\u09AC\u09BE\u09A6, UDECS.STORE-\u098F\u09B0 \u09B8\u09BE\u09A5\u09C7 \u09A5\u09BE\u0995\u09BE\u09B0 \u099C\u09A8\u09CD\u09AF!',
-    cancelled: '\u098F\u0987 \u0985\u09B0\u09CD\u09A1\u09BE\u09B0\u099F\u09BF \u09AC\u09BE\u09A4\u09BF\u09B2 \u0995\u09B0\u09BE \u09B9\u09DF\u09BC\u09C7\u099B\u09C7\u0964 \u09AA\u09CD\u09B0\u09DF\u09CB\u099C\u09A8 \u09B9\u09B2\u09C7 \u09B8\u09B9\u09BE\u09DF\u09BC\u09A4\u09BE\u09B0 \u099C\u09A8\u09CD\u09AF \u09AF\u09CB\u0997\u09BE\u09AF\u09CB\u0997 \u0995\u09B0\u09C1\u09A8\u0964'
-  };
+  const notes = T.notes;
   note.innerHTML = '<span style="font-size:17px"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span><span>' + (notes[st] || notes.pending) + '</span>';
   const cb = document.getElementById('rCourier');
   if (o.courierName && o.trackingNumber) {
@@ -261,7 +288,9 @@ async function track(oid, mob){
     body: JSON.stringify({orderId: oid, mobile: mob})
   });
   const d = await r.json().catch(() => ({}));
-  if (!r.ok || !d.order) throw Error(d.error || 'Order not found. Order ID \u098F\u09AC\u0982 mobile number \u09AE\u09BF\u09B2\u09BF\u09DF\u09BC\u09C7 \u0986\u09AC\u09BE\u09B0 \u09A6\u09C7\u0996\u09C1\u09A8\u0964');
+  if (r.status === 429) throw Error(T.tooMany);
+  if (r.status === 503) throw Error(T.unavailable);
+  if (!r.ok || !d.order) throw Error(T.notFound);
   return d.order;
 }
 
@@ -269,14 +298,14 @@ document.getElementById('f').addEventListener('submit', async (ev) => {
   ev.preventDefault();
   const oid = document.getElementById('oid').value.trim();
   const mob = document.getElementById('mob').value.trim();
-  if (!/^UDECS-[A-Za-z0-9-]{3,64}$/.test(oid)) return showError('Sahi Order ID \u09B2\u09BF\u0996\u09C1\u09A8 (\u09AF\u09C7\u09AE\u09A8: UDECS-ORD-4607)\u0964');
+  if (!/^UDECS-[A-Za-z0-9-]{3,64}$/.test(oid)) return showError(T.errId);
   const digits = mob.replace(/\D/g, '');
-  if (digits.length < 10) return showError('Sahi 10 \u0985\u0982\u0995\u09C7\u09B0 mobile number \u09B2\u09BF\u0996\u09C1\u09A8\u0964');
+  if (digits.length < 10) return showError(T.errMob);
   const btn = document.querySelector('.trackbtn');
-  btn.disabled = true; btn.textContent = 'Checking\u2026';
+  btn.disabled = true; btn.textContent = T.checking;
   try { render(await track(oid, digits.slice(-10))); }
   catch (e) { showError(e.message); }
-  finally { btn.disabled = false; btn.innerHTML = '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Track Order'; }
+  finally { btn.disabled = false; btn.innerHTML = '<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> <span id=\"t_trackBtn\">' + T.trackBtn + '</span>'; }
 });
 
 </script>
