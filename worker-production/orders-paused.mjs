@@ -709,6 +709,11 @@ function restDb(project, token, fetcher = fetch) {
       const docs = (Array.isArray(out) ? out : [out]).filter((x) => x.document).map((x) => ({ id: x.document.name.split("/").at(-1), ...document(x.document).data() }));
       const orders = docs.slice(0, 5), last = orders.at(-1);
       return { orders, nextCursor: docs.length > 5 ? btoa(JSON.stringify({ uid, createdAt: last.createdAt, id: last.id })) : null };
+    },
+    async track(id) {
+      const out = await call(":batchGet", { documents: [`${root}/orders/${id}`] });
+      const row = (Array.isArray(out) ? out : [out])[0];
+      return row?.found ? document(row.found) : { id, exists: false, data: /* @__PURE__ */ __name(() => void 0, "data") };
     }
   };
 }
@@ -906,6 +911,35 @@ function router({ fetcher = fetch, dbFactory = restDb, verify = principal } = {}
     }
     if (!["https://udecs.store", "https://www.udecs.store"].includes(origin)) return reply(403, { error: "Origin not allowed" });
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: { ...headers, "Access-Control-Allow-Headers": "Content-Type, Authorization, Idempotency-Key", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" } });
+    if (new URL(request.url).pathname === "/api/orders/track") {
+      const notFound = () => reply(404, { error: "Order not found. Check the Order ID and registered mobile number." });
+      try {
+        if (request.method !== "POST") return reply(405, { error: "Method not allowed" });
+        if (request.headers.get("Content-Type")?.split(";")[0] !== "application/json") return reply(400, { error: "JSON required" });
+        const text = await request.text();
+        if (text.length > 512) return reply(413, { error: "Request too large" });
+        const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+        const rate = env.RATE_LIMITER.get(env.RATE_LIMITER.idFromName("track:" + ip));
+        if (!(await rate.fetch("https://limit/consume", { method: "POST" })).ok) return reply(429, { error: "Too many requests. Wait before retrying." });
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          return notFound();
+        }
+        const rawId = typeof data?.orderId === "string" ? data.orderId.trim() : "";
+        const orderId = rawId.replace(/^udecs-ord-/i, "UDECS-ORD-");
+        const mobile = typeof data?.mobile === "string" ? data.mobile.replace(/\D/g, "").slice(-10) : "";
+        if (!/^UDECS-ORD-[A-Za-z0-9-]{1,64}$/.test(orderId) || mobile.length !== 10) return notFound();
+        const db = dbFactory(env.FIREBASE_PROJECT_ID, await sharedServerToken(env), fetcher);
+        const found = await db.track(orderId), o = found.exists ? found.data() : null;
+        const phone = typeof o?.customerPhone === "string" ? o.customerPhone.replace(/\D/g, "").slice(-10) : "";
+        if (!o || phone !== mobile) return notFound();
+        return reply(200, { order: { orderId: found.id, orderStatus: typeof o.orderStatus === "string" && ["pending", "processing", "packed", "shipped", "delivered", "cancelled"].includes(o.orderStatus) ? o.orderStatus : "pending", courierName: typeof o.courierName === "string" ? o.courierName.slice(0, 120) : "", trackingNumber: typeof o.trackingNumber === "string" ? o.trackingNumber.slice(0, 60) : "", createdAt: typeof o.createdAt === "string" ? o.createdAt : "", updatedAt: typeof o.updatedAt === "string" ? o.updatedAt : "" } });
+      } catch {
+        return reply(503, { error: "Tracking temporarily unavailable. Try again shortly." });
+      }
+    }
     try {
       const token = request.headers.get("Authorization")?.match(/^Bearer (.+)$/)?.[1], user = await verify(token, env, fetcher);
       const path = new URL(request.url).pathname;
