@@ -66,7 +66,7 @@ const StoreContent: React.FC = () => {
       {/* Top Navbar */}
       <Navbar
         onOpenCart={() => setIsCartOpen(true)}
-        onOpenTracking={() => setIsTrackingOpen(true)}
+        onOpenTracking={() => window.location.assign('/track.html')}
         onOpenSearch={() => setIsSearchOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenVoice={() => setIsVoiceOpen(true)}
@@ -76,7 +76,7 @@ const StoreContent: React.FC = () => {
       <main className="flex-1">
         {/* Architectural Hero */}
         {!isB2bPage && <Hero
-          onOpenTracking={() => setIsTrackingOpen(true)}
+          onOpenTracking={() => window.location.assign('/track.html')}
           onOpenVoice={() => setIsVoiceOpen(true)}
         />}
         {isB2bPage && <section className="p-6 sm:p-12 bg-[#101e34] text-white"><div className="max-w-[1240px] mx-auto"><a href="/" className="text-sm underline">Retail storefront</a><h1 className="text-3xl sm:text-5xl font-black mt-5">UDECS B2B Wholesale</h1><p className="mt-4 max-w-2xl">Wholesale products and quotations for shops, resellers and business buyers. Minimum 100 pieces per product, rounded up to full cartons. GST extra; shipping and availability confirmed before payment.</p><a href="#wholesale" className="inline-block mt-5 rounded-lg bg-[#CC9A2E] text-[#0F1913] px-5 py-3 font-bold">Request a quotation</a></div></section>}
@@ -106,7 +106,7 @@ const StoreContent: React.FC = () => {
 
       {/* Storefront Footer */}
       <Footer
-        onOpenTracking={() => setIsTrackingOpen(true)}
+        onOpenTracking={() => window.location.assign('/track.html')}
         onOpenAdmin={() => setIsAdminOpen(true)}
       />
 
