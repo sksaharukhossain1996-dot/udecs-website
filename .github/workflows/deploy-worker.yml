@@ -33,5 +33,5 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: bfa14054934d0f067511f26979c971d4
         run: |
-          npx wrangler deploy --config worker-production/wrangler.json --no-bundle --keep-vars
           npx wrangler deploy --config worker-production/orders-paused.json --no-bundle --keep-vars
+          npx wrangler deploy --config worker-production/wrangler.json --no-bundle --keep-vars
