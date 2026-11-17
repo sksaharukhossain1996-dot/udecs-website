@@ -30,14 +30,6 @@
       }
     ]
   },
-  "migrations": [
-    {
-      "tag": "udecs-inquiry-v1",
-      "new_sqlite_classes": [
-        "InquiryInbox"
-      ]
-    }
-  ],
   "services": [
     {
       "binding": "WA_ORDER_SERVICE",
