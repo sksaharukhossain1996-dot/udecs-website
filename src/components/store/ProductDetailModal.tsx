@@ -283,7 +283,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </span>
               <span className="flex items-center gap-1">
                 <Truck className="w-3.5 h-3.5 text-[#3C6656]" />
-                {product.shippingMode === 'quote' ? 'Shipping quoted before payment' : language === 'bn' ? 'দ্রুত কুরিয়ার ট্র্যাকিং' : 'Fast Tracked Delivery'}
+                {product.shippingMode === 'quote' ? 'Shipping quoted before payment' : language === 'bn' ? 'অনলাইন অর্ডার ট্র্যাকিং' : 'Easy online order tracking'}
               </span>
             </div>
           </div>
