@@ -1,5 +1,5 @@
 import {getApps,initializeApp} from 'firebase/app';
-import {getAuth,setPersistence,browserSessionPersistence,GoogleAuthProvider,onAuthStateChanged,signInWithPopup,signOut,sendSignInLinkToEmail,isSignInWithEmailLink,signInWithEmailLink} from 'firebase/auth';
+import {getAuth,setPersistence,browserSessionPersistence,GoogleAuthProvider,onAuthStateChanged,signInWithPopup,signOut,sendSignInLinkToEmail,isSignInWithEmailLink,signInWithEmailLink,RecaptchaVerifier,signInWithPhoneNumber,type ConfirmationResult} from 'firebase/auth';
 import {getFirestore} from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 // Named client isolates customer sign-in from the existing staff listener/provider.
@@ -28,4 +28,25 @@ export async function completeCustomerEmailLink(email:string){
  const result=await signInWithEmailLink(customerAuth,email.trim(),window.location.href);
  sessionStorage.removeItem('udecs-email-link-address');
  window.history.replaceState({},'',window.location.origin+'/?customer-portal=1');return result.user;
+}
+
+// Mobile OTP sign-in (Firebase Phone Auth). The verifier must live on a stable
+// element; one pending confirmation at a time per page.
+let phoneConfirmation:ConfirmationResult|null=null;
+let phoneVerifier:RecaptchaVerifier|null=null;
+export async function customerStartPhoneSignIn(phoneE164:string,containerId:string){
+ const value=phoneE164.trim();
+ if(!/^\+[1-9][0-9]{6,14}$/.test(value))throw Error('Enter your mobile number with country code, like +919876543210.');
+ await setPersistence(customerAuth,browserSessionPersistence);
+ if(phoneVerifier){try{phoneVerifier.clear();}catch{}}
+ phoneVerifier=new RecaptchaVerifier(customerAuth,containerId,{size:'invisible'});
+ phoneConfirmation=await signInWithPhoneNumber(customerAuth,value,phoneVerifier);
+}
+export async function customerConfirmPhoneCode(code:string){
+ if(!phoneConfirmation)throw Error('Request the OTP first.');
+ const value=code.trim();
+ if(!/^[0-9]{6}$/.test(value))throw Error('Enter the 6-digit OTP.');
+ const user=(await phoneConfirmation.confirm(value)).user;
+ phoneConfirmation=null;
+ return user;
 }
