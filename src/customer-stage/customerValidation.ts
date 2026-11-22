@@ -7,3 +7,14 @@ export function validateCustomerContact(name:string,phone:string,email:string,ge
  if(address.length<5||address.length>500)throw Error('Enter your address (5-500 characters).');
  return{name,phone,email,gender,address,source:'mysa' as const,phoneVerified:false as const,noticeVersion:'customer-profile-v2' as const};
 }
+
+// Phone-OTP sign-in path: identity comes from the verified auth token, so no
+// email is stored and the phone must be the token's verified number.
+export function validateCustomerPhoneContact(name:string,phone:string,gender='prefer_not_to_say',address=''){
+ name=name.trim();phone=phone.trim();address=address.trim();
+ if(name.length<2||name.length>120)throw Error('Enter a name between2 and120 characters.');
+ if(!/^\+[1-9][0-9]{6,14}$/.test(phone))throw Error('Verified phone number is invalid.');
+ if(!['female','male','other','prefer_not_to_say'].includes(gender))throw Error('Choose a gender option, or prefer not to say.');
+ if(address.length<5||address.length>500)throw Error('Enter your address (5-500 characters).');
+ return{name,phone,email:'',gender,address,source:'mysa' as const,phoneVerified:true as const,noticeVersion:'customer-profile-v2' as const};
+}
