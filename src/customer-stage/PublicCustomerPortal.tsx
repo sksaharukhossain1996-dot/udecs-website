@@ -28,7 +28,7 @@ export function PublicCustomerPortal(){
       <main className="portal-layout"><div className="portal-intro"><img className="portal-brand" src="/UDECS_Logo_Premium_Transparent.png" alt="UDECS Commerce Solutions"/><p className="portal-eyebrow">YOUR UDECS ACCOUNT</p>
         <h1 className="text-2xl font-bold mt-2">Customer sign in</h1>
         <p className="text-sm text-[#565F52] mt-1 mb-2">Sign in, save your delivery details and see your orders.</p><p className="portal-separation">No UDECS password needed. Staff sign-in is separate.</p></div><div className="portal-content">
-        {saved?<section className="customer-stage"><h2>Your customer details are saved</h2><p>You are signed in with your verified email. Your phone number is not verified.</p><a href="/">Back to UDECS store</a><button onClick={()=>{setReviewExisting(true);setSaved(false)}}>Review my details</button></section>:<CustomerIntake enabled googleFirst reviewExisting={reviewExisting} onSaved={()=>{setReviewExisting(false);setSaved(true)}}/>}
+        {saved?<section className="customer-stage"><h2>Your customer details are saved</h2><p>You are signed in and your customer details are saved.</p><a href="/">Back to UDECS store</a><button onClick={()=>{setReviewExisting(true);setSaved(false)}}>Review my details</button></section>:<CustomerIntake enabled googleFirst reviewExisting={reviewExisting} onSaved={()=>{setReviewExisting(false);setSaved(true)}}/>}
         <B2bRegistration uid={uid}/>
         {ORDER_SERVICE_ORIGIN&&<MyOrders uid={uid} load={cursor=>customerOrderClient().mine(cursor)}/>}
       </div></main>
