@@ -2,7 +2,7 @@ import{saveExport}from'../lib/exportFile';
 import type{GstDraft}from './draftInvoices';import type{CompanyInfo}from '../types';
 const headers=['Invoice number','Invoice date','Customer','Recipient GSTIN','POS','Taxable INR','CGST INR','SGST INR','IGST INR','Invoice INR','Source order','Status'];
 const values=(d:GstDraft)=>[d.invoiceNumber,d.invoiceDate,d.customerName,d.recipientGstin,d.placeOfSupply,d.taxableValue,d.cgst,d.sgst,d.igst,d.invoiceValue,d.sourceOrderId,d.status];
-const logoUrl='/UDECS_Logo_Premium_Transparent.png';
+const logoUrl='/UDECS_Logo_Export.png';
 async function logo(){const r=await fetch(logoUrl);if(!r.ok)throw Error('Original UDECS logo unavailable. Export stopped.');const b=await r.blob();return await new Promise<string>((resolve,reject)=>{const f=new FileReader();f.onload=()=>resolve(String(f.result));f.onerror=reject;f.readAsDataURL(b)});}
 export async function exportGstXlsx(rows:GstDraft[],company:CompanyInfo,period:string){
  const{default:ExcelJS}=await import('exceljs'),wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('GST draft invoices');wb.creator=company.legalName;
