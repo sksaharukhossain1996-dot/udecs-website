@@ -214,6 +214,14 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
                 <span>{company.emailOutlook}</span>
               </a>
 
+              <a
+                href="mailto:udecs.store@gmail.com"
+                className="flex items-center gap-1.5 hover:text-white transition-colors break-all"
+              >
+                <Mail className="w-3.5 h-3.5 text-[#CC9A2E]" />
+                <span>Customer Support: udecs.store@gmail.com</span>
+              </a>
+
               <div className="pt-1 text-[11px] text-[#B9BFAE]">
                 Domain: <b className="text-white font-mono">{company.domain}</b>
               </div>
