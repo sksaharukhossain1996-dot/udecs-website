@@ -295,7 +295,7 @@ Order a new batch from the factory promptly.`;
         <div className="bg-[#182620] text-white border border-[#CBCFB9] rounded-xl p-5 space-y-3">
           <p className="text-xs uppercase tracking-wide text-[#B9BFAE]">Order auto-messages</p>
           <div className="flex items-center justify-between"><h2 className="wa-paused-heading text-xl font-bold">Paused</h2><input aria-label="Order auto-messages (not connected)" type="checkbox" role="switch" disabled checked={false} readOnly /></div>
-          <p className="text-sm text-[#B9BFAE]">COD confirmation stays paused. The order pipeline is not connected and needs your approval before activation.</p>
+          <p className="text-sm text-[#B9BFAE]">COD orders are on. WhatsApp auto-confirmation stays paused and the order pipeline is not connected, so the seller confirms each COD order manually before dispatch.</p>
           <p className="text-xs text-[#B9BFAE]">This switch cannot start customer messages.</p>
         </div>
         <div className="bg-white border border-[#CBCFB9] rounded-xl p-5 space-y-3">
@@ -308,7 +308,7 @@ Order a new batch from the factory promptly.`;
       </section>
 
       <section className="bg-white border border-[#CBCFB9] rounded-xl p-5 space-y-4" aria-label="Register business number">
-        <div><h2 className="text-xl font-bold">Register UDECS Orders</h2><p className="text-sm text-[#565F52] mt-2">One-time Meta registration for +91 86605 80564. Phone ID: 1393523580503157. This does not activate customer auto-messages or COD.</p></div>
+        <div><h2 className="text-xl font-bold">Register UDECS Orders</h2><p className="text-sm text-[#565F52] mt-2">One-time Meta registration for +91 86605 80564. Phone ID: 1393523580503157. This does not activate customer auto-messages.</p></div>
         <p className="text-xs text-[#565F52]">Enter your chosen six-digit PIN. It is used only for this request and cleared afterwards. It is never saved to browser storage or message history. Keep your secure backup.</p>
         <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
           <label className="block text-sm font-bold">Six-digit registration PIN<input type="password" inputMode="numeric" autoComplete="off" maxLength={6} value={registrationPin} onChange={e => setRegistrationPin(e.target.value.replace(/\D/g,''))} className="block border rounded-lg p-3 mt-2 w-full sm:w-56" disabled={registrationBusy}/></label>
