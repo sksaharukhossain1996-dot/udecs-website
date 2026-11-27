@@ -103,7 +103,7 @@ button{
  </div>
 
  <label>Order ID</label>
- <input id="order" placeholder="যেমন: UDECS1001">
+ <input id="order" placeholder="Example: UDECS1001">
 
  <label>Customer WhatsApp Number</label>
  <input id="phone" placeholder="91XXXXXXXXXX" type="tel">
@@ -123,15 +123,15 @@ button{
  </div>
 
  <label>WhatsApp Message</label>
- <textarea id="message" readonly placeholder="Generate Message চাপুন..."></textarea>
+ <textarea id="message" readonly placeholder="Press Generate Message..."></textarea>
 
  <button class="generate" onclick="generateMessage()">Generate Message</button>
  <button class="copy" onclick="copyMessage()">Copy Message</button>
  <button class="whatsapp" onclick="sendWhatsApp()">Open WhatsApp</button>
 
  <p class="note">
- Note: Open WhatsApp বাটনে মেসেজটি প্রস্তুত হবে।
- পাঠানোর আগে WhatsApp-এ Send চাপতে হবে।
+ Note: The Open WhatsApp button prepares the message.
+ You must press Send in WhatsApp to deliver it.
  </p>
 </div>
 
@@ -150,20 +150,20 @@ function generateMessage(){
  const track=document.getElementById("tracking").value.trim();
  const s=status.value;
 
- if(!id){ alert("Order ID দিন"); return; }
- if(s==="shipped" && !track){ alert("Tracking Number দিন"); return; }
+ if(!id){ alert("Please enter the Order ID"); return; }
+ if(s==="shipped" && !track){ alert("Please enter the Tracking Number"); return; }
 
  const messages={
  confirmed:
- `🎉 প্রিয় গ্রাহক, আপনার অর্ডারটি সফলভাবে নিশ্চিত হয়েছে!\n\n🛍️ Order ID: ${id}\n\nআপনার অর্ডারটি দ্রুত প্রস্তুত করা হচ্ছে।\n\nধন্যবাদ — UDECS.STORE ❤️`,
+ `🎉 Dear Customer, your order has been successfully confirmed!\n\n🛍️ Order ID: ${id}\n\nYour order is being prepared quickly.\n\nThank you — UDECS.STORE ❤️`,
  packing:
- `📦 সুসংবাদ!\n\nআপনার অর্ডারটির প্যাকিং চলছে।\n\n🛍️ Order ID: ${id}\n\nখুব শীঘ্রই কুরিয়ারে পাঠানো হবে।\n\nUDECS.STORE ❤️`,
+ `📦 Good news!\n\nYour order is being packed.\n\n🛍️ Order ID: ${id}\n\nIt will be handed to the courier very soon.\n\nUDECS.STORE ❤️`,
  shipped:
- `🚚 আপনার অর্ডারটি কুরিয়ারে পাঠানো হয়েছে!\n\n🛍️ Order ID: ${id}\n📍 Tracking Number: ${track}\n\nধন্যবাদ — UDECS.STORE ❤️`,
+ `🚚 Your order has been shipped!\n\n🛍️ Order ID: ${id}\n📍 Tracking Number: ${track}\n\nThank you — UDECS.STORE ❤️`,
  delivered:
- `🎁 আপনার অর্ডারটি সফলভাবে ডেলিভারি সম্পন্ন হয়েছে!\n\n🛍️ Order ID: ${id}\n\nকেনাকাটা করার জন্য অসংখ্য ধন্যবাদ।\n\nUDECS.STORE ❤️`,
+ `🎁 Your order has been delivered successfully!\n\n🛍️ Order ID: ${id}\n\nThank you very much for shopping with us.\n\nUDECS.STORE ❤️`,
  cancelled:
- `❌ দুঃখিত! আপনার অর্ডারটি বাতিল করা হয়েছে।\n\n🛍️ Order ID: ${id}\n\nসাহায্যের প্রয়োজন হলে আমাদের সঙ্গে যোগাযোগ করুন।\n\nUDECS.STORE`
+ `❌ Sorry! Your order has been cancelled.\n\n🛍️ Order ID: ${id}\n\nIf you need help, please contact us.\n\nUDECS.STORE`
  };
 
  document.getElementById("message").value=messages[s];
@@ -171,20 +171,20 @@ function generateMessage(){
 
 function copyMessage(){
  const msg=document.getElementById("message").value;
- if(!msg){alert("আগে Generate Message চাপুন");return;}
+ if(!msg){alert("Please press Generate Message first");return;}
  navigator.clipboard.writeText(msg)
  .then(()=>alert("Message Copied Successfully!"))
- .catch(()=>alert("Copy করতে Message নির্বাচন করুন"));
+ .catch(()=>alert("Please select the message to copy"));
 }
 
 function sendWhatsApp(){
  const msg=document.getElementById("message").value;
  let phone=document.getElementById("phone").value.replace(/\D/g,"");
 
- if(!msg){alert("আগে Generate Message চাপুন");return;}
- if(!phone){alert("Customer Mobile Number দিন");return;}
+ if(!msg){alert("Please press Generate Message first");return;}
+ if(!phone){alert("Please enter the Customer Mobile Number");return;}
  if(phone.length<10 || phone.length>15){
-  alert("সঠিক Country Code-সহ Mobile Number দিন"); return;
+  alert("Please enter a valid Mobile Number with Country Code"); return;
  }
 
  const url="https://wa.me/"+phone+"?text="+encodeURIComponent(msg);
