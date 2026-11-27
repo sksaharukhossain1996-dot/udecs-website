@@ -676,7 +676,7 @@ Verification required
                   <p className="text-[11px] text-[#565F52]">{company.address}</p>
                   <p className="text-[11px] font-bold text-[#0F1913]">GSTIN: {company.gstin}</p>
                   <p className="text-[11px] text-[#565F52]">
-                    Email: {company.emailGmail} · WhatsApp: {company.whatsapp}
+                    Email: {company.emailGmail} · Customer Support: udecs.store@gmail.com · WhatsApp: {company.whatsapp}
                   </p>
                 </div>
                 <div className="text-right">
