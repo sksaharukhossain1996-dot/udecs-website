@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>UDECS Customer Service - WhatsApp Order Updates</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;padding:0 20px 20px;
+ background:#f2f4f9;
+ font-family:Arial,sans-serif;
+ color:#172033;
+ min-height:100vh;
+ position:relative
+}
+/* UDECS logo transparent watermark */
+body::before{
+ content:"";
+ position:fixed;inset:0;
+ background:url("https://udecs.store/UDECS_Logo_Premium_Transparent.png") no-repeat center 40%;
+ background-size:min(70vw,520px);
+ opacity:.06;
+ pointer-events:none;
+ z-index:0
+}
+.topbar{
+ background:#233f66;
+ padding:12px 0;
+ margin:0 -20px 25px;
+ border-bottom:3px solid #d18146;
+ position:relative;z-index:1
+}
+.topbar-inner{
+ max-width:960px;margin:0 auto;padding:0 20px;
+ display:flex;align-items:center;justify-content:space-between;gap:12px
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{height:40px;width:auto}
+.brand-name{font-size:20px;font-weight:bold;color:#fff;letter-spacing:.5px}
+.brand-name span{color:#e8a06a}
+.tag{color:#c9d6ea;font-size:13px;white-space:nowrap}
+.container{
+ max-width:520px;margin:0 auto 30px;
+ background:rgba(255,255,255,.97);padding:26px;
+ border-radius:18px;
+ box-shadow:0 8px 30px rgba(35,63,102,.14);
+ border-top:4px solid #d18146;
+ position:relative;z-index:1
+}
+.header{text-align:center;margin-bottom:22px}
+.header img{height:72px;width:auto}
+.header h2{margin:10px 0 4px;color:#233f66}
+.header p{color:#777;margin:0}
+.staffbadge{
+ display:inline-block;background:#fdf1e7;color:#a35a1e;
+ border:1px solid #eec39c;border-radius:20px;
+ font-size:12px;font-weight:bold;padding:4px 12px;margin-top:10px
+}
+label{display:block;margin:15px 0 7px;font-weight:bold;color:#233f66}
+input,select,textarea{
+ width:100%;padding:13px;
+ border:1px solid #cfd8e6;border-radius:9px;
+ font-size:15px;background:#fbfcfe
+}
+input:focus,select:focus,textarea:focus{outline:2px solid #233f66;outline-offset:0}
+textarea{height:170px;resize:vertical}
+button{
+ width:100%;padding:14px;margin-top:12px;
+ border:0;border-radius:9px;
+ font-size:15px;font-weight:bold;
+ cursor:pointer
+}
+.generate{background:#233f66;color:white}
+.copy{background:#fbe9d9;color:#a35a1e}
+.whatsapp{background:#159c55;color:white}
+.note{font-size:12px;color:#777;line-height:1.6}
+.footer{
+ text-align:center;color:#8a97ab;font-size:12px;padding-bottom:10px;
+ position:relative;z-index:1
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+ <div class="topbar-inner">
+  <div class="brand">
+   <img src="https://udecs.store/UDECS_Logo_Premium_Transparent.png" alt="UDECS logo">
+   <div class="brand-name">UDECS<span>.STORE</span></div>
+  </div>
+  <div class="tag">Customer Service Panel</div>
+ </div>
+</div>
+
+<div class="container">
+ <div class="header">
+  <img src="https://udecs.store/UDECS_Logo_Premium_Transparent.png" alt="UDECS.STORE">
+  <h2>WhatsApp Order Updates</h2>
+  <p>Customer Notification System</p>
+  <div class="staffbadge">STAFF USE ONLY</div>
+ </div>
+
+ <label>Order ID</label>
+ <input id="order" placeholder="যেমন: UDECS1001">
+
+ <label>Customer WhatsApp Number</label>
+ <input id="phone" placeholder="91XXXXXXXXXX" type="tel">
+
+ <label>Order Status</label>
+ <select id="status">
+  <option value="confirmed">Order Confirmed</option>
+  <option value="packing">Packing in Progress</option>
+  <option value="shipped">Shipped</option>
+  <option value="delivered">Delivered</option>
+  <option value="cancelled">Cancelled</option>
+ </select>
+
+ <div id="trackingBox" style="display:none">
+  <label>Tracking Number</label>
+  <input id="tracking" placeholder="Enter Tracking Number">
+ </div>
+
+ <label>WhatsApp Message</label>
+ <textarea id="message" readonly placeholder="Generate Message চাপুন..."></textarea>
+
+ <button class="generate" onclick="generateMessage()">Generate Message</button>
+ <button class="copy" onclick="copyMessage()">Copy Message</button>
+ <button class="whatsapp" onclick="sendWhatsApp()">Open WhatsApp</button>
+
+ <p class="note">
+ Note: Open WhatsApp বাটনে মেসেজটি প্রস্তুত হবে।
+ পাঠানোর আগে WhatsApp-এ Send চাপতে হবে।
+ </p>
+</div>
+
+<div class="footer">UNICK DIGITAL E-COMMERCE SOLUTIONS &bull; udecs.store</div>
+
+<script>
+const status = document.getElementById("status");
+const trackingBox = document.getElementById("trackingBox");
+
+status.addEventListener("change",()=>{
+ trackingBox.style.display = status.value === "shipped" ? "block":"none";
+});
+
+function generateMessage(){
+ const id=document.getElementById("order").value.trim();
+ const track=document.getElementById("tracking").value.trim();
+ const s=status.value;
+
+ if(!id){ alert("Order ID দিন"); return; }
+ if(s==="shipped" && !track){ alert("Tracking Number দিন"); return; }
+
+ const messages={
+ confirmed:
+ `🎉 প্রিয় গ্রাহক, আপনার অর্ডারটি সফলভাবে নিশ্চিত হয়েছে!\n\n🛍️ Order ID: ${id}\n\nআপনার অর্ডারটি দ্রুত প্রস্তুত করা হচ্ছে।\n\nধন্যবাদ — UDECS.STORE ❤️`,
+ packing:
+ `📦 সুসংবাদ!\n\nআপনার অর্ডারটির প্যাকিং চলছে।\n\n🛍️ Order ID: ${id}\n\nখুব শীঘ্রই কুরিয়ারে পাঠানো হবে।\n\nUDECS.STORE ❤️`,
+ shipped:
+ `🚚 আপনার অর্ডারটি কুরিয়ারে পাঠানো হয়েছে!\n\n🛍️ Order ID: ${id}\n📍 Tracking Number: ${track}\n\nধন্যবাদ — UDECS.STORE ❤️`,
+ delivered:
+ `🎁 আপনার অর্ডারটি সফলভাবে ডেলিভারি সম্পন্ন হয়েছে!\n\n🛍️ Order ID: ${id}\n\nকেনাকাটা করার জন্য অসংখ্য ধন্যবাদ।\n\nUDECS.STORE ❤️`,
+ cancelled:
+ `❌ দুঃখিত! আপনার অর্ডারটি বাতিল করা হয়েছে।\n\n🛍️ Order ID: ${id}\n\nসাহায্যের প্রয়োজন হলে আমাদের সঙ্গে যোগাযোগ করুন।\n\nUDECS.STORE`
+ };
+
+ document.getElementById("message").value=messages[s];
+}
+
+function copyMessage(){
+ const msg=document.getElementById("message").value;
+ if(!msg){alert("আগে Generate Message চাপুন");return;}
+ navigator.clipboard.writeText(msg)
+ .then(()=>alert("Message Copied Successfully!"))
+ .catch(()=>alert("Copy করতে Message নির্বাচন করুন"));
+}
+
+function sendWhatsApp(){
+ const msg=document.getElementById("message").value;
+ let phone=document.getElementById("phone").value.replace(/\D/g,"");
+
+ if(!msg){alert("আগে Generate Message চাপুন");return;}
+ if(!phone){alert("Customer Mobile Number দিন");return;}
+ if(phone.length<10 || phone.length>15){
+  alert("সঠিক Country Code-সহ Mobile Number দিন"); return;
+ }
+
+ const url="https://wa.me/"+phone+"?text="+encodeURIComponent(msg);
+ window.open(url,"_blank");
+}
+
+// Preview demo state: ?demo=1 fills a shipped order so screenshots show a generated message
+if(new URLSearchParams(location.search).get("demo")==="1"){
+ document.getElementById("order").value="UDECS-ORD-4607";
+ document.getElementById("phone").value="919845485437";
+ status.value="shipped";
+ status.dispatchEvent(new Event("change"));
+ document.getElementById("tracking").value="DLV123456789IN";
+ generateMessage();
+}
+</script>
+
+</body>
+</html>
