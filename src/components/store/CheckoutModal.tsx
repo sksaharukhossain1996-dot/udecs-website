@@ -228,7 +228,6 @@ GSTIN: ${formData.gstin || 'not provided'}`;
   };
 
   const executeOrderPlacement = async (method: 'upi'|'cod'|'payu') => {
-    if(method==='cod'){setOrderError('Cash on Delivery is temporarily paused. Choose the PayU gateway or PayU merchant QR. No request was sent.');return;}
     if(requestBusy.current)return;
     const user=customerAuth.currentUser;
     if(!isVerifiedGoogleCustomer(user)||formData.email!==user?.email){setLoginError('Sign in again and review your details. No order was placed.');return;}
@@ -462,7 +461,7 @@ Verification required
                       </div>
                     </label>
 
-                    {!gatewayVerification && <p className="text-xs text-[#565F52]" role="status">Cash on Delivery is temporarily paused for new orders. Choose the PayU gateway or PayU merchant QR. Existing orders are unchanged.</p>}
+                    {!gatewayVerification && <label className="flex items-center gap-3 p-3 bg-white border rounded cursor-pointer"><input type="radio" name="payment" checked={paymentMethod==='cod'} onChange={()=>setPaymentMethod('cod')} className="accent-[#CC9A2E]"/><span><b>Cash on Delivery (COD)</b> - pay cash when the order arrives. The seller confirms your order before dispatch. COD charge is shown in the total.</span></label>}
                   </div>
                 </div>
               </div>
