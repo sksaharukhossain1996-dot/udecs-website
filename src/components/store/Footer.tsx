@@ -246,7 +246,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenTracking, onOpenAdmin }) =
           <div className="flex items-center gap-4">
             <span className="font-mono">udecs.store</span>
             <span>·</span>
-            <span>UPI & online payments · COD temporarily paused</span>
+            <span>UPI & online payments · Cash on Delivery available</span>
             <span>·</span>
             <span>WhatsApp customer support</span>
           </div>
