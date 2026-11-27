@@ -785,7 +785,6 @@ function orderService(db) {
           if (!old.exists || old.data().customerUid !== principal2.uid) fail2("INCONSISTENT", "Previously saved order unavailable");
           return { order: { id: old.id, ...old.data() }, replayed: true };
         }
-        if (data.paymentMethod === "cod") fail2("COD_PAUSED", "New cash-on-delivery orders are temporarily paused while customer confirmation is set up. Please choose PayU online payment.");
         const profile = await tx.get(db.collection("customers").doc(principal2.uid));
         if (!profile.exists || profile.data().email !== principal2.email || profile.data().noticeVersion !== "customer-profile-v2" || typeof profile.data().name !== "string" || profile.data().name.trim().length < 2 || typeof profile.data().address !== "string" || profile.data().address.trim().length < 5) fail2("REGISTRATION_REQUIRED", "Save your customer registration and delivery details before ordering.");
         const refs = data.items.map((i) => db.collection("products").doc(i.productId));
