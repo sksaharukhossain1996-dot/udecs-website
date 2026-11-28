@@ -252,7 +252,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
       if(customerAuth.currentUser?.uid!==user!.uid)throw Error('Customer account changed. Sign in to the original account to recover the saved order.');
       reference.confirmed();attempt.current=null;setWasRecovered(!!recovered.found);
       setCompletedOrder(saved);setCheckoutStep(saved.paymentMethod==='payu'?'payu_pay':saved.paymentMethod==='upi'?'upi_pay':'complete');if(!recovered.found)clearCart();onOrderSuccess(saved);
-    }catch(e){setOrderError((e instanceof Error?e.message:'Order could not be confirmed')+'. Cart kept. Retry keeps the same order reference; it does not start a second order.');}
+    }catch(e){if(e instanceof Error&&/total changed|no longer available|unavailable|out of stock|Insufficient stock/i.test(e.message))attempt.current=null;setOrderError((e instanceof Error?e.message:'Order could not be confirmed')+'. Cart kept. Retry keeps the same order reference; it does not start a second order.');}
     finally{requestBusy.current=false;setIsProcessing(false);}
   };
 
