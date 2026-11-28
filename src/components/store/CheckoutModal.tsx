@@ -1,3 +1,4 @@
+import {PhoneField,phoneValid} from '../../customer-app/PhoneField';
 import {OrderWhatsAppPreferences} from './OrderWhatsAppPreferences';
 import {readProductsByIds} from '../../firebase/catalogIndex';
 import {wholesaleAvailability} from '../../lib/wholesale';
@@ -132,6 +133,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [wasRecovered,setWasRecovered]=useState(false);
   const [recoverOnLoad,setRecoverOnLoad]=useState(false);
   useEffect(()=>{if(!isOpen){attempt.current=null;return;}if(customer?.uid){setRecoverOnLoad(!!localStorage.getItem('udecs-order-retry-'+customer.uid));}else{setRecoverOnLoad(false);attempt.current=null;}},[customer?.uid,isOpen]);
+  const[savedAddrs,setSavedAddrs]=useState<any[]>([]);
+  const applySaved=(a:any)=>setFormData(old=>({...old,name:a.name||old.name,phone:a.phone||old.phone,address:[a.address,a.landmark].filter(Boolean).join(', '),city:a.city,state:a.state,pincode:a.pincode}));
+  useEffect(()=>{if(!isOpen)return;try{const pr=JSON.parse(localStorage.getItem('udecs_app_profile')||'null');const list=pr&&Array.isArray(pr.addresses)?pr.addresses:[];setSavedAddrs(list);const d=list.find((a:any)=>a.isDefault)||list[0];if(d)applySaved(d);else if(pr&&(pr.name||pr.phone))setFormData(old=>({...old,name:old.name||pr.name||'',phone:old.phone||pr.phone||''}));}catch{}},[isOpen]);
   useEffect(()=>watchCustomerIdentity(user=>{setCustomer(user);setIdentityReady(true);setFormData(old=>({...old,email:isVerifiedGoogleCustomer(user)?user!.email!:''}));}),[]);
   const signInForOrder=async()=>{setLoginBusy(true);setLoginError('');try{await customerSignIn();}catch{setLoginError('Google sign-in did not finish. Please try again. No order was placed.');}finally{setLoginBusy(false);}};
 
@@ -197,6 +201,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     if(!quoteShipping&&(!identityReady||!isVerifiedGoogleCustomer(customerAuth.currentUser))){setLoginError('Sign in with your verified email before placing an order. No order was placed.');return;}
     if(!quoteShipping&&!registrationReady){setLoginError('Complete your customer registration first. No order was placed.');return;}
     if(!quoteShipping&&formData.email!==customerAuth.currentUser?.email){setLoginError('Your signed-in account changed. Review your details before ordering.');return;}
+    if(formData.phone&&!phoneValid(formData.phone)){alert('Enter a valid mobile number for the selected country.');return;}
     if (!formData.name || !formData.email || !formData.phone || !formData.address) {
       alert('Please fill in all mandatory billing and shipping fields.');
       return;
@@ -302,6 +307,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                   1. {language === 'bn' ? 'গ্রাহকের তথ্য ও ডেলিভারি ঠিকানা' : 'Customer & Shipping Address'}
                 </h4>
 
+                {savedAddrs.length>1&&<div><label className="block text-xs font-semibold text-[#182620] mb-1">Saved addresses</label><select className="w-full p-2 border rounded text-sm bg-white" defaultValue={savedAddrs.find((a:any)=>a.isDefault)?.id||savedAddrs[0].id} onChange={e=>{const a=savedAddrs.find((x:any)=>x.id===e.target.value);if(a)applySaved(a)}}>{savedAddrs.map((a:any)=><option key={a.id} value={a.id}>{a.label}: {a.address.slice(0,40)}, {a.pincode}</option>)}</select></div>}
                 <div>
                   <label className="block text-xs font-semibold text-[#182620] mb-1">
                     {language === 'bn' ? 'পুরো নাম *' : 'Full Name *'}
@@ -337,15 +343,7 @@ GSTIN: ${formData.gstin || 'not provided'}`;
                     <label className="block text-xs font-semibold text-[#182620] mb-1">
                       {language === 'bn' ? 'মোবাইল নম্বর (SMS ট্র্যাকিংয়ের জন্য) *' : 'Phone Number (for order support) *'}
                     </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      required
-                      placeholder="+91 9831123456"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className="w-full text-xs bg-white border border-[#CBCFB9] rounded p-2.5 text-[#0F1913] focus:border-[#A87C1F] focus:outline-none"
-                    />
+                    <PhoneField required value={formData.phone} onChange={v=>setFormData(old=>({...old,phone:v}))} inputClassName="w-full text-xs bg-white border border-[#CBCFB9] rounded p-2.5 text-[#0F1913] focus:border-[#A87C1F] focus:outline-none"/>
                   </div>
                 </div>
 
