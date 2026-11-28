@@ -61,7 +61,7 @@ const deliveryCharge = (pincode: string, items: { product: any; quantity: number
   const zone = zoneForPincode(pincode);
   const rawWeight = items.reduce((w, item) => w + (item.product.weightKg || 0.5) * item.quantity, 0);
   const weightKg = Math.max(0.5, Math.round(rawWeight * 10) / 10); // 0.5 kg per unit default
-  const fee = orderSubtotal >= 1000 && !isCod ? 0 : isCod ? 55 : 45;
+  const fee = orderSubtotal >= 1000 && !isCod ? 0 : isCod ? 95 : 35;
   return { zone, weightKg, fee };
 };
 
@@ -177,7 +177,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const delivery = quoteShipping ? { zone: zoneForPincode(formData.pincode), weightKg: 0, fee: 0 } : deliveryCharge(formData.pincode, checkoutItems, paymentMethod === 'cod', subtotal);
   const shippingFee = gatewayVerification||(roundMoney(subtotal)>=1000&&paymentMethod!=='cod')?0:delivery.fee;
   const smallOrderDeliveryFee = 0;
-  const shoppingCharge = gatewayVerification||quoteShipping?0:paymentMethod==='cod'?(roundMoney(subtotal)>=1000?119:45):roundMoney(subtotal)>=1000?(paymentMethod==='payu'?roundMoney(roundMoney(subtotal)*0.023):0):7;
+  const shoppingCharge = gatewayVerification||quoteShipping?0:roundMoney(roundMoney(subtotal)*0.03);
   const totalAmount = gatewayVerification?50:roundMoney(taxableAmount + totalGst + shippingFee + smallOrderDeliveryFee + shoppingCharge);
 
   // Original issuer QR payload is preserved. It carries no amount or order reference.
@@ -534,7 +534,7 @@ Verification required
                     </div>
 
                     {!gatewayVerification&&!quoteShipping&&<>
-                      <div className="flex justify-between"><span>Shopping charge ({paymentMethod==='payu'&&roundMoney(subtotal)>=1000?'PayU 2.30% of products':paymentMethod==='cod'?'COD flat':'flat'}):</span><span className="whitespace-nowrap pl-2">{formatPrice(shoppingCharge)}</span></div>
+                      <div className="flex justify-between"><span>Shopping charge (3% of products):</span><span className="whitespace-nowrap pl-2">{formatPrice(shoppingCharge)}</span></div>
                     </>}
 
                     <div className="pt-2 border-t border-[#CBCFB9] flex justify-between items-baseline text-sm font-bold text-[#0F1913]">
